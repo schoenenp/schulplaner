@@ -1,0 +1,220 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+* {
+  min-width: 0;
+}
+
+body {
+  @apply min-h-screen bg-slate-950 text-pirrot-blue-50 antialiased;
+  background-image:
+    radial-gradient(
+      circle at top left,
+      rgba(77, 184, 255, 0.22),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at top right,
+      rgba(255, 104, 87, 0.18),
+      transparent 28%
+    ),
+    linear-gradient(180deg, #06101f 0%, #0b1730 38%, #0f2a5c 100%);
+  font-family: var(--font-baloo), sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-cairo), sans-serif;
+}
+
+p {
+  line-height: 1.6;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  @apply min-w-0;
+}
+
+button,
+a {
+  overflow-wrap: anywhere;
+}
+
+.dashboard-grid {
+  background-image:
+    linear-gradient(to right, rgba(183, 227, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(183, 227, 255, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.glass-card {
+  border: 1px solid rgba(183, 227, 255, 0.15);
+  border-radius: 0.75rem;
+  background: rgba(2, 6, 23, 0.45);
+  box-shadow: 0 18px 40px rgba(2, 6, 23, 0.28);
+  backdrop-filter: blur(24px);
+}
+
+.glass-card-soft {
+  border: 1px solid rgba(183, 227, 255, 0.12);
+  border-radius: 0.75rem;
+  background: rgba(15, 42, 92, 0.55);
+  box-shadow: 0 14px 30px rgba(2, 6, 23, 0.2);
+  backdrop-filter: blur(12px);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.toast-enter {
+  animation: toast-in 200ms ease-out;
+}
+
+.metric-card {
+  border: 1px solid rgba(183, 227, 255, 0.12);
+  border-radius: 0.75rem;
+  background: rgba(15, 42, 92, 0.55);
+  box-shadow: 0 14px 30px rgba(2, 6, 23, 0.2);
+  backdrop-filter: blur(12px);
+  padding: 1.25rem;
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(183, 227, 255, 0.25);
+  background: rgba(18, 74, 166, 0.65);
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-lg bg-pirrot-blue-500 px-4 py-2 text-center font-semibold text-white transition hover:bg-pirrot-blue-400;
+  border: 1px solid rgba(134, 210, 255, 0.3);
+  box-shadow: 0 18px 32px rgba(15, 42, 92, 0.35);
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-center font-semibold text-pirrot-blue-50 transition;
+  border: 1px solid rgba(183, 227, 255, 0.15);
+  background: rgba(15, 42, 92, 0.7);
+}
+
+.btn-secondary:hover {
+  border-color: rgba(183, 227, 255, 0.3);
+  background: rgba(18, 74, 166, 0.75);
+}
+
+.field-shell {
+  border: 1px solid rgba(183, 227, 255, 0.12);
+  border-radius: 0.75rem;
+  background: rgba(15, 42, 92, 0.6);
+}
+
+.soft-input {
+  @apply w-full px-4 py-3 text-pirrot-blue-50 placeholder:text-pirrot-blue-300 focus:outline-none focus:ring-2;
+  border: 1px solid rgba(183, 227, 255, 0.12);
+  border-radius: 0.75rem;
+  background: rgba(15, 42, 92, 0.6);
+  --tw-placeholder-opacity: 0.6;
+  --tw-ring-color: rgba(134, 210, 255, 0.2);
+}
+
+.soft-input:focus {
+  border-color: rgba(134, 210, 255, 0.4);
+}
+
+.soft-input-leading {
+  padding-left: 2.75rem;
+}
+
+.soft-input-trailing {
+  padding-right: 2.5rem;
+}
+
+.badge-shell {
+  @apply inline-flex max-w-full items-center px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-pirrot-blue-200;
+  border: 1px solid rgba(183, 227, 255, 0.15);
+  border-radius: 9999px;
+  background: rgba(15, 42, 92, 0.7);
+  overflow-wrap: anywhere;
+}
+
+.dashboard-card-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+}
+
+.dashboard-metric-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+}
+
+.compact-label {
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 640px) {
+  .metric-card {
+    padding: 1rem;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    @apply px-3;
+  }
+}
+
+.rise-in {
+  animation: rise-in 320ms ease both;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* width */
+::-webkit-scrollbar {
+  width: 3px;
+}
+
+::-webkit-scrollbar:horizontal {
+  height: 4px; /* Adjust the height as needed */
+}
+/* Track */
+::-webkit-scrollbar-track {
+  @apply bg-pirrot-blue-200 p-1;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  @apply rounded bg-pirrot-blue-500 hover:bg-pirrot-blue-400;
+}

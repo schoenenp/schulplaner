@@ -1,0 +1,25 @@
+{
+  "name": "schoolbooks",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "trustedDependencies": [
+    "prisma",
+    "@prisma/client",
+    "@prisma/engines",
+    "esbuild",
+    "sharp"
+  ],
+  "scripts": {
+    "dev:genbooks": "bun run --cwd apps/genbooks dev",
+    "dev:panel": "bun run --cwd apps/panel_books dev",
+    "build:genbooks": "bun run --cwd apps/genbooks build",
+    "build:panel": "bun run --cwd apps/panel_books build",
+    "start:genbooks": "bun run --cwd apps/genbooks start",
+    "start:panel": "bun run --cwd apps/panel_books start",
+    "test": "bun run --cwd packages/pdf-pipeline test && bun run --cwd apps/genbooks test",
+    "typecheck": "bun run --cwd packages/pdf-pipeline typecheck && bun run --cwd apps/genbooks typecheck && bun run --cwd apps/panel_books typecheck"
+  }
+}

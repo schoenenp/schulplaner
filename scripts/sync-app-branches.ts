@@ -118,6 +118,20 @@ function syncBranch(config: AppConfig) {
     runGit(["commit", "-q", "-m", `Sync ${config.branch} from main`], tempDir);
 
     const commit = runGit(["rev-parse", "HEAD"], tempDir).trim();
+    const newTree = runGit(["rev-parse", "HEAD^{tree}"], tempDir).trim();
+    const oldTree = runGit(
+      ["rev-parse", `${config.branch}^{tree}`],
+      repoRoot,
+      false,
+    ).trim();
+
+    // Skip unchanged branches so pushes to main only redeploy the app that
+    // actually changed.
+    if (newTree === oldTree) {
+      console.log(`${config.branch} already up to date.`);
+      return;
+    }
+
     runGit(["branch", "-f", config.branch, commit], repoRoot);
 
     if (push) {

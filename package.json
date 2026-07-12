@@ -20,6 +20,11 @@
     "start:genbooks": "bun run --cwd apps/genbooks start",
     "start:panel": "bun run --cwd apps/panel_books start",
     "test": "bun run --cwd packages/pdf-pipeline test && bun run --cwd apps/genbooks test",
-    "typecheck": "bun run --cwd packages/pdf-pipeline typecheck && bun run --cwd apps/genbooks typecheck && bun run --cwd apps/panel_books typecheck"
+    "typecheck": "bun run --cwd packages/pdf-pipeline typecheck && bun run --cwd apps/genbooks typecheck && bun run --cwd apps/panel_books typecheck",
+    "sync:branches": "bun scripts/sync-app-branches.ts",
+    "sync:branches:push": "bun scripts/sync-app-branches.ts --push"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.21"
   }
 }

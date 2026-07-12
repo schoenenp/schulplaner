@@ -31,6 +31,29 @@ bun run typecheck        # all three workspaces
 
 Per-app `.env` files live in each app directory (see the `.env.example`s).
 
+## Branch workflow
+
+`main` is the source-of-truth monorepo branch and keeps both apps plus
+`packages/pdf-pipeline` together.
+
+The app-specific branches are generated deploy branches derived from `main`:
+
+- `gen-main` — `apps/genbooks` + `packages/pdf-pipeline`
+- `panel-main` — `apps/panel_books` + `packages/pdf-pipeline`
+
+Never commit to or merge from those branches. Update `main` first, then
+regenerate them:
+
+```sh
+bun run sync:branches         # regenerate both branches locally
+bun run sync:branches:push    # regenerate and force-push to origin
+```
+
+On GitHub, a workflow regenerates both deploy branches automatically on every
+push to `main`, and two guard workflows block/auto-close any accidental PR
+from a deploy branch back into `main`.
+
 ## Deployment
 
-Coolify + Nixpacks, two services from this one repo — see [DEPLOY.md](DEPLOY.md).
+Coolify + Nixpacks, one service per deploy branch (`gen-main`, `panel-main`) —
+see [DEPLOY.md](DEPLOY.md).

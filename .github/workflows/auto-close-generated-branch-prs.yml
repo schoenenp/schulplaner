@@ -1,0 +1,51 @@
+name: Auto Close Generated Branch PRs
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, edited]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  auto-close-generated-branch-prs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close deploy branch PRs into main
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const blockedBranches = new Set(["gen-main", "panel-main"]);
+            const baseRef = context.payload.pull_request?.base?.ref;
+            const headRef = context.payload.pull_request?.head?.ref;
+            const prNumber = context.payload.pull_request?.number;
+
+            if (baseRef !== "main" || !blockedBranches.has(headRef) || !prNumber) {
+              core.info("PR branch policy check passed.");
+              return;
+            }
+
+            const body = [
+              "This PR was automatically closed.",
+              "",
+              `\`${headRef}\` is a generated deploy branch and must not be merged into \`main\`.`,
+              "Make code changes on `main`, then regenerate the deploy branches from `main` instead.",
+            ].join("\n");
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body,
+            });
+
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+              state: "closed",
+            });
+
+            core.setFailed(`Closed forbidden PR from ${headRef} into main.`);

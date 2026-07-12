@@ -50,7 +50,7 @@
     "parent-module": "^1.0.1",
     "pdf-lib": "^1.17.1",
     "pdf-pipeline": "workspace:*",
-    "pdfjs-dist": "^5.4.530",
+    "pdfjs-dist": "^6.1.200",
     "posthog-js": "^1.360.0",
     "react": "^19.2.4",
     "react-datepicker": "^9.1.0",

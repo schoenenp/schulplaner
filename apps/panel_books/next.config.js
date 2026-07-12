@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename);
 const config = {
   transpilePackages: ["pdf-pipeline"],
   turbopack: {
-    // Monorepo root so the file:-linked pdf-pipeline package resolves.
+    // Monorepo root so the workspace-linked pdf-pipeline package resolves.
     root: path.join(__dirname, "../.."),
   },
   images: {

@@ -18,3 +18,6 @@ coverage/
 
 # local git-history backups of the pre-monorepo app repos (history lives on GitHub)
 _archive/git-backups/
+
+# retired orders app kept locally for reference (own .git, not part of the monorepo)
+_archive/orders/

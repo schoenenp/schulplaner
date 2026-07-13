@@ -1,6 +1,7 @@
 # dependencies
 node_modules/
 
+promo/
 # next.js build output
 .next/
 out/

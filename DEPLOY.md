@@ -11,7 +11,7 @@ The refactored code expects two new nullable columns on `File`
 (`pageCount`, `srcGrayscale`). Apply them **before** the first deploy, either:
 
 ```sh
-cd apps/genbooks && bunx prisma db push          # uses DATABASE_URL
+bun run db:push          # prisma db push from packages/db (uses its DATABASE_URL)
 # or run apps/genbooks/scripts/sql/add-file-pagecount.sql against MySQL
 ```
 
@@ -37,10 +37,10 @@ via GitHub Actions (`.github/workflows/sync-generated-branches.yml`).
 ## 2. Create two Coolify services from the one repo
 
 Each app deploys from its **generated deploy branch** (a pruned snapshot of
-`main` that contains only that app plus `packages/pdf-pipeline` and a
+`main` that contains only that app plus the shared `packages/` and a
 regenerated `bun.lock`). Create a Coolify application per app pointing at
 `schoenenp/schoolbooks`, build pack **Nixpacks**, Base Directory `/` (the repo
-root — so the workspace install sees `bun.lock` and `packages/pdf-pipeline`):
+root — so the workspace install sees `bun.lock` and `packages/`):
 
 |                 | genbooks                    | panel_books              |
 | --------------- | --------------------------- | ------------------------ |
@@ -55,8 +55,9 @@ respective branches.)
 
 Notes:
 - `next start` honors Coolify's `PORT` env automatically.
-- `bun install` runs each app's `postinstall` (`prisma generate`); the prisma
-  engine download is allowed via `trustedDependencies` in the root package.json.
+- `bun install` runs the `postinstall` of `packages/db` (`prisma generate`);
+  the prisma engine download is allowed via `trustedDependencies` in the root
+  package.json.
 - If the Nixpacks version on the server is too old to detect the textual
   `bun.lock`, set the env `NIXPACKS_INSTALL_CMD`/`NIXPACKS_BUILD_CMD`/
   `NIXPACKS_START_CMD` to the same commands, or switch that service to a
@@ -89,10 +90,12 @@ The important ones per app: `DATABASE_URL`, `AUTH_*`, `STRIPE_*`,
 - Local git-history backups of the old repos also sit in
   `_archive/git-backups/` (untracked).
 
-## Known follow-up
+## Database package
 
-Both apps still own an identical copy of `prisma/schema.prisma` (one shared
-MySQL database). Because the generated client is hoisted, the **last**
-`prisma generate` wins — harmless while the schemas are identical, a bug the
-moment they drift. Consolidating into a shared `packages/db` (real one this
-time) is the recommended next step.
+Both apps share one MySQL database through `packages/db`, which owns the
+single `prisma/schema.prisma`, the migrations, the seed scripts, and the
+exported `db` client (each app's `src/server/db.ts` re-exports it).
+`prisma generate` runs once via the package's `postinstall` and serves both
+apps. Run migrations with `bun run db:migrate` — available on `main` and on
+both deploy branches (locally it reads `DATABASE_URL` from `packages/db/.env`;
+on the server from the service env).

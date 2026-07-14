@@ -10,9 +10,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** @type {import("next").NextConfig} */
 const config = { 
-    // Monorepo root so the workspace-linked pdf-pipeline package is traced.
+    // Monorepo root so the workspace-linked packages are traced.
     outputFileTracingRoot: path.join(__dirname, "../.."),
-    transpilePackages: ["pdf-pipeline"],
+    transpilePackages: ["pdf-pipeline", "db"],
     images:{
     remotePatterns: [
         {

@@ -12,9 +12,9 @@ const __dirname = path.dirname(__filename);
 
 /** @type {import("next").NextConfig} */
 const config = {
-  transpilePackages: ["pdf-pipeline"],
+  transpilePackages: ["pdf-pipeline", "db"],
   turbopack: {
-    // Monorepo root so the workspace-linked pdf-pipeline package resolves.
+    // Monorepo root so the workspace-linked packages resolve.
     root: path.join(__dirname, "../.."),
   },
   images: {

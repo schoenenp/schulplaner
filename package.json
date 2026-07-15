@@ -15,8 +15,8 @@
   "scripts": {
     "dev:genbooks": "bun run --cwd apps/genbooks dev",
     "dev:panel": "bun run --cwd apps/panel_books dev",
-    "build:genbooks": "bun run --cwd apps/genbooks build",
-    "build:panel": "bun run --cwd apps/panel_books build",
+    "build:genbooks": "bun run --cwd packages/db generate && bun run --cwd apps/genbooks build",
+    "build:panel": "bun run --cwd packages/db generate && bun run --cwd apps/panel_books build",
     "start:genbooks": "bun run --cwd apps/genbooks start",
     "start:panel": "bun run --cwd apps/panel_books start",
     "db:generate": "bun run --cwd packages/db db:generate",

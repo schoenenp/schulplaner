@@ -55,9 +55,12 @@ respective branches.)
 
 Notes:
 - `next start` honors Coolify's `PORT` env automatically.
-- `bun install` runs the `postinstall` of `packages/db` (`prisma generate`);
-  the prisma engine download is allowed via `trustedDependencies` in the root
-  package.json.
+- `bun run build` runs `prisma generate` (packages/db) before `next build`.
+  The package's `postinstall` also generates, but bun skips lifecycle scripts
+  when it considers an install a no-op (e.g. cached `node_modules`), so the
+  build must not rely on it — without the generated client the type check
+  fails with tRPC outputs collapsing to `unknown`. The prisma engine download
+  is allowed via `trustedDependencies` in the root package.json.
 - If the Nixpacks version on the server is too old to detect the textual
   `bun.lock`, set the env `NIXPACKS_INSTALL_CMD`/`NIXPACKS_BUILD_CMD`/
   `NIXPACKS_START_CMD` to the same commands, or switch that service to a

@@ -158,7 +158,7 @@ export default function ModuleGrid() {
 
   function getPageNumbers(): (number | "...")[] {
     const total = pagination.totalPages;
-    const current = pagination.page;
+    const current = currentPage;
 
     if (total <= 7) {
       return Array.from({ length: total }, (_, index) => index + 1);

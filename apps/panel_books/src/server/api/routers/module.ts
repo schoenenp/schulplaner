@@ -1,4 +1,4 @@
-import { BookPart, Visibility, type Prisma } from "@prisma/client";
+import { BookPart, Visibility, type Prisma } from "db";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 

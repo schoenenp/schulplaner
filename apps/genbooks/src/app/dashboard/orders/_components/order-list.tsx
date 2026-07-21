@@ -1,5 +1,5 @@
 'use client'
-import type { OrderStatus } from '@prisma/client';
+import type { OrderStatus } from 'db';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { DashboardEmptyState } from "../../_components/dashboard-states";

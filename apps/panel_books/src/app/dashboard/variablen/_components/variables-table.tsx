@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowUturnLeftIcon, TrashIcon } from "@heroicons/react/16/solid";
-import type { TagStatus, TagType } from "@prisma/client";
+import type { TagStatus, TagType } from "db";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 

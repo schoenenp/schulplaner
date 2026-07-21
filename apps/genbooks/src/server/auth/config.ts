@@ -5,7 +5,7 @@ import {
   type NextAuthConfig,
   type Session,
 } from "next-auth";
-import type { UserRole } from "@prisma/client";
+import type { UserRole } from "db";
 import NodemailerProvider from "next-auth/providers/nodemailer";
 import GoogleProvider from "next-auth/providers/google";
 import { createTransport } from "nodemailer";
@@ -43,7 +43,7 @@ declare module "next-auth" {
  *
  * @see https://next-auth.js.org/configuration/options
  */
-const adapter = PrismaAdapter(db as never);
+const adapter = PrismaAdapter(db);
 const trustHost = process.env.AUTH_TRUST_HOST
   ? process.env.AUTH_TRUST_HOST === "true"
   : env.NODE_ENV === "production";

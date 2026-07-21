@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import type { PartnerOrderStatus, PrismaClient, Prisma } from "@prisma/client";
+import type { PartnerOrderStatus, PrismaClient, Prisma } from "db";
 
 const ALLOWED_STATUS_TRANSITIONS: Record<
   PartnerOrderStatus,

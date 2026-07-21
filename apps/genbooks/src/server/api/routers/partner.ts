@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import type { PartnerOrderStatus, PrismaClient } from "@prisma/client";
+import type { PartnerOrderStatus, PrismaClient } from "db";
 import type Stripe from "stripe";
 import { Naming } from "@/util/naming";
 import {

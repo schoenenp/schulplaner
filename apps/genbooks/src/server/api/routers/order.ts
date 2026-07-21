@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type Stripe from "stripe";
 import { TRPCError } from "@trpc/server";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "db";
 
 import {
   createTRPCRouter,

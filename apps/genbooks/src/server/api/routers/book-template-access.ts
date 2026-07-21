@@ -1,4 +1,4 @@
-import type { UserRole } from "@prisma/client";
+import type { UserRole } from "db";
 
 export function canToggleTemplateByRole(role: UserRole): boolean {
   return (

@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "db";
 import type Stripe from "stripe";
 import { stripeClient } from "@/util/stripe";
 import { env } from "@/env";
@@ -108,7 +108,7 @@ function asRecord(value: Prisma.JsonValue | null | undefined): Record<string, un
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return {};
   }
-  return value as Record<string, unknown>;
+  return value;
 }
 
 function asString(

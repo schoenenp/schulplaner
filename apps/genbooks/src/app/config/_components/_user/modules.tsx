@@ -8,7 +8,7 @@ import { api } from "@/trpc/react";
 import { useState } from "react";
 import { validatePDFUpload } from "@/util/pdf/functions";
 import { uploadModuleFiles } from "@/util/upload/client";
-import type { BookPart } from "@prisma/client";
+import type { BookPart } from "db";
 import { getPageRules } from "@/util/book/functions";
 import LoadingSpinner from "@/app/_components/loading-spinner";
 

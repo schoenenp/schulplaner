@@ -5,7 +5,7 @@ import type { Provider } from "next-auth/providers";
 import { env } from "@/env";
 import { db } from "@/server/db";
 import { logger } from "@/server/util/logger";
-import type { UserRole } from "@prisma/client";
+import type { UserRole } from "db";
 
 const PANEL_ROLES = new Set<UserRole>(["ADMIN", "STAFF", "MODERATOR"]);
 const smtpSecure =

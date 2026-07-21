@@ -1,4 +1,4 @@
-import type { BookPart } from "@prisma/client";
+import type { BookPart } from "db";
 import { PDFDocument, PDFName, PDFBool } from "pdf-lib";
 import type { TagItem } from "@/app/dashboard/module/manage/_components/module-form";
 import { logger } from "@/server/util/logger";

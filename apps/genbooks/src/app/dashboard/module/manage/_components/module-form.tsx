@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import type { FileType } from "@prisma/client";
+import type { FileType } from "db";
 import { CheckCircleIcon, ClipboardCopyIcon } from "lucide-react";
 
 import FileUpload from "@/app/config/_components/file-upload";

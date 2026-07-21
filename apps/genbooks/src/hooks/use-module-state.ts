@@ -1,4 +1,4 @@
-import type { BookPart } from "@prisma/client";
+import type { BookPart } from "db";
 import { useState } from "react";
 import {
   type ConfigModules,

@@ -1,4 +1,4 @@
-import type { OrderStatus } from "@prisma/client";
+import type { OrderStatus } from "db";
 
 export function getCancellationGuardError(params: {
   orderStatus: OrderStatus;
@@ -22,4 +22,3 @@ export function getCancellationPaymentStatus(params: {
 }): "REFUNDED" | "CANCELLED" {
   return params.hasPaymentIntent ? "REFUNDED" : "CANCELLED";
 }
-

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "db";
 
 import { protectedProcedure, createTRPCRouter } from "@/server/api/trpc";
 import { enforceProcedureRateLimit } from "@/server/util/rate-limit";

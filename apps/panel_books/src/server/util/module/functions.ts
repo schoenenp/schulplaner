@@ -1,4 +1,4 @@
-import type { BookPart } from "@prisma/client";
+import type { BookPart } from "db";
 export function handleBookPart(type: string): BookPart {
   switch (type.toLocaleLowerCase()) {
     case "bindung":

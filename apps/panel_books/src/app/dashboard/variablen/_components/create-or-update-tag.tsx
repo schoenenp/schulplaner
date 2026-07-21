@@ -3,7 +3,7 @@ import Modal from "@/app/_components/modal";
 import { PencilIcon, PlusIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { useState } from "react";
 import { api } from "@/trpc/react";
-import type { TagStatus, TagType } from "@prisma/client";
+import type { TagStatus, TagType } from "db";
 import { useRouter } from "next/navigation";
 
 type TagFormInputs = {

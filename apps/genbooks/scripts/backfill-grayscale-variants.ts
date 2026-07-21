@@ -12,7 +12,7 @@
  *   bun scripts/backfill-grayscale-variants.ts           # dry run
  *   bun scripts/backfill-grayscale-variants.ts --apply   # convert + write
  */
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "db";
 
 const CDN_BASE = "https://cdn.pirrot.de";
 const GRAYSCALE_ENDPOINT =

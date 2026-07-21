@@ -628,7 +628,7 @@ export default function BookConfig(props: {
   );
 
   const allModules = useMemo<AvailableModule[]>(
-    () => modules as AvailableModule[],
+    () => modules,
     [modules],
   );
 
@@ -1952,10 +1952,7 @@ export default function BookConfig(props: {
     );
   }
 
-  const partnerBookMeta = existingBook as typeof existingBook & {
-    partnerCampaignExpiresAt?: Date | string | null;
-    partnerOrderSubmittedAt?: Date | string | null;
-  };
+  const partnerBookMeta = existingBook;
   const partnerCampaignExpiresAt =
     existingBook.sourceType === "PARTNER_TEMPLATE" &&
     partnerBookMeta.partnerCampaignExpiresAt
@@ -2710,7 +2707,7 @@ export default function BookConfig(props: {
               <div className="p-1">
                 <ModuleChanger
                   items={pickedModules}
-                  modules={modules as never[]}
+                  modules={modules}
                   onItemsChange={(items) => setPickedModules(items)}
                   initialColorMap={moduleColorMap}
                   onColorMapChange={setModuleColorMap}

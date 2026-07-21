@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "db";
 import type Stripe from "stripe";
 import { stripeClient } from "@/server/stripe";
 import { env } from "@/env";

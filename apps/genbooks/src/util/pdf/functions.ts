@@ -1,4 +1,4 @@
-import type { BookPart } from "@prisma/client";
+import type { BookPart } from "db";
 import { PDFDocument } from "pdf-lib";
 import type { TagItem } from "@/app/dashboard/module/manage/_components/module-form";
 import { logger } from "@/util/logger";
@@ -8,7 +8,8 @@ export const fileToBase64 = (file: File): Promise<string> => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = () => resolve(reader.result as string);
-      reader.onerror = () => reject(reader.error as Error);
+      reader.onerror = () =>
+        reject(reader.error ?? new Error("Failed to read file"));
     });
   };
 

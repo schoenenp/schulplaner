@@ -1,4 +1,4 @@
-import type { BookPart } from "@prisma/client";
+import type { BookPart } from "db";
 import { logger } from "@/util/logger";
 const currentDate = new Date();
 const nextYearDate = new Date(currentDate);

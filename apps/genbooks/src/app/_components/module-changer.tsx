@@ -3,7 +3,7 @@
 import { Reorder } from "framer-motion"
 import { BookImage, CalendarDays, GripVertical, ShellIcon, XIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import type { BookPart } from "@prisma/client";
+import type { BookPart } from "db";
 import type { ConfigModules } from "@/util/book/configurator";
 
 type ModuleItem = {

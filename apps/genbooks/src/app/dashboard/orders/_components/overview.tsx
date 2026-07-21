@@ -1,7 +1,7 @@
 'use client'
 
 import { api } from "@/trpc/react"
-import type { OrderStatus, PaymentStatus } from "@prisma/client";
+import type { OrderStatus, PaymentStatus } from "db";
 import { Calendar, Package, CreditCard, Truck, CheckCircle, Clock, XCircle, AlertCircle, RefreshCw } from "lucide-react"
 import Link from "next/link";
 import { useState } from "react";

@@ -9,7 +9,7 @@
  *   bun scripts/backfill-file-page-counts.ts           # dry run, prints plan
  *   bun scripts/backfill-file-page-counts.ts --apply   # writes page counts
  */
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "db";
 import { PDFDocument } from "pdf-lib";
 
 const CDN_BASE = "https://cdn.pirrot.de";

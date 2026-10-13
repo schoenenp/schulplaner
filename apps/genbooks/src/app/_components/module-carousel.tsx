@@ -143,8 +143,8 @@ export default function ModuleCarousel(props: ModuleCarouselProps) {
   return (
     <>
       <Modal selector="modal-hook" show={previewModule !== null}>
-        <div className="bg-info-950/90 absolute top-0 left-0 z-[69] flex size-full items-center justify-center p-4">
-          <div className="content-card text-pirrot-blue-950 pointer-events-none z-[69] w-full max-w-3xl p-4">
+        <div className="bg-info-950/90 fixed inset-0 z-[69] flex items-center justify-center p-4">
+          <div className="content-card text-pirrot-blue-950 pointer-events-none z-[69] max-h-[calc(100dvh-2rem)] w-full max-w-3xl overflow-y-auto p-4 min-[1920px]:!max-w-[90rem] 2xl:max-w-6xl">
             <div className="pointer-events-auto flex flex-col gap-3">
               <div className="flex items-center justify-between gap-3">
                 <h3 className="min-w-0 truncate text-xl font-bold">
@@ -159,9 +159,13 @@ export default function ModuleCarousel(props: ModuleCarouselProps) {
                   <XIcon className="size-5" />
                 </button>
               </div>
-              <div className="field-shell flex min-h-[440px] w-full items-center justify-center overflow-hidden rounded">
+              <div className="field-shell flex min-h-0 w-full items-center justify-center overflow-hidden rounded">
                 {previewModule ? (
-                  <ModulePreview moduleId={previewModule.id} />
+                  <ModulePreview
+                    moduleId={previewModule.id}
+                    className="h-[min(60dvh,26.25rem)] 2xl:h-[min(78dvh,64rem)]"
+                    sizes="(min-width: 1920px) 1400px, (min-width: 1536px) 1120px, (max-width: 768px) 100vw, 720px"
+                  />
                 ) : null}
               </div>
             </div>
@@ -231,15 +235,15 @@ export default function ModuleCarousel(props: ModuleCarouselProps) {
                     <div
                       className={`absolute inset-x-0 top-0 h-1 ${accent.bar}`}
                     />
-                    <div className="grid min-h-[560px] grid-cols-1 lg:grid-cols-[2fr_1fr]">
+                    <div className="grid min-h-[560px] grid-cols-1 lg:grid-cols-[2fr_1fr] 2xl:min-h-[720px] 2xl:grid-cols-[minmax(0,1fr)_18rem]">
                       <button
                         type="button"
                         onClick={() => setPreviewModule(item)}
-                        className="field-shell group relative m-3 min-h-[360px] overflow-hidden rounded-lg text-left lg:min-h-[536px]"
+                        className="field-shell group relative m-3 min-h-[360px] overflow-hidden rounded-lg text-left lg:min-h-[536px] 2xl:min-h-[696px]"
                         aria-label={`${item.name} Vorschau öffnen`}
                       >
                         <Image
-                          className="object-cover transition duration-300 group-hover:scale-[1.02]"
+                          className="object-contain transition duration-300 group-hover:scale-[1.02]"
                           src={imageSrc}
                           alt={item.name}
                           fill

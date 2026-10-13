@@ -17,6 +17,7 @@ import type { ModulePickerItem } from "./module-item";
 
 type ModuleCarouselItem = ModulePickerItem & {
   booksCount?: number;
+  pageCount?: number | null;
 };
 
 type ModuleCarouselProps = {
@@ -27,6 +28,14 @@ type ModuleCarouselProps = {
     disabled: boolean;
     reason?: string;
   };
+};
+
+const MODULE_PART_LABELS: Record<string, string> = {
+  COVER: "Umschlag",
+  DEFAULT: "Inhalt",
+  PLANNER: "Kalendarium",
+  BINDING: "Bindung",
+  SETTINGS: "Planerinfo",
 };
 
 function getAccentClasses(moduleType: string): {
@@ -274,34 +283,31 @@ export default function ModuleCarousel(props: ModuleCarouselProps) {
                           </div>
 
                           <dl className="grid gap-2 text-sm">
-                            {item.theme ? (
-                              <div className="field-shell flex items-center justify-between gap-3 px-3 py-2">
-                                <dt className="text-info-800 font-bold">
-                                  Thema
-                                </dt>
-                                <dd className="text-right font-bold">
-                                  {item.theme}
-                                </dd>
-                              </div>
-                            ) : null}
-                            <div className="field-shell flex items-center justify-between gap-3 px-3 py-2">
+                            <div className="field-shell flex flex-wrap items-start justify-between gap-x-3 gap-y-1 px-3 py-2">
+                              <dt className="text-info-800 font-bold">Thema</dt>
+                              <dd className="min-w-0 text-right font-bold break-words">
+                                {item.theme ?? "Ohne Thema"}
+                              </dd>
+                            </div>
+                            <div className="field-shell flex flex-wrap items-start justify-between gap-x-3 gap-y-1 px-3 py-2">
                               <dt className="text-info-800 font-bold">
                                 Bereich
                               </dt>
-                              <dd className="text-right font-bold">
-                                {item.part}
+                              <dd className="min-w-0 text-right font-bold break-words">
+                                {MODULE_PART_LABELS[item.part] ?? item.part}
                               </dd>
                             </div>
-                            {typeof item.booksCount === "number" ? (
-                              <div className="field-shell flex items-center justify-between gap-3 px-3 py-2">
-                                <dt className="text-info-800 font-bold">
-                                  Verwendungen
-                                </dt>
-                                <dd className="text-right font-bold">
-                                  {item.booksCount}
-                                </dd>
-                              </div>
-                            ) : null}
+                            <div className="field-shell flex flex-wrap items-start justify-between gap-x-3 gap-y-1 px-3 py-2">
+                              <dt className="text-info-800 font-bold">
+                                Seitenzahl
+                              </dt>
+                              <dd className="min-w-0 text-right font-bold">
+                                {typeof item.pageCount === "number" &&
+                                item.pageCount > 0
+                                  ? `${item.pageCount} ${item.pageCount === 1 ? "Seite" : "Seiten"}`
+                                  : "Nicht verfügbar"}
+                              </dd>
+                            </div>
                           </dl>
 
                           {disabledState.disabled && disabledState.reason ? (
@@ -341,6 +347,22 @@ export default function ModuleCarousel(props: ModuleCarouselProps) {
                               </>
                             )}
                           </button>
+                          {typeof item.booksCount === "number" ? (
+                            <div className="text-info-800 mt-1 flex flex-wrap items-start gap-x-2 gap-y-1 border-t border-white/70 pt-3 text-xs">
+                              <span
+                                className="shrink-0 font-semibold"
+                                aria-label={`${item.booksCount} Verwendungen`}
+                              >
+                                <span aria-hidden="true">📒</span>{" "}
+                                {item.booksCount}
+                              </span>
+                              <p className="min-w-0 flex-1 basis-40">
+                                {item.booksCount === 0
+                                  ? "Noch in keinem Planer verwendet."
+                                  : `Bereits in ${item.booksCount} ${item.booksCount === 1 ? "Planer" : "Planern"} verwendet.`}
+                              </p>
+                            </div>
+                          ) : null}
                         </div>
                       </aside>
                     </div>

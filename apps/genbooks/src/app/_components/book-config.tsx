@@ -627,10 +627,7 @@ export default function BookConfig(props: {
     [currentStep, setOnlyPickedModules],
   );
 
-  const allModules = useMemo<AvailableModule[]>(
-    () => modules,
-    [modules],
-  );
+  const allModules = useMemo<AvailableModule[]>(() => modules, [modules]);
 
   const moduleLookupById = useMemo(
     () => new Map(allModules.map((moduleItem) => [moduleItem.id, moduleItem])),
@@ -1976,64 +1973,32 @@ export default function BookConfig(props: {
       <div
         className={`${modalId !== undefined && modalId !== "login-prompt" ? "blur" : ""} relative z-10 flex h-screen w-full flex-col justify-between overflow-hidden md:flex-row`}
       >
-        <div
-          className={`${isFilterOpen ? "sticky top-0 md:w-sm" : ""} border-pirrot-blue-950/10 bg-pirrot-blue-100/65 relative flex flex-col gap-2 overflow-y-auto border-b backdrop-blur-sm md:h-screen lg:border-r`}
+        <aside
+          aria-labelledby="planner-summary-heading"
+          className={`${isFilterOpen ? "md:w-sm" : ""} border-pirrot-blue-950/10 bg-pirrot-blue-100/65 relative flex flex-col gap-2 overflow-y-auto border-b backdrop-blur-sm md:h-screen md:border-r`}
         >
-          <div className="flex items-center gap-2 p-2">
-            {bookId ? (
-              <button
-                type="button"
-                onClick={() => setModalId("custom-modules")}
-                className="btn-solid p-2"
-                aria-label="Eigene Inhalte öffnen"
-                title="Eigene Inhalte"
-              >
-                <Plus className="size-5" />
-              </button>
-            ) : null}
+          <div className="flex items-center justify-between gap-2 p-2">
+            <h2 id="planner-summary-heading" className="font-bold">
+              Statistik &amp; Kosten
+            </h2>
             <button
               type="button"
               onClick={() => setIsFilterOpen((prev) => !prev)}
               className="btn-soft p-2"
+              aria-expanded={isFilterOpen}
+              aria-label={
+                isFilterOpen
+                  ? "Statistik und Kosten schließen"
+                  : "Statistik und Kosten öffnen"
+              }
             >
               {isFilterOpen ? <XIcon /> : <ChevronDown />}
             </button>
           </div>
 
           {isFilterOpen ? (
-            <div className="flex w-full flex-col gap-2 p-2 pt-0">
-              <div className="content-card flex flex-col gap-2 p-3">
-                <h3 className="font-bold">Aktueller Schritt</h3>
-                <p className={`text-xl font-bold ${STEP_ACCENTS[currentStep]}`}>
-                  {STEP_LABELS[currentStep]}
-                </p>
-                <p className="text-info-800 text-sm">
-                  {currentStepConfig.desc}
-                </p>
-                <div className="field-shell flex items-start gap-2 p-2 text-sm">
-                  <InfoIcon
-                    className={`mt-0.5 size-4 shrink-0 ${STEP_ACCENTS[currentStep]}`}
-                  />
-                  <p className="text-info-800">{currentStepConfig.hint}</p>
-                </div>
-              </div>
-
-              {currentStep !== "CHECKOUT" ? (
-                <>
-                  <SearchInput
-                    value={searchFilterValue}
-                    onChange={setSearchFilterValue}
-                    onClear={clearSearch}
-                  />
-                  <ToggleSwitch
-                    checked={onlyPickedModules}
-                    onChange={setOnlyPickedModules}
-                    label="Nur aktuelle Auswahl"
-                  />
-                </>
-              ) : null}
-
-              <div className="content-card flex flex-col gap-2 p-3">
+            <>
+              <div className="content-card mx-2 flex flex-col gap-2 p-3">
                 <h3 className="font-bold">Live-Hinweis</h3>
                 <p className="text-info-800 text-sm">
                   {liveChangeNotice ??
@@ -2076,9 +2041,101 @@ export default function BookConfig(props: {
                   </p>
                 ) : null}
               </div>
-            </div>
+
+              <div className="content-card mx-2 flex flex-col gap-2 p-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold">Kostenübersicht</h3>
+                  <button
+                    type="button"
+                    onClick={() => setIsCostOpen((prev) => !prev)}
+                    className="btn-soft p-1.5"
+                  >
+                    <ChevronDown
+                      className={`${isCostOpen ? "rotate-180" : ""} transition-transform`}
+                    />
+                  </button>
+                </div>
+                <div
+                  className={`field-shell p-3 ${isCostOpen ? "" : "hidden"}`}
+                >
+                  <div className="flex flex-col gap-1 text-sm">
+                    <h3>Seiten gesamt: {totalPagesCount}</h3>
+                    {liveDelta ? (
+                      <p className="text-info-800 text-xs">
+                        Änderung: {formatSignedPages(liveDelta.pageDelta)}
+                      </p>
+                    ) : null}
+                    <h5>Kosten: {(previewPrice.total / 100).toFixed(2)} €</h5>
+                    {liveDelta ? (
+                      <p className="text-info-800 text-xs">
+                        Preisänderung:{" "}
+                        {formatSignedEuroCents(liveDelta.priceDelta)}
+                      </p>
+                    ) : null}
+                    <h5>
+                      pro Planer: {(previewPrice.single / 100).toFixed(2)} €
+                    </h5>
+                    {isLiveCalculating ? (
+                      <p className="text-pirrot-blue-700">
+                        Live-Berechnung läuft…
+                      </p>
+                    ) : null}
+                    {liveCalculationError ? (
+                      <p className="text-pirrot-red-500">
+                        {liveCalculationError}
+                      </p>
+                    ) : null}
+                    {isCheckoutPreviewStale ? (
+                      <p className="text-warning-800">
+                        Vorschau und exakte Seitenzahl sind nach den letzten
+                        Änderungen veraltet.
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <button
+                    className="btn-soft flex gap-2 px-4 py-2"
+                    type="button"
+                    disabled={isMakingPreview || !isConfigComplete}
+                    onClick={() => void refreshCheckoutPreview()}
+                  >
+                    Vorschau neu
+                    {isMakingPreview ? (
+                      <LoaderCircle className="size-4 animate-spin" />
+                    ) : null}
+                  </button>
+                  {previewFileURL ? (
+                    <button
+                      type="button"
+                      onClick={() => setModalId("preview")}
+                      className="btn-soft p-2"
+                    >
+                      <EyeIcon />
+                    </button>
+                  ) : null}
+                </div>
+
+                {configWarnings.length > 0 ? (
+                  <div className="mt-2 flex flex-col gap-2">
+                    {configWarnings.map((warning, index) => (
+                      <button
+                        key={warning}
+                        id={`warning-${index}`}
+                        type="button"
+                        onClick={handleConfigWarning}
+                        className="border-pirrot-red-500/50 bg-pirrot-red-300/80 flex w-full gap-2 rounded border p-2 text-start text-sm"
+                      >
+                        <XIcon className="size-4 shrink-0" />
+                        <span>{warning}</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            </>
           ) : null}
-        </div>
+        </aside>
 
         <div
           ref={mainContentRef}
@@ -2563,21 +2620,79 @@ export default function BookConfig(props: {
           </div>
         </div>
 
-        <div
-          className={`${isBookInfoOpen ? "h-full lg:w-sm" : ""} border-pirrot-blue-950/10 bg-pirrot-blue-100/65 relative flex flex-col gap-2 overflow-y-auto border-t backdrop-blur-sm md:h-screen lg:border-l`}
+        <aside
+          aria-labelledby="planner-config-heading"
+          className={`${isBookInfoOpen ? "h-full md:w-sm" : ""} border-pirrot-blue-950/10 bg-pirrot-blue-100/65 relative flex flex-col gap-2 overflow-y-auto border-t backdrop-blur-sm md:h-screen md:border-l`}
         >
-          <div className="p-2">
-            <button
-              type="button"
-              onClick={() => setIsBookInfoOpen((prev) => !prev)}
-              className="btn-soft p-2"
-            >
-              <BookA className="size-5" />
-            </button>
+          <div className="flex items-center justify-between gap-2 p-2">
+            <h2 id="planner-config-heading" className="font-bold">
+              Planer konfigurieren
+            </h2>
+            <div className="flex items-center gap-2">
+              {bookId ? (
+                <button
+                  type="button"
+                  onClick={() => setModalId("custom-modules")}
+                  className="btn-solid p-2"
+                  aria-label="Eigene Inhalte öffnen"
+                  title="Eigene Inhalte"
+                >
+                  <Plus className="size-5" />
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => setIsBookInfoOpen((prev) => !prev)}
+                className="btn-soft p-2"
+                aria-expanded={isBookInfoOpen}
+                aria-label={
+                  isBookInfoOpen
+                    ? "Planerkonfiguration schließen"
+                    : "Planerkonfiguration öffnen"
+                }
+              >
+                <BookA className="size-5" />
+              </button>
+            </div>
           </div>
 
           {isBookInfoOpen ? (
             <>
+              <div className="flex flex-col gap-2 px-2">
+                <div className="content-card flex flex-col gap-2 p-3">
+                  <h3 className="font-bold">Aktueller Schritt</h3>
+                  <p
+                    className={`text-xl font-bold ${STEP_ACCENTS[currentStep]}`}
+                  >
+                    {STEP_LABELS[currentStep]}
+                  </p>
+                  <p className="text-info-800 text-sm">
+                    {currentStepConfig.desc}
+                  </p>
+                  <div className="field-shell flex items-start gap-2 p-2 text-sm">
+                    <InfoIcon
+                      className={`mt-0.5 size-4 shrink-0 ${STEP_ACCENTS[currentStep]}`}
+                    />
+                    <p className="text-info-800">{currentStepConfig.hint}</p>
+                  </div>
+                </div>
+
+                {currentStep !== "CHECKOUT" ? (
+                  <>
+                    <SearchInput
+                      value={searchFilterValue}
+                      onChange={setSearchFilterValue}
+                      onClear={clearSearch}
+                    />
+                    <ToggleSwitch
+                      checked={onlyPickedModules}
+                      onChange={setOnlyPickedModules}
+                      label="Nur aktuelle Auswahl"
+                    />
+                  </>
+                ) : null}
+              </div>
+
               <div className="content-card mx-2 flex flex-col gap-3 p-3">
                 <div className="flex flex-col gap-2">
                   <h3 className="font-bold">Stückzahl</h3>
@@ -2610,98 +2725,6 @@ export default function BookConfig(props: {
                     </button>
                   </div>
                 </div>
-              </div>
-
-              <div className="content-card mx-2 flex flex-col gap-2 p-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold">Kostenübersicht</h3>
-                  <button
-                    type="button"
-                    onClick={() => setIsCostOpen((prev) => !prev)}
-                    className="btn-soft p-1.5"
-                  >
-                    <ChevronDown
-                      className={`${isCostOpen ? "rotate-180" : ""} transition-transform`}
-                    />
-                  </button>
-                </div>
-                <div
-                  className={`field-shell p-3 ${isCostOpen ? "" : "hidden"}`}
-                >
-                  <div className="flex flex-col gap-1 text-sm">
-                    <h3>Seiten gesamt: {totalPagesCount}</h3>
-                    {liveDelta ? (
-                      <p className="text-info-800 text-xs">
-                        Änderung: {formatSignedPages(liveDelta.pageDelta)}
-                      </p>
-                    ) : null}
-                    <h5>Kosten: {(previewPrice.total / 100).toFixed(2)} €</h5>
-                    {liveDelta ? (
-                      <p className="text-info-800 text-xs">
-                        Preisänderung:{" "}
-                        {formatSignedEuroCents(liveDelta.priceDelta)}
-                      </p>
-                    ) : null}
-                    <h5>
-                      pro Planer: {(previewPrice.single / 100).toFixed(2)} €
-                    </h5>
-                    {isLiveCalculating ? (
-                      <p className="text-pirrot-blue-700">
-                        Live-Berechnung läuft…
-                      </p>
-                    ) : null}
-                    {liveCalculationError ? (
-                      <p className="text-pirrot-red-500">
-                        {liveCalculationError}
-                      </p>
-                    ) : null}
-                    {isCheckoutPreviewStale ? (
-                      <p className="text-warning-800">
-                        Vorschau und exakte Seitenzahl sind nach den letzten
-                        Änderungen veraltet.
-                      </p>
-                    ) : null}
-                  </div>
-                </div>
-                <div className="flex items-center justify-between gap-2">
-                  <button
-                    className="btn-soft flex gap-2 px-4 py-2"
-                    type="button"
-                    disabled={isMakingPreview || !isConfigComplete}
-                    onClick={() => void refreshCheckoutPreview()}
-                  >
-                    Vorschau neu
-                    {isMakingPreview ? (
-                      <LoaderCircle className="size-4 animate-spin" />
-                    ) : null}
-                  </button>
-                  {previewFileURL ? (
-                    <button
-                      type="button"
-                      onClick={() => setModalId("preview")}
-                      className="btn-soft p-2"
-                    >
-                      <EyeIcon />
-                    </button>
-                  ) : null}
-                </div>
-
-                {configWarnings.length > 0 ? (
-                  <div className="mt-2 flex flex-col gap-2">
-                    {configWarnings.map((warning, index) => (
-                      <button
-                        key={warning}
-                        id={`warning-${index}`}
-                        type="button"
-                        onClick={handleConfigWarning}
-                        className="border-pirrot-red-500/50 bg-pirrot-red-300/80 flex w-full gap-2 rounded border p-2 text-start text-sm"
-                      >
-                        <XIcon className="size-4 shrink-0" />
-                        <span>{warning}</span>
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
               </div>
 
               <div className="p-1">
@@ -2751,7 +2774,7 @@ export default function BookConfig(props: {
               </div>
             </>
           ) : null}
-        </div>
+        </aside>
       </div>
 
       <Modal

@@ -13,9 +13,9 @@ type ModalType =
 
 export function useUIState() {
   const [modalId, setModalId] = useState<ModalType>();
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [isBookInfoOpen, setIsBookInfoOpen] = useState(false);
-  const [isCostOpen, setIsCostOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(true);
+  const [isBookInfoOpen, setIsBookInfoOpen] = useState(true);
+  const [isCostOpen, setIsCostOpen] = useState(true);
   const [onlyPickedModules, setOnlyPickedModules] = useState(false);
   const [previewFileURL, setPreviewFileURL] = useState<string | undefined>();
   const [configWarnings, setConfigWarnings] = useState<string[]>([]);

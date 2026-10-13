@@ -2011,6 +2011,26 @@ export default function BookConfig(props: {
 
           {isFilterOpen ? (
             <>
+              <div className="mx-2 grid gap-2">
+                <button
+                  type="button"
+                  onClick={() => setModalId("info")}
+                  className="btn-soft flex items-center gap-2 px-3 py-2.5"
+                >
+                  <InfoIcon className="size-5" />
+                  <span className="text-sm font-semibold">Planerinfo</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setModalId(isLoggedIn ? "dates" : "login-prompt")
+                  }
+                  className="btn-soft flex items-center gap-2 px-3 py-2.5"
+                >
+                  <CalendarDays className="size-5" />
+                  <span className="text-sm font-semibold">Termine</span>
+                </button>
+              </div>
               <div className="content-card mx-2 flex flex-col gap-2 p-3">
                 <h3 className="font-bold">Live-Hinweis</h3>
                 <p className="text-info-800 text-sm">
@@ -2195,34 +2215,6 @@ export default function BookConfig(props: {
                 >
                   {nameInput} <PenBox className="size-8 lg:size-9" />
                 </button>
-                <div className="flex items-center gap-2 sm:gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setModalId("info")}
-                    className="btn-soft flex items-center gap-2 p-2"
-                  >
-                    <InfoIcon className="size-5" />
-                    <span className="hidden sm:block">Planerinfo</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setModalId(isLoggedIn ? "dates" : "login-prompt")
-                    }
-                    className="btn-soft flex items-center gap-2 p-2"
-                  >
-                    <CalendarDays className="size-5" />
-                    <span className="hidden sm:block">Termine</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsBookInfoOpen((prev) => !prev)}
-                    className="btn-soft flex items-center gap-2 p-2"
-                  >
-                    <BookA className="size-5" />
-                    <span className="hidden sm:block">Buchaufbau</span>
-                  </button>
-                </div>
               </div>
 
               <hr className="w-full rounded-full border border-white/50" />

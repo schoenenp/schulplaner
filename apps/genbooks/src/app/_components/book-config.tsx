@@ -1975,10 +1975,13 @@ export default function BookConfig(props: {
       >
         <aside
           aria-labelledby="planner-summary-heading"
-          className={`${isFilterOpen ? "md:w-sm" : ""} border-pirrot-blue-950/10 bg-pirrot-blue-100/65 relative flex flex-col gap-2 overflow-y-auto border-b backdrop-blur-sm md:h-screen md:border-r`}
+          className={`${isFilterOpen ? "md:w-60 2xl:w-72" : ""} border-pirrot-blue-950/10 bg-pirrot-blue-100/65 relative flex flex-col gap-2 overflow-y-auto border-b backdrop-blur-sm md:h-screen md:shrink-0 md:border-r`}
         >
           <div className="flex items-center justify-between gap-2 p-2">
-            <h2 id="planner-summary-heading" className="font-bold">
+            <h2
+              id="planner-summary-heading"
+              className={`${isFilterOpen ? "" : "md:hidden"} text-sm font-bold`}
+            >
               Statistik &amp; Kosten
             </h2>
             <button
@@ -2139,7 +2142,7 @@ export default function BookConfig(props: {
 
         <div
           ref={mainContentRef}
-          className="flex w-full max-w-screen-2xl flex-[5] flex-col gap-8 overflow-y-auto"
+          className="flex min-w-0 flex-1 flex-col gap-8 overflow-y-auto"
         >
           <div className="flex w-full flex-col gap-8 p-2 lg:p-4">
             {showPartnerTemplateBanner ? (
@@ -2622,10 +2625,13 @@ export default function BookConfig(props: {
 
         <aside
           aria-labelledby="planner-config-heading"
-          className={`${isBookInfoOpen ? "h-full md:w-sm" : ""} border-pirrot-blue-950/10 bg-pirrot-blue-100/65 relative flex flex-col gap-2 overflow-y-auto border-t backdrop-blur-sm md:h-screen md:border-l`}
+          className={`${isBookInfoOpen ? "h-full md:w-72 2xl:w-80" : ""} border-pirrot-blue-950/10 bg-pirrot-blue-100/65 relative flex flex-col gap-2 overflow-y-auto border-t backdrop-blur-sm md:h-screen md:shrink-0 md:border-l`}
         >
           <div className="flex items-center justify-between gap-2 p-2">
-            <h2 id="planner-config-heading" className="font-bold">
+            <h2
+              id="planner-config-heading"
+              className={`${isBookInfoOpen ? "" : "md:hidden"} text-sm font-bold`}
+            >
               Planer konfigurieren
             </h2>
             <div className="flex items-center gap-2">

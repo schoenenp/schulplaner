@@ -1694,11 +1694,18 @@ export default function BookConfig(props: {
         );
       case "custom-modules":
         return bookId ? (
-          <div className="text-info-950 w-full max-w-5xl p-3">
-            <div className="content-card flex flex-col gap-4 p-3">
-              <div className="flex items-center justify-between gap-3">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="custom-modules-title"
+            className="text-info-950 flex max-h-[calc(100dvh-2rem)] w-full max-w-5xl flex-col"
+          >
+            <div className="content-card flex min-h-0 flex-col gap-4 overflow-hidden p-3">
+              <div className="flex shrink-0 items-center justify-between gap-3">
                 <div>
-                  <h3 className="text-2xl font-bold">Eigene Inhalte</h3>
+                  <h3 id="custom-modules-title" className="text-2xl font-bold">
+                    Eigene Inhalte
+                  </h3>
                   <p className="text-info-800 text-sm">
                     Eigene PDFs anlegen und direkt in die normale Modulauswahl
                     übernehmen.
@@ -1707,21 +1714,24 @@ export default function BookConfig(props: {
                 <button
                   type="button"
                   onClick={() => setModalId(undefined)}
-                  className="btn-soft rounded p-2"
+                  className="btn-soft shrink-0 rounded p-2"
+                  aria-label="Eigene Inhalte schließen"
                 >
                   <XIcon className="size-6" />
                 </button>
               </div>
-              <UserModules
-                bookId={bookId}
-                existingTips={matchingTips}
-                onCreated={() => {
-                  setModalId(undefined);
-                  announceChange(
-                    "Eigenes Modul gespeichert. Es erscheint jetzt direkt in der Auswahl.",
-                  );
-                }}
-              />
+              <div className="min-h-0 overflow-y-auto overscroll-contain">
+                <UserModules
+                  bookId={bookId}
+                  existingTips={matchingTips}
+                  onCreated={() => {
+                    setModalId(undefined);
+                    announceChange(
+                      "Eigenes Modul gespeichert. Es erscheint jetzt direkt in der Auswahl.",
+                    );
+                  }}
+                />
+              </div>
             </div>
           </div>
         ) : null;
@@ -2787,10 +2797,18 @@ export default function BookConfig(props: {
         selector="modal-hook"
         show={modalId !== undefined && modalId !== "login-prompt"}
       >
-        <div className="absolute top-0 left-0 z-[69] flex h-full w-full items-center justify-center">
-          <div className="bg-info-950/95 flex size-full items-center justify-center">
-            {renderModalContent()}
-          </div>
+        <div
+          className="bg-info-950/95 fixed inset-0 z-[69] flex items-center justify-center p-4"
+          onClick={(event) => {
+            if (
+              modalId === "custom-modules" &&
+              event.target === event.currentTarget
+            ) {
+              setModalId(undefined);
+            }
+          }}
+        >
+          {renderModalContent()}
         </div>
       </Modal>
 

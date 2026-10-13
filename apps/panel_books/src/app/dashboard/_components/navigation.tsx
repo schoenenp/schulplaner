@@ -131,16 +131,14 @@ export default function Navigation() {
   }
 
   return (
-    <aside className="glass-card relative z-10 h-fit w-full shrink-0 overflow-hidden lg:sticky lg:top-6 lg:w-72 xl:w-80">
+    <aside className="glass-card relative z-10 h-fit w-full shrink-0 overflow-hidden lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:w-52 lg:overflow-y-auto 2xl:w-56">
       <div className="dashboard-grid pointer-events-none absolute inset-0 opacity-25" />
-      <div className="relative z-10 flex items-center justify-between gap-3 border-b border-pirrot-blue-200/10 px-4 py-4 sm:px-5">
+      <div className="relative z-10 flex items-center justify-between gap-3 border-b border-pirrot-blue-200/10 px-4 py-3">
         <div className="min-w-0">
           <p className="compact-label truncate text-xs font-semibold uppercase text-pirrot-blue-200/75">
             Panel Books
           </p>
-          <h1 className="truncate text-xl font-bold text-white sm:text-2xl">
-            Staff Panel
-          </h1>
+          <h1 className="truncate text-xl font-bold text-white">Staff Panel</h1>
         </div>
         <button
           type="button"
@@ -157,9 +155,9 @@ export default function Navigation() {
       </div>
 
       <div
-        className={`${isOpen ? "flex" : "hidden"} relative z-10 flex-col gap-5 p-3 sm:p-4 lg:flex`}
+        className={`${isOpen ? "flex" : "hidden"} relative z-10 flex-col gap-4 p-3 lg:flex`}
       >
-        <nav className="flex flex-col gap-4">
+        <nav className="flex flex-col gap-3">
           {NAV_GROUPS.map((group) => (
             <div key={group.label} className="flex flex-col gap-1.5">
               <p className="compact-label px-3 text-[11px] font-semibold uppercase text-pirrot-blue-200/55">
@@ -178,7 +176,7 @@ export default function Navigation() {
                     onClick={handleNavigate}
                     aria-current={isActive ? "page" : undefined}
                     className={[
-                      "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition",
+                      "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold transition",
                       isActive
                         ? "bg-pirrot-blue-500 text-white shadow-lg shadow-pirrot-blue-950/35"
                         : "text-pirrot-blue-100/85 hover:bg-pirrot-blue-950/80 hover:text-white",
@@ -200,7 +198,7 @@ export default function Navigation() {
           ))}
         </nav>
 
-        <div className="glass-card-soft flex flex-col gap-3 p-4">
+        <div className="glass-card-soft hidden flex-col gap-3 p-4 2xl:flex">
           <div className="badge-shell w-fit">Workspace</div>
           <p className="text-sm text-pirrot-blue-100/80">
             Bestellungen, Kunden, Partner-Fulfillment und der komplette

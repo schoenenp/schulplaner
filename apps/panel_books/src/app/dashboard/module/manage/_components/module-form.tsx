@@ -126,7 +126,7 @@ function Tag({ id, name, output, onClick, variant = "available" }: TagProps) {
       type="button"
       onClick={() => onClick?.({ id, name, output })}
       className={[
-        "rounded-lg border px-3 py-2 text-left text-sm transition",
+        "max-w-full break-words rounded-lg border px-3 py-2 text-left text-sm transition",
         isSelected
           ? "border-pirrot-blue-300/25 bg-pirrot-blue-100 text-pirrot-blue-900 hover:border-pirrot-red-300/40 hover:bg-pirrot-red-100"
           : "border-pirrot-blue-200/12 bg-pirrot-blue-950/70 text-pirrot-blue-100 hover:border-pirrot-blue-300/30 hover:bg-pirrot-blue-900/75",
@@ -452,14 +452,12 @@ export default function ModuleForm({ moduleId }: { moduleId?: string }) {
   ];
 
   return (
-    <div className="grid min-h-0 gap-5 xl:grid-cols-[minmax(20rem,28rem)_minmax(0,1fr)]">
-      <div className="glass-card-soft min-h-0 overflow-hidden">
-        <div className="flex h-full flex-col p-5 lg:p-6">
-          <div className="border-b border-pirrot-blue-200/10 pb-5">
+    <div className="grid min-h-0 min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] 2xl:gap-5">
+      <div className="glass-card-soft min-h-0 min-w-0">
+        <div className="flex flex-col p-4 2xl:p-5">
+          <div className="border-b border-pirrot-blue-200/10 pb-4">
             <div className="badge-shell w-fit">Module workspace</div>
-            <h3 className="mt-3 text-2xl font-black text-white sm:text-3xl">
-              {moduleId ? "Bestehendes Modul pflegen" : "Neues Modul anlegen"}
-            </h3>
+            <h3 className="mt-2 text-xl font-bold text-white">Moduldetails</h3>
             <p className="text-pirrot-blue-100/72 mt-3 text-sm leading-6">
               Formulardaten, Dateiupload und Vorschau sind in einer Ansicht
               gebündelt. PDF-Felder werden beim Hochladen direkt mit vorhandenen
@@ -469,7 +467,7 @@ export default function ModuleForm({ moduleId }: { moduleId?: string }) {
 
           <form
             onSubmit={handleSubmit}
-            className="mt-6 flex min-h-0 flex-1 flex-col gap-6"
+            className="mt-4 flex min-h-0 flex-1 flex-col gap-5"
           >
             <div className="grid gap-4">
               <div>
@@ -484,7 +482,7 @@ export default function ModuleForm({ moduleId }: { moduleId?: string }) {
                 />
               </div>
 
-              <div className="grid gap-4 lg:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-pirrot-blue-100">
                     Typ
@@ -554,7 +552,7 @@ export default function ModuleForm({ moduleId }: { moduleId?: string }) {
                 <label className="mb-2 block text-sm font-semibold text-pirrot-blue-100">
                   Sichtbarkeit
                 </label>
-                <div className="grid gap-2 sm:grid-cols-3">
+                <div className="grid grid-cols-3 gap-2">
                   {visibilityOptions.map((option) => {
                     const isActive = visible === option.value;
 
@@ -565,7 +563,7 @@ export default function ModuleForm({ moduleId }: { moduleId?: string }) {
                         aria-pressed={isActive}
                         onClick={() => setVisible(option.value)}
                         className={[
-                          "rounded-lg px-3 py-3 text-sm font-semibold transition",
+                          "rounded-lg px-2 py-2.5 text-sm font-semibold transition",
                           isActive
                             ? "bg-pirrot-blue-500 text-white shadow-lg shadow-pirrot-blue-950/30"
                             : "field-shell text-pirrot-blue-100 hover:border-pirrot-blue-300/30 hover:bg-pirrot-blue-900/75",
@@ -580,7 +578,7 @@ export default function ModuleForm({ moduleId }: { moduleId?: string }) {
             </div>
 
             {selectedType ? (
-              <div className="grid gap-3 sm:grid-cols-3">
+              <div className="grid gap-2 sm:grid-cols-3">
                 <div className="field-shell p-4">
                   <div className="flex items-center gap-2 text-pirrot-blue-100/75">
                     <DocumentTextIcon className="size-4" />
@@ -588,7 +586,7 @@ export default function ModuleForm({ moduleId }: { moduleId?: string }) {
                       Seitenregel
                     </span>
                   </div>
-                  <p className="mt-3 text-lg font-bold text-white">
+                  <p className="mt-2 break-words text-base font-bold text-white">
                     {getPageRules({
                       min: selectedType.minPages,
                       max: selectedType.maxPages,
@@ -602,7 +600,7 @@ export default function ModuleForm({ moduleId }: { moduleId?: string }) {
                       Thema
                     </span>
                   </div>
-                  <p className="mt-3 text-lg font-bold text-white">
+                  <p className="mt-2 break-words text-base font-bold text-white">
                     {theme.trim() || "noch offen"}
                   </p>
                 </div>
@@ -613,15 +611,15 @@ export default function ModuleForm({ moduleId }: { moduleId?: string }) {
                       Tags
                     </span>
                   </div>
-                  <p className="mt-3 text-lg font-bold text-white">
+                  <p className="mt-2 break-words text-base font-bold text-white">
                     {allowedTags.length}
                   </p>
                 </div>
               </div>
             ) : null}
 
-            <div className="grid gap-4 xl:grid-cols-2">
-              <div className="field-shell min-h-52 p-1">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="field-shell min-h-40 p-1">
                 {file.data ? (
                   <div
                     className="group relative flex size-full cursor-pointer flex-col items-center justify-center rounded-lg border border-pirrot-blue-200/10 bg-pirrot-blue-950/55 px-4 text-center text-pirrot-blue-100 transition hover:border-pirrot-blue-300/30 hover:bg-pirrot-blue-900/70"
@@ -648,7 +646,7 @@ export default function ModuleForm({ moduleId }: { moduleId?: string }) {
                 )}
               </div>
 
-              <div className="field-shell min-h-52 p-1">
+              <div className="field-shell min-h-40 p-1">
                 {thumbnail.data ? (
                   <div
                     className="group relative flex size-full cursor-pointer flex-col overflow-hidden rounded-lg border border-pirrot-blue-200/10 bg-pirrot-blue-950/55"
@@ -675,9 +673,9 @@ export default function ModuleForm({ moduleId }: { moduleId?: string }) {
               </div>
             </div>
 
-            <div className="grid gap-4 xl:grid-cols-2">
+            <div className="grid gap-4 2xl:grid-cols-2">
               <div className="field-shell p-4">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="compact-label text-xs font-semibold uppercase text-pirrot-blue-200/70">
                       Erkannte Tags
@@ -716,7 +714,7 @@ export default function ModuleForm({ moduleId }: { moduleId?: string }) {
               </div>
 
               <div className="field-shell p-4">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="compact-label text-xs font-semibold uppercase text-pirrot-blue-200/70">
                       Verfügbar
@@ -784,9 +782,9 @@ export default function ModuleForm({ moduleId }: { moduleId?: string }) {
         </div>
       </div>
 
-      <div className="glass-card-soft min-h-[60vh] overflow-hidden">
-        <div className="flex h-full flex-col">
-          <div className="flex items-start justify-between gap-3 border-b border-pirrot-blue-200/10 px-5 py-4">
+      <div className="glass-card-soft min-w-0 overflow-hidden xl:sticky xl:top-4">
+        <div className="flex flex-col">
+          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-pirrot-blue-200/10 px-5 py-4">
             <div>
               <p className="compact-label text-xs font-semibold uppercase text-pirrot-blue-200/70">
                 Live Preview
@@ -798,14 +796,15 @@ export default function ModuleForm({ moduleId }: { moduleId?: string }) {
             {pdfFileUrl ? <span className="badge-shell">bereit</span> : null}
           </div>
 
-          <div className="flex flex-1 items-center justify-center p-4">
+          <div className="flex min-w-0 items-center justify-center p-3">
             {pdfFileUrl ? (
               <iframe
                 src={pdfFileUrl}
-                className="h-[72vh] w-full rounded-lg border border-pirrot-blue-200/10 bg-white"
+                title="Dokumentvorschau"
+                className="h-[min(72dvh,52rem)] min-h-80 w-full rounded-lg border border-pirrot-blue-200/10 bg-white"
               />
             ) : (
-              <div className="field-shell flex h-full min-h-[24rem] w-full flex-col items-center justify-center gap-4 px-6 text-center">
+              <div className="field-shell flex h-[min(72dvh,52rem)] min-h-80 w-full flex-col items-center justify-center gap-4 px-6 text-center">
                 <div className="bg-pirrot-blue-500/12 flex size-16 items-center justify-center rounded-full text-pirrot-blue-100/70">
                   <DocumentTextIcon className="size-8" />
                 </div>

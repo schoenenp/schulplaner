@@ -1,4 +1,5 @@
 import BookConfig from "../_components/book-config";
+import Navigation from "../_components/navigation";
 import { api, HydrateClient } from "@/trpc/server";
 import { auth } from "@/server/auth";
 
@@ -17,8 +18,9 @@ export default async function ConfigPage({
 
   return (
     <HydrateClient>
-      <main className="from-pirrot-blue-50 to-pirrot-blue-100/20 text-info-900 relative min-h-screen w-full overflow-hidden bg-gradient-to-b">
+      <main className="from-pirrot-blue-50 to-pirrot-blue-100/20 text-info-900 relative flex h-dvh w-full flex-col overflow-hidden bg-gradient-to-b">
         <div className="subtle-grid pointer-events-none absolute inset-0 opacity-30" />
+        <Navigation />
         <BookConfig
           bookId={bookId}
           isLoggedIn={isLoggedIn}

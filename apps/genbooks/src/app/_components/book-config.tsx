@@ -1938,7 +1938,7 @@ export default function BookConfig(props: {
 
   if (!existingBook) {
     return (
-      <div className="relative flex h-screen w-full flex-col items-center justify-center gap-8 overflow-hidden">
+      <div className="relative flex min-h-0 w-full flex-1 flex-col items-center justify-center gap-8 overflow-hidden">
         <h2 className="text-pirrot-red-400 text-2xl font-bold">
           Kein Buch gefunden.
         </h2>
@@ -1981,11 +1981,11 @@ export default function BookConfig(props: {
   return (
     <>
       <div
-        className={`${modalId !== undefined && modalId !== "login-prompt" ? "blur" : ""} relative z-10 flex h-screen w-full flex-col justify-between overflow-hidden md:flex-row`}
+        className={`${modalId !== undefined && modalId !== "login-prompt" ? "blur" : ""} relative z-10 flex min-h-0 w-full flex-1 flex-col justify-between overflow-hidden md:flex-row`}
       >
         <aside
           aria-labelledby="planner-summary-heading"
-          className={`${isFilterOpen ? "md:w-60 2xl:w-72" : ""} border-pirrot-blue-950/10 bg-pirrot-blue-100/65 relative flex flex-col gap-2 overflow-y-auto border-b backdrop-blur-sm md:h-screen md:shrink-0 md:border-r`}
+          className={`${isFilterOpen ? "md:w-60 2xl:w-72" : ""} border-pirrot-blue-950/10 bg-pirrot-blue-100/65 relative flex flex-col gap-2 overflow-y-auto border-b backdrop-blur-sm md:h-full md:shrink-0 md:border-r`}
         >
           <div className="flex items-center justify-between gap-2 p-2">
             <h2
@@ -2627,7 +2627,7 @@ export default function BookConfig(props: {
 
         <aside
           aria-labelledby="planner-config-heading"
-          className={`${isBookInfoOpen ? "h-full md:w-72 2xl:w-80" : ""} border-pirrot-blue-950/10 bg-pirrot-blue-100/65 relative flex flex-col gap-2 overflow-y-auto border-t backdrop-blur-sm md:h-screen md:shrink-0 md:border-l`}
+          className={`${isBookInfoOpen ? "h-full md:w-72 2xl:w-80" : ""} border-pirrot-blue-950/10 bg-pirrot-blue-100/65 relative flex flex-col gap-2 overflow-y-auto border-t backdrop-blur-sm md:h-full md:shrink-0 md:border-l`}
         >
           <div className="flex items-center justify-between gap-2 p-2">
             <h2

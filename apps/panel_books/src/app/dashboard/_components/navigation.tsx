@@ -72,6 +72,12 @@ const NAV_GROUPS: NavGroup[] = [
     label: "Partner",
     items: [
       {
+        href: "/dashboard/partner-info",
+        label: "Für Partner",
+        icon: QuestionMarkCircleIcon,
+        matches: ["/dashboard/partner-info"],
+      },
+      {
         href: "/dashboard/fulfillment",
         label: "Fulfillment",
         icon: TruckIcon,

@@ -49,9 +49,9 @@ export default function StartConfig({
           Schulalltag.
         </p>
       </section>
-      <HowItWorks />
-
       <TemplateGallery />
+
+      <HowItWorks />
 
       <section className="section-shell w-full py-2">
         <div className="content-card grid min-h-[640px] w-full grid-cols-1 items-center justify-center gap-8 p-3 py-8 lg:grid-cols-3 lg:p-6">

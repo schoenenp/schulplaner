@@ -46,11 +46,6 @@ export default function Footer() {
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/partner-info" className="text-info-700 hover:text-pirrot-red-500 transition-colors">
-                                    Partner-Programm Info
-                                </Link>
-                            </li>
-                            <li>
                                 <Link href="/module-docs" className="text-info-700 hover:text-pirrot-red-500 transition-colors">
                                     Modul-Dokumentation
                                 </Link>

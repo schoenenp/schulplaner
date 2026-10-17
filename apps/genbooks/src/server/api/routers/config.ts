@@ -1115,7 +1115,24 @@ export const configRouter = createTRPCRouter({
         },
         include: {
           _count: {
-            select: { books: true },
+            select: {
+              books: {
+                where: {
+                  book: {
+                    isTemplate: false,
+                    ordered: {
+                      some: {
+                        order: {
+                          deletedAt: null,
+                          canceledAt: null,
+                          status: { in: ["PENDING", "COMPLETED", "SHIPPED"] },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
           type: true,
           files: true,

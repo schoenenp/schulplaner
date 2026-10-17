@@ -351,7 +351,8 @@ export default function ModuleCarousel(props: ModuleCarouselProps) {
                               </>
                             )}
                           </button>
-                          {typeof item.booksCount === "number" ? (
+                          {typeof item.booksCount === "number" &&
+                          item.booksCount > 0 ? (
                             <div className="text-info-800 mt-1 flex flex-wrap items-start gap-x-2 gap-y-1 border-t border-white/70 pt-3 text-xs">
                               <span
                                 className="shrink-0 font-semibold"
@@ -361,9 +362,7 @@ export default function ModuleCarousel(props: ModuleCarouselProps) {
                                 {item.booksCount}
                               </span>
                               <p className="min-w-0 flex-1 basis-40">
-                                {item.booksCount === 0
-                                  ? "Noch in keinem Planer verwendet."
-                                  : `Bereits in ${item.booksCount} ${item.booksCount === 1 ? "Planer" : "Planern"} verwendet.`}
+                                {`Bereits in ${item.booksCount} ${item.booksCount === 1 ? "bestelltem Planer" : "bestellten Planern"} verwendet.`}
                               </p>
                             </div>
                           ) : null}

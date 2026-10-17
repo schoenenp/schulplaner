@@ -30,6 +30,8 @@ function buildBookWhere(
   const query = input.query && input.query.length > 0 ? input.query : undefined;
 
   return {
+    // Catalog templates stay visible; guest planner drafts do not.
+    AND: [{ OR: [{ isTemplate: true }, { createdById: { not: null } }] }],
     ...(input.includeDeleted ? {} : { deletedAt: null }),
     ...(input.kind === "TEMPLATE" ? { isTemplate: true } : {}),
     ...(input.kind === "PLANNER" ? { isTemplate: false } : {}),
@@ -62,7 +64,9 @@ export const plannerRouter = createTRPCRouter({
       ctx.db.book.count({
         where: { deletedAt: null, isTemplate: true, isFeatured: true },
       }),
-      ctx.db.book.count({ where: { deletedAt: null, isTemplate: false } }),
+      ctx.db.book.count({
+        where: { deletedAt: null, isTemplate: false, createdById: { not: null } },
+      }),
       ctx.db.module.count({ where: { deletedAt: null } }),
       ctx.db.module.groupBy({
         by: ["visible"],

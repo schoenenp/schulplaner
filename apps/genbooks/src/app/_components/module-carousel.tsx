@@ -9,10 +9,8 @@ import {
   EyeIcon,
   MinusIcon,
   PlusIcon,
-  XIcon,
 } from "lucide-react";
-import Modal from "./modal";
-import ModulePreview from "./module-preview";
+import ModulePreviewDialog from "./module-preview-dialog";
 import type { ModulePickerItem } from "./module-item";
 
 type ModuleCarouselItem = ModulePickerItem & {
@@ -142,36 +140,13 @@ export default function ModuleCarousel(props: ModuleCarouselProps) {
 
   return (
     <>
-      <Modal selector="modal-hook" show={previewModule !== null}>
-        <div className="bg-info-950/90 fixed inset-0 z-[69] flex items-center justify-center p-4">
-          <div className="content-card text-pirrot-blue-950 pointer-events-none z-[69] max-h-[calc(100dvh-2rem)] w-full max-w-3xl overflow-y-auto p-4 min-[1920px]:!max-w-[90rem] 2xl:max-w-6xl">
-            <div className="pointer-events-auto flex flex-col gap-3">
-              <div className="flex items-center justify-between gap-3">
-                <h3 className="min-w-0 truncate text-xl font-bold">
-                  {previewModule?.name}
-                </h3>
-                <button
-                  onClick={() => setPreviewModule(null)}
-                  type="button"
-                  className="btn-soft text-pirrot-blue-900 p-2"
-                  aria-label="Vorschau schließen"
-                >
-                  <XIcon className="size-5" />
-                </button>
-              </div>
-              <div className="field-shell flex min-h-0 w-full items-center justify-center overflow-hidden rounded">
-                {previewModule ? (
-                  <ModulePreview
-                    moduleId={previewModule.id}
-                    className="h-[min(60dvh,26.25rem)] 2xl:h-[min(78dvh,64rem)]"
-                    sizes="(min-width: 1920px) 1400px, (min-width: 1536px) 1120px, (max-width: 768px) 100vw, 720px"
-                  />
-                ) : null}
-              </div>
-            </div>
-          </div>
-        </div>
-      </Modal>
+      {previewModule ? (
+        <ModulePreviewDialog
+          moduleId={previewModule.id}
+          title={previewModule.name}
+          onClose={() => setPreviewModule(null)}
+        />
+      ) : null}
 
       <section className="content-card overflow-hidden p-3">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">

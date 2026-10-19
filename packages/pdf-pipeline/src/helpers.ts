@@ -1,3 +1,4 @@
+import { fetchCdnAsset } from "./cdn-fetch";
 import { PDFDocument } from "pdf-lib";
 import type { BookFormat } from "./types";
 import { logger } from "./logger";
@@ -54,7 +55,7 @@ export async function fetchPdfBytes(url: string): Promise<Uint8Array> {
   }
 
   try {
-    const response = await fetch(url);
+    const response = await fetchCdnAsset(url);
     if (!response.ok) {
       logger.warn("pdf_fetch_failed_fallback_blank_page", {
         url,
@@ -82,9 +83,12 @@ export async function fetchPdfBytesOrNull(
 ): Promise<Uint8Array | undefined> {
   if (!url || url.trim() === "") return undefined;
   try {
-    const response = await fetch(url);
+    const response = await fetchCdnAsset(url);
     if (!response.ok) {
-      logger.warn("optional_pdf_fetch_failed", { url, status: response.status });
+      logger.warn("optional_pdf_fetch_failed", {
+        url,
+        status: response.status,
+      });
       return undefined;
     }
     return new Uint8Array(await response.arrayBuffer());
@@ -121,9 +125,10 @@ export const PAGE_DIMENSIONS = {
   BLEEDING: (6 / 25.4) * 72,
 } as const;
 
-export function getPageSizeWithBleed(
-  format: BookFormat,
-): { width: number; height: number } {
+export function getPageSizeWithBleed(format: BookFormat): {
+  width: number;
+  height: number;
+} {
   if (format === "DIN A4") {
     return {
       width: PAGE_DIMENSIONS.A4_WIDTH + PAGE_DIMENSIONS.BLEEDING,

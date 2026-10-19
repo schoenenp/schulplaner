@@ -1,4 +1,5 @@
 "use client";
+import { cdnAssetUrl } from "@/util/cdn-asset-url";
 
 import { fileToBase64 } from "@/server/util/pdf/functions";
 import Image from "next/image";
@@ -15,7 +16,7 @@ export default function PreviewImage(props: { file?: string | File }) {
       }
 
       if (typeof props.file === "string" && props.file.startsWith("/storage")) {
-        setPreviewUrl(`https://cdn.pirrot.de${props.file}`);
+        setPreviewUrl(cdnAssetUrl(props.file));
         return;
       }
 

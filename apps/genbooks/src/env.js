@@ -36,11 +36,14 @@ export const env = createEnv({
     EMAIL_FROM: z.string(),
     SHOP_EMAIL: z.string(),
     CANCEL_SECRET: z.string(),
-    UPLOAD_URL_LINK: z.string(),
-    UPLOAD_API_KEY: z.string(),
+    S3_BUCKET: z.string().min(1),
+    AWS_REGION: z.string().min(1),
+    S3_ENDPOINT: z.string().url(),
+    S3_PREFIX: z.string().optional(),
     CUSTOM_COVER_TEMPLATE_URL: z.string().optional(),
     GHOST_GRAYSCALE_API_KEY: z.string().optional(),
     DATABASE_URL: z.string().url(),
+    DATABASE_MAINTENANCE_MODE: z.enum(["true", "false"]).default("false"),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
@@ -52,7 +55,7 @@ export const env = createEnv({
    * `NEXT_PUBLIC_`.
    */
   client: {
-    NEXT_PUBLIC_CDN_SERVER_URL: z.string(),
+    NEXT_PUBLIC_CDN_SERVER_URL: z.string().default(""),
     NEXT_PUBLIC_STRIPE_PUSHABLE_KEY: z.string(),
     NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
     NEXT_PUBLIC_POSTHOG_HOST: z.string().url().optional(),
@@ -88,8 +91,10 @@ export const env = createEnv({
     EMAIL_SERVER_PASSWORD: process.env.EMAIL_SERVER_PASSWORD,
     EMAIL_SERVER_HOST: process.env.EMAIL_SERVER_HOST,
     EMAIL_SERVER_PORT: process.env.EMAIL_SERVER_PORT,
-    UPLOAD_URL_LINK: process.env.UPLOAD_URL_LINK,
-    UPLOAD_API_KEY: process.env.UPLOAD_API_KEY,
+    S3_BUCKET: process.env.S3_BUCKET,
+    AWS_REGION: process.env.AWS_REGION,
+    S3_ENDPOINT: process.env.S3_ENDPOINT,
+    S3_PREFIX: process.env.S3_PREFIX,
     CUSTOM_COVER_TEMPLATE_URL: process.env.CUSTOM_COVER_TEMPLATE_URL,
     GHOST_GRAYSCALE_API_KEY: process.env.GHOST_GRAYSCALE_API_KEY,
     EMAIL_FROM: process.env.EMAIL_FROM,
@@ -100,6 +105,7 @@ export const env = createEnv({
     // AUTH_LINKEDIN_SECRET: process.env.AUTH_LINKEDIN_SECRET,
     SHOP_EMAIL: process.env.SHOP_EMAIL,
     DATABASE_URL: process.env.DATABASE_URL,
+    DATABASE_MAINTENANCE_MODE: process.env.DATABASE_MAINTENANCE_MODE,
     NODE_ENV: process.env.NODE_ENV,
     CANCEL_SECRET: process.env.CANCEL_SECRET,
     STRIPE_SUCCESS_URL: process.env.STRIPE_SUCCESS_URL,

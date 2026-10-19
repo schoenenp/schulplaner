@@ -6,7 +6,7 @@ import { registry } from "./handlers";
 import { addPageNumbers, DEFAULT_PAGE_NUMBER_OPTIONS } from "./pagination";
 import { addWatermark } from "./watermark";
 import { finalizeDocument } from "./alignment";
-import { fetchPdfBytes } from "./helpers";
+import { fetchPdfBytes, fetchPdfBytesOrNull } from "./helpers";
 import type {
   BookDetails,
   BookFormat,
@@ -26,6 +26,22 @@ class PDFProcessor {
    * downloads every module at most once.
    */
   private readonly templateCache = new Map<string, Promise<Uint8Array>>();
+  private readonly optionalTemplateCache = new Map<
+    string,
+    Promise<Uint8Array | undefined>
+  >();
+
+  private readonly fetchOptionalPdfBytes = (
+    url: string | null | undefined,
+  ): Promise<Uint8Array | undefined> => {
+    if (!url?.trim()) return Promise.resolve(undefined);
+    let cached = this.optionalTemplateCache.get(url);
+    if (!cached) {
+      cached = fetchPdfBytesOrNull(url);
+      this.optionalTemplateCache.set(url, cached);
+    }
+    return cached;
+  };
 
   private getTemplateBytes(url: string): Promise<Uint8Array> {
     let cached = this.templateCache.get(url);
@@ -40,9 +56,20 @@ class PDFProcessor {
    * Start fetching every module PDF in parallel so the sequential processing
    * below never waits on the network for the next module.
    */
-  private prefetchTemplates(modules: PDFModule[]): void {
+  private prefetchTemplates(
+    modules: PDFModule[],
+    colorMap: Map<ModuleId, ColorCode>,
+  ): void {
     for (const moduleItem of modules) {
-      void this.getTemplateBytes(moduleItem.pdfUrl).catch(() => {
+      const handler = registry.getOrDefault(moduleItem.type);
+      const useVariantFirst =
+        handler.processWithLazyTemplate &&
+        colorMap.get(moduleItem.id) === 1 &&
+        moduleItem.grayscalePdfUrl?.trim();
+      const pending = useVariantFirst
+        ? this.fetchOptionalPdfBytes(moduleItem.grayscalePdfUrl)
+        : this.getTemplateBytes(moduleItem.pdfUrl);
+      void pending.catch(() => {
         // fetchPdfBytes resolves with a blank-page fallback; this guard only
         // exists so an unexpected rejection cannot become unhandled.
       });
@@ -91,6 +118,7 @@ class PDFProcessor {
         previewMode: false,
         isGrayscale: colorMap.get(moduleItem.id) === 1,
         currentPageCount: calculatedPageCount,
+        fetchOptionalPdfBytes: this.fetchOptionalPdfBytes,
       };
       const getTemplateBytes = () => this.getTemplateBytes(moduleItem.pdfUrl);
 
@@ -153,7 +181,7 @@ class PDFProcessor {
     const { coverModule, sortedModules } = this.validateAndSortModules(modules);
 
     // Overlap all template downloads with the sequential build below.
-    this.prefetchTemplates([coverModule, ...sortedModules]);
+    this.prefetchTemplates([coverModule, ...sortedModules], colorMap);
 
     const finalPdf = await PDFDocument.create();
 
@@ -168,6 +196,7 @@ class PDFProcessor {
       previewMode,
       isGrayscale: isCoverGrayscale,
       grayscaleApiKey,
+      fetchOptionalPdfBytes: this.fetchOptionalPdfBytes,
     };
 
     // Process cover first and capture back cover doc
@@ -204,10 +233,14 @@ class PDFProcessor {
       const isGrayscale = colorMap.get(moduleItem.id) === 1;
 
       const result = await this.runModuleStep(moduleItem, async () => {
-        const templateBytes = await this.getTemplateBytes(moduleItem.pdfUrl);
+        const moduleContext = { ...context, moduleItem, isGrayscale };
+        const getTemplateBytes = () => this.getTemplateBytes(moduleItem.pdfUrl);
+        if (handler.processWithLazyTemplate) {
+          return handler.processWithLazyTemplate(moduleContext, getTemplateBytes);
+        }
         return handler.process(
-          { ...context, moduleItem, isGrayscale },
-          templateBytes,
+          moduleContext,
+          await getTemplateBytes(),
         );
       });
 

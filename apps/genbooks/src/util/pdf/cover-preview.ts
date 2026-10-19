@@ -1,8 +1,8 @@
+import { fetchCdnAsset } from "pdf-pipeline";
+import { cdnAssetUrl } from "@/util/cdn-asset-url";
 import { PDFDocument } from "pdf-lib";
 import { logger } from "@/util/logger";
 import { pickModulePdfFile } from "@/util/module-files";
-
-const CDN_URL = process.env.NEXT_PUBLIC_CDN_SERVER_URL ?? "";
 
 interface CoverPreviewOptions {
   pdfUrl: string;
@@ -26,12 +26,12 @@ export async function generateCoverPreview(
   const { pdfUrl, bookTitle, yearStart, yearEnd } = options;
 
   try {
-    const fullPdfUrl = pdfUrl.startsWith("http")
-      ? pdfUrl
-      : `${CDN_URL}${pdfUrl}`;
-    const response = await fetch(fullPdfUrl);
+    const fullPdfUrl = cdnAssetUrl(pdfUrl);
+    const response = await fetchCdnAsset(fullPdfUrl);
     if (!response.ok) {
-      logger.warn("cover_preview_pdf_fetch_failed", { status: response.status });
+      logger.warn("cover_preview_pdf_fetch_failed", {
+        status: response.status,
+      });
       return null;
     }
     const pdfBytes = await response.arrayBuffer();
@@ -103,7 +103,7 @@ export function getCoverThumbnail(
       f.name?.startsWith("thumb_"),
     );
     if (thumbFile) {
-      return `${CDN_URL}${thumbFile.src}`;
+      return cdnAssetUrl(thumbFile.src);
     }
   }
   return null;
@@ -111,7 +111,9 @@ export function getCoverThumbnail(
 
 export function getCoverPdfUrl(
   modules: Array<{
-    module: { files: Array<{ name?: string | null; src: string; type?: string }> };
+    module: {
+      files: Array<{ name?: string | null; src: string; type?: string }>;
+    };
   } | null>,
 ): string | null {
   for (const mod of modules) {

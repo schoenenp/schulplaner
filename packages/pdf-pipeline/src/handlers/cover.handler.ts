@@ -1,3 +1,4 @@
+import { fetchCdnAsset } from "../cdn-fetch";
 import { PDFDocument } from "pdf-lib";
 import { logger } from "../logger";
 import { BaseHandler } from "./base.handler";
@@ -139,7 +140,7 @@ class CoverHandler extends BaseHandler {
   }
 
   private async fetchImageBytes(imageUrl: string): Promise<Uint8Array> {
-    const response = await fetch(imageUrl);
+    const response = await fetchCdnAsset(imageUrl);
     if (!response.ok) {
       logger.warn("custom_cover_image_fetch_failed", {
         imageUrl,
@@ -151,10 +152,7 @@ class CoverHandler extends BaseHandler {
     return new Uint8Array(await response.arrayBuffer());
   }
 
-  private async embedCoverImage(
-    coverDoc: PDFDocument,
-    imageBytes: Uint8Array,
-  ) {
+  private async embedCoverImage(coverDoc: PDFDocument, imageBytes: Uint8Array) {
     const signature = Array.from(imageBytes.subarray(0, 8))
       .map((byte) => byte.toString(16).padStart(2, "0"))
       .join("");

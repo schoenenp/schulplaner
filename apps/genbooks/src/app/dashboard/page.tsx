@@ -1,3 +1,4 @@
+import { claimedPlannerPath } from "@/util/template-share-navigation";
 import Link from "next/link";
 
 import { auth } from "@/server/auth";
@@ -21,11 +22,12 @@ import PartnerSection from "./_components/partner";
 export default async function Dashboard({
     searchParams,
   }: {
-    searchParams: Promise<{ view?: string }>
+    searchParams: Promise<{ view?: string; claimedTemplate?: string }>
   }) {
 
   const session = await auth()
-  const { view } = await searchParams
+  const { view, claimedTemplate } = await searchParams
+  if (claimedTemplate) redirect(claimedPlannerPath(claimedTemplate))
 
   void api.module.getUserModules.prefetch()
   void api.book.getUserBooks.prefetch()

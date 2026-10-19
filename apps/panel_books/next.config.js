@@ -12,12 +12,14 @@ const __dirname = path.dirname(__filename);
 
 /** @type {import("next").NextConfig} */
 const config = {
-  transpilePackages: ["pdf-pipeline", "db"],
+  transpilePackages: ["pdf-pipeline", "db", "books-storage"],
   turbopack: {
     // Monorepo root so the workspace-linked packages resolve.
     root: path.join(__dirname, "../.."),
   },
   images: {
+    // Session-protected previews must be fetched directly by the browser.
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",

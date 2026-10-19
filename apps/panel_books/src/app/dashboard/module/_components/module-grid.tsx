@@ -1,4 +1,5 @@
 "use client";
+import { cdnAssetUrl } from "@/util/cdn-asset-url";
 
 import {
   ChevronLeftIcon,
@@ -19,7 +20,7 @@ import { getPageRules } from "@/server/util/pdf/functions";
 
 const ITEMS_PER_PAGE = 12;
 const CDN_BASE =
-  process.env.NEXT_PUBLIC_CDN_BASE_URL ?? "https://cdn.pirrot.de";
+  process.env.NEXT_PUBLIC_CDN_BASE_URL ?? "";
 
 function formatDate(date: Date) {
   return new Intl.DateTimeFormat("de-DE", {
@@ -29,8 +30,8 @@ function formatDate(date: Date) {
 
 function toPreviewSrc(src: string) {
   if (src === "/default.png") return src;
-  if (src.startsWith("https://")) return src;
-  return `${CDN_BASE}${src.startsWith("/") ? "" : "/"}${src}`;
+
+  return cdnAssetUrl(src, CDN_BASE);
 }
 
 const visibilityTheme = {

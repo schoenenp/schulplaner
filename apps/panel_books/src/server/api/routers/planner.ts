@@ -1,8 +1,8 @@
+import { cdnAssetUrl } from "@/util/cdn-asset-url";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import type { Prisma } from "db";
 
-import { env } from "@/env";
 import { protectedProcedure, createTRPCRouter } from "@/server/api/trpc";
 import { enforceProcedureRateLimit } from "@/server/util/rate-limit";
 import { pickCoverImageFile, pickModulePdfFile } from "@/util/module-files";
@@ -12,7 +12,7 @@ const COVER_MODULE_TYPE = "umschlag";
 const COVER_MODULE_IDX = 12345;
 
 function toAbsoluteCdnUrl(src: string): string {
-  return /^https?:\/\//i.test(src) ? src : env.NEXT_PUBLIC_CDN_SERVER_URL + src;
+  return cdnAssetUrl(src);
 }
 
 const listInput = z.object({
@@ -39,9 +39,9 @@ function buildBookWhere(
     ...(query
       ? {
           OR: [
-            { name: { contains: query } },
-            { bookTitle: { contains: query } },
-            { createdBy: { email: { contains: query } } },
+            { name: { contains: query, mode: "insensitive" } },
+            { bookTitle: { contains: query, mode: "insensitive" } },
+            { createdBy: { email: { contains: query, mode: "insensitive" } } },
             { id: query },
           ],
         }

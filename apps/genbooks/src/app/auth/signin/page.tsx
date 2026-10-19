@@ -105,7 +105,7 @@ function SignInContent() {
   const closeErrorModal = () => {
     setShowError(false);
     setErrorMessage("");
-    router.push("/api/auth/signin");
+    router.replace(`/auth/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`);
   };
 
   return (

@@ -9,37 +9,40 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** @type {import("next").NextConfig} */
-const config = { 
-    // Monorepo root so the workspace-linked packages are traced.
-    outputFileTracingRoot: path.join(__dirname, "../.."),
-    transpilePackages: ["pdf-pipeline", "db"],
-    images:{
+const config = {
+  // Monorepo root so the workspace-linked packages are traced.
+  outputFileTracingRoot: path.join(__dirname, "../.."),
+  transpilePackages: ["pdf-pipeline", "db", "books-storage"],
+  images: {
+    // Session-protected previews must be fetched directly by the browser.
+    unoptimized: true,
     remotePatterns: [
-        {
-          protocol: 'https',
-          hostname: 'cdn.pirrot.de',
-          port: '',
-          pathname: '/storage/**',
-        },
-        {
-          protocol: 'https',
-          hostname: 'cdn.pirrot.de',
-          port: '',
-          pathname: '/assets/**',
-        },
-        {
-          protocol: 'https',
-          hostname: 'picsum.photos',
-          port: '',
-          pathname: '/id/**',
-        },
-        {
-          protocol: 'https',
-          hostname: 'picsum.photos',
-          port: '',
-          pathname: '/seed/**',
-        },
-      ],
-}};
+      {
+        protocol: "https",
+        hostname: "cdn.pirrot.de",
+        port: "",
+        pathname: "/storage/**",
+      },
+      {
+        protocol: "https",
+        hostname: "cdn.pirrot.de",
+        port: "",
+        pathname: "/assets/**",
+      },
+      {
+        protocol: "https",
+        hostname: "picsum.photos",
+        port: "",
+        pathname: "/id/**",
+      },
+      {
+        protocol: "https",
+        hostname: "picsum.photos",
+        port: "",
+        pathname: "/seed/**",
+      },
+    ],
+  },
+};
 
 export default config;

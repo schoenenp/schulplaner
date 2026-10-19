@@ -186,9 +186,7 @@ class PlannerHandler extends BaseHandler {
     // any conversion. Field geometry always comes from the original template.
     let artworkDoc = templateDoc;
     if (isGrayscale) {
-      const variantDoc = await this.loadUsableVariant(
-        context.moduleItem.grayscalePdfUrl,
-      );
+      const variantDoc = await this.loadUsableVariant(context);
       if (variantDoc) {
         artworkDoc = variantDoc;
       } else {
@@ -274,9 +272,10 @@ class PlannerHandler extends BaseHandler {
    * planner spread shape; anything else falls back to runtime conversion.
    */
   private async loadUsableVariant(
-    grayscalePdfUrl: string | null | undefined,
+    context: TagContext,
   ): Promise<PDFDocument | undefined> {
-    const variantBytes = await fetchPdfBytesOrNull(grayscalePdfUrl);
+    const fetchVariant = context.fetchOptionalPdfBytes ?? fetchPdfBytesOrNull;
+    const variantBytes = await fetchVariant(context.moduleItem.grayscalePdfUrl);
     if (!variantBytes) return undefined;
     try {
       const variantDoc = await PDFDocument.load(variantBytes);

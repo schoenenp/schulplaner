@@ -67,6 +67,7 @@ function buildModuleListWhere(filters: {
           type: {
             name: {
               equals: typeTerm.toLowerCase(),
+              mode: "insensitive",
             },
           },
         }
@@ -74,11 +75,11 @@ function buildModuleListWhere(filters: {
     ...(searchTerm
       ? {
           OR: [
-            { name: { contains: searchTerm } },
-            { theme: { contains: searchTerm } },
+            { name: { contains: searchTerm, mode: "insensitive" } },
+            { theme: { contains: searchTerm, mode: "insensitive" } },
             {
               type: {
-                name: { contains: searchTerm.toLowerCase() },
+                name: { contains: searchTerm.toLowerCase(), mode: "insensitive" },
               },
             },
           ],

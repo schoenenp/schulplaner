@@ -90,3 +90,5 @@ export {
   getOverlayFont,
   type OverlayFieldSpec,
 } from "./template-overlay";
+
+export { fetchCdnAsset } from "./cdn-fetch";

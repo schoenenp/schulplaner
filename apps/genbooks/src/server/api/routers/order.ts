@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type Stripe from "stripe";
 import { TRPCError } from "@trpc/server";
-import { Prisma } from "db";
+import { finalizeBookOrder } from "db";
 
 import {
   createTRPCRouter,
@@ -87,9 +87,14 @@ export const orderRouter = createTRPCRouter({
         });
       }
 
-      const existingBookOrder = await ctx.db.bookOrder.findFirst({
+      const bookOrderId = retrievedSession.metadata?.orderId;
+      if (!bookOrderId) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Checkout has no book order reference" });
+      }
+
+      const existingBookOrder = await ctx.db.bookOrder.findUnique({
         where: {
-          id: retrievedSession.metadata?.orderId,
+          id: bookOrderId,
         },
         include: {
           payment: true,
@@ -109,114 +114,25 @@ export const orderRouter = createTRPCRouter({
         });
       }
 
-      if (existingBookOrder.order?.orderKey) {
-        return encryptPayload({ orderKey: existingBookOrder.order.orderKey });
+      const createdOrderRef = await finalizeBookOrder(
+        ctx.db,
+        {
+          bookOrderId: existingBookOrder.id,
+          checkoutSessionId: retrievedSession.id,
+          userId: ctx.session?.user?.id,
+          paymentStatus: retrievedSession.payment_status === "unpaid"
+            ? "PENDING"
+            : "SUCCEEDED",
+          total: retrievedSession.amount_total ?? 0,
+          shippingCost: retrievedSession.shipping_cost?.amount_total ?? 0,
+        },
+        createOrderKey,
+      );
+      // Only the validator that finalized the order sends confirmation or
+      // records the initial partner transition.
+      if (!createdOrderRef.newlyFinalized) {
+        return encryptPayload({ orderKey: createdOrderRef.orderKey });
       }
-
-      const createdOrderRef = await ctx.db.$transaction(async (tx) => {
-        await tx.bookOrder.update({
-          where: {
-            id: existingBookOrder.id,
-          },
-          data: {
-            payment: {
-              update: {
-                status:
-                  retrievedSession.payment_status === "unpaid"
-                    ? "PENDING"
-                    : "SUCCEEDED",
-                total: retrievedSession.amount_total ?? 0,
-                shippingCost: retrievedSession.shipping_cost?.amount_total ?? 0,
-              },
-            },
-          },
-        });
-
-        const currentBookOrder = await tx.bookOrder.findUnique({
-          where: { id: existingBookOrder.id },
-          include: {
-            order: true,
-          },
-        });
-
-        if (!currentBookOrder) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Keine Bestellung gefunden",
-          });
-        }
-
-        if (currentBookOrder.order?.orderKey) {
-          return {
-            orderKey: currentBookOrder.order.orderKey,
-            orderId: currentBookOrder.order.id,
-          };
-        }
-
-        let createdOrder = currentBookOrder.order ?? null;
-        if (!createdOrder) {
-          try {
-            createdOrder = await tx.order.create({
-              data: {
-                user: ctx.session?.user
-                  ? {
-                      connect: {
-                        id: ctx.session.user.id,
-                      },
-                    }
-                  : undefined,
-                bookOrder: {
-                  connect: {
-                    id: existingBookOrder.id,
-                  },
-                },
-              },
-            });
-          } catch (error) {
-            // Handle a concurrent validator creating the linked order.
-            if (
-              error instanceof Prisma.PrismaClientKnownRequestError &&
-              error.code === "P2002"
-            ) {
-              const racedBookOrder = await tx.bookOrder.findUnique({
-                where: { id: existingBookOrder.id },
-                include: { order: true },
-              });
-              createdOrder = racedBookOrder?.order ?? null;
-            } else {
-              throw error;
-            }
-          }
-        }
-
-        if (!createdOrder) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to create order",
-          });
-        }
-
-        if (createdOrder.orderKey) {
-          return {
-            orderKey: createdOrder.orderKey,
-            orderId: createdOrder.id,
-          };
-        }
-
-        const newOrderKey = createOrderKey(createdOrder.id);
-        await tx.order.update({
-          where: {
-            id: createdOrder.id,
-          },
-          data: {
-            orderKey: newOrderKey,
-          },
-        });
-        return {
-          orderKey: newOrderKey,
-          orderId: createdOrder.id,
-        };
-      });
 
       const partnerMetadata = parsePartnerSessionMetadata(
         retrievedSession.metadata,

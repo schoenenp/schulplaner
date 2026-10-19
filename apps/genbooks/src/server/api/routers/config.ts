@@ -1,3 +1,4 @@
+import { cdnAssetUrl } from "@/util/cdn-asset-url";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { stripeClient, toStripeAddress } from "@/util/stripe";
@@ -281,14 +282,10 @@ export const configRouter = createTRPCRouter({
           const rawPdfUrl = pdfFile?.src ?? "/storage/notizen.pdf";
           const coverImageFile = pickCoverImageFile(moduleItem.module.files);
           const coverImageUrl = coverImageFile
-            ? /^https?:\/\//i.test(coverImageFile.src)
-              ? coverImageFile.src
-              : env.NEXT_PUBLIC_CDN_SERVER_URL + coverImageFile.src
+            ? cdnAssetUrl(coverImageFile.src)
             : undefined;
 
-          const pdfUrl = /^https?:\/\//i.test(rawPdfUrl)
-            ? rawPdfUrl
-            : env.NEXT_PUBLIC_CDN_SERVER_URL + rawPdfUrl;
+          const pdfUrl = cdnAssetUrl(rawPdfUrl);
           moduleColorMap.set(
             moduleItem.id,
             moduleItem.colorCode === "COLOR" ? 4 : 1,
@@ -747,8 +744,7 @@ export const configRouter = createTRPCRouter({
       }
 
       let partneredPaymentIntentData:
-        | Stripe.Checkout.SessionCreateParams.PaymentIntentData
-        | undefined;
+        Stripe.Checkout.SessionCreateParams.PaymentIntentData | undefined;
       if (isPartneredCheckout && partnerMetadata && unitAmountCents > 0) {
         const partnerSubtotalCents = unitAmountPerPlannerCents * quantity;
         if (configuredApplicationFeeCents > partnerSubtotalCents) {
@@ -1146,26 +1142,15 @@ export const configRouter = createTRPCRouter({
         const moduleFile = pickModulePdfFile(files);
         const coverImageFile = pickCoverImageFile(files);
 
-        const thumbnail =
-          (thumbnailFile ?? coverImageFile) &&
-          !/^https?:\/\//i.test((thumbnailFile ?? coverImageFile)!.src)
-            ? `https://cdn.pirrot.de${(thumbnailFile ?? coverImageFile)!.src}`
-            : ((thumbnailFile ?? coverImageFile)?.src ?? "/default.png");
-
-        const url =
-          moduleFile && !/^https?:\/\//i.test(moduleFile.src)
-            ? `https://cdn.pirrot.de${moduleFile.src}`
-            : (moduleFile?.src ?? "/storage/notizen.pdf");
-        const coverImageUrl =
-          coverImageFile && !/^https?:\/\//i.test(coverImageFile.src)
-            ? `https://cdn.pirrot.de${coverImageFile.src}`
-            : (coverImageFile?.src ?? null);
-        const grayscaleSrc = moduleFile?.srcGrayscale ?? null;
-        const grayscalePdfUrl = grayscaleSrc
-          ? /^https?:\/\//i.test(grayscaleSrc)
-            ? grayscaleSrc
-            : `https://cdn.pirrot.de${grayscaleSrc}`
+        const thumbnail = cdnAssetUrl(
+          (thumbnailFile ?? coverImageFile)?.src ?? "/default.png",
+        );
+        const url = cdnAssetUrl(moduleFile?.src ?? "/storage/notizen.pdf");
+        const coverImageUrl = coverImageFile
+          ? cdnAssetUrl(coverImageFile.src)
           : null;
+        const grayscaleSrc = moduleFile?.srcGrayscale ?? null;
+        const grayscalePdfUrl = grayscaleSrc ? cdnAssetUrl(grayscaleSrc) : null;
 
         return {
           id,

@@ -25,5 +25,8 @@
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^6.1.200",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "books-storage": "workspace:*"
   }
 }

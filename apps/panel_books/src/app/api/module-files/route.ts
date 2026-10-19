@@ -1,3 +1,4 @@
+import { fetchCdnAsset } from "pdf-pipeline";
 import { NextResponse } from "next/server";
 import { PDFDocument } from "pdf-lib";
 
@@ -73,7 +74,7 @@ async function getCustomCoverTemplateBytes(): Promise<Uint8Array> {
     );
   }
 
-  const response = await fetch(env.CUSTOM_COVER_TEMPLATE_URL);
+  const response = await fetchCdnAsset(env.CUSTOM_COVER_TEMPLATE_URL);
   if (!response.ok) {
     throw new Error(
       `Failed to fetch custom cover template: ${response.status}`,

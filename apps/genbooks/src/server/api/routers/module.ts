@@ -1,3 +1,5 @@
+import { verifyFileUpload } from "@/server/cdn-upload-proof";
+import { cdnAssetUrl } from "@/util/cdn-asset-url";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
@@ -22,6 +24,7 @@ const COVER_TYPE = "umschlag";
 // Metadata of a file already stored via /api/module-files. Raw bytes never
 // travel through tRPC; the route handler validated and uploaded them.
 const uploadedFileInput = z.object({
+  uploadProof: z.string().optional(),
   name: z.string().nullable().optional(),
   src: z.string(),
   type: z.enum(["PDF", "IMAGE_PNG", "IMAGE_JPEG"]),
@@ -41,7 +44,7 @@ function isCoverType(type: string): boolean {
 }
 
 function toModuleAssetSrc(src: string): string {
-  return /^https?:\/\//i.test(src) ? src : `https://cdn.pirrot.de${src}`;
+  return cdnAssetUrl(src);
 }
 
 function getModuleThumbnailSrc(
@@ -156,7 +159,9 @@ export const moduleRouter = createTRPCRouter({
           },
           theme: "custom",
           files: {
-            create: filesToCreate,
+            create: filesToCreate.map((file) =>
+              verifyFileUpload(file, ctx.session.user.id),
+            ),
           },
           createdBy: {
             connect: {
@@ -179,8 +184,7 @@ export const moduleRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { id, name, type, uploadedFile, uploadedThumbnail, tagIds } =
-        input;
+      const { id, name, type, uploadedFile, uploadedThumbnail, tagIds } = input;
       const existingModule = await ctx.db.module.findFirst({
         where: {
           id,
@@ -270,7 +274,12 @@ export const moduleRouter = createTRPCRouter({
             connect: tagIds?.map((id) => ({ id })),
           },
           files: {
-            create: filesToCreate.length >= 1 ? filesToCreate : undefined,
+            create:
+              filesToCreate.length >= 1
+                ? filesToCreate.map((file) =>
+                    verifyFileUpload(file, ctx.session.user.id),
+                  )
+                : undefined,
             disconnect:
               filesToDisconnect.length >= 1 ? filesToDisconnect : undefined,
           },

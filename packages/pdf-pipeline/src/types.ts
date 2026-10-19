@@ -122,6 +122,10 @@ export interface TagContext {
   grayscaleApiKey?: string;
   /** Running total page count at this module boundary (used for accurate estimations) */
   currentPageCount?: number;
+  /** Optional PDF reads shared within one generation, including its count pass. */
+  fetchOptionalPdfBytes?: (
+    url: string | null | undefined,
+  ) => Promise<Uint8Array | undefined>;
 
   // Planner-specific context (populated per week iteration)
   /** Current week index (0-based) */
@@ -170,6 +174,15 @@ export interface ModuleHandler {
   process(
     context: TagContext,
     templateBytes: Uint8Array,
+  ): Promise<HandlerResult>;
+
+  /**
+   * Optional entry point for handlers that can use a stored variant without
+   * downloading the original template. Form-based handlers still use process.
+   */
+  processWithLazyTemplate?(
+    context: TagContext,
+    getTemplateBytes: () => Promise<Uint8Array>,
   ): Promise<HandlerResult>;
 
   /**

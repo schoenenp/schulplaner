@@ -1,8 +1,9 @@
+import { fetchCdnAsset } from "pdf-pipeline";
 /**
  * Backfill File.pageCount for PDF rows uploaded before the column existed.
  *
- * The column ships with `prisma db push` (or apply scripts/sql/add-file-pagecount.sql
- * manually). New uploads store their page count automatically; this script
+ * The column ships with the reviewed PostgreSQL migration (or apply
+ * scripts/sql/add-file-pagecount.sql on an older PostgreSQL installation). New uploads store their page count automatically; this script
  * repairs existing rows so price estimation never has to download a PDF.
  *
  * Usage (from apps/genbooks, needs DATABASE_URL in the environment):
@@ -12,18 +13,17 @@
 import { PrismaClient } from "db";
 import { PDFDocument } from "pdf-lib";
 
-const CDN_BASE = "https://cdn.pirrot.de";
 const CONCURRENCY = 4;
 
 const apply = process.argv.includes("--apply");
 const prisma = new PrismaClient();
 
 function toAbsoluteUrl(src: string): string {
-  return /^https?:\/\//i.test(src) ? src : `${CDN_BASE}${src}`;
+  return /^https?:\/\//i.test(src) ? src : src;
 }
 
 async function countPages(url: string): Promise<number> {
-  const response = await fetch(url);
+  const response = await fetchCdnAsset(url);
   if (!response.ok) {
     throw new Error(`fetch failed with status ${response.status}`);
   }

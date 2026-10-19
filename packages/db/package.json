@@ -20,17 +20,18 @@
     "db:push": "prisma db push",
     "db:seed": "bun prisma/seed.ts",
     "db:studio": "prisma studio",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "typecheck:migration": "tsc --noEmit -p ../../scripts/db-migration/tsconfig.json"
   },
   "prisma": {
     "schema": "prisma/schema.prisma"
   },
   "dependencies": {
-    "@prisma/client": "^6.19.2"
+    "@prisma/client": "6.19.3"
   },
   "devDependencies": {
     "@types/bun": "^1.2.21",
-    "prisma": "^6.19.2",
+    "prisma": "6.19.3",
     "typescript": "^5.9.3"
   }
 }

@@ -2,25 +2,21 @@
 
 Both apps deploy from **this single repository** as two separate Coolify
 services. The old per-app repos (`schoenenp/genbooks`, `schoenenp/panel_books`)
-and their Coolify services stay untouched until the new services are verified —
-they are the rollback.
+and their Coolify services should be retained through the database recovery
+period. Database rollback must follow POSTGRESQL-MIGRATION.md.
 
-## 0. Database first (one-time, required before deploying this code)
+## 0. Database first
 
-The refactored code expects two new nullable columns on `File`
-(`pageCount`, `srcGrayscale`). Apply them **before** the first deploy, either:
+This release uses PostgreSQL. Existing MySQL deployments must complete
+[POSTGRESQL-MIGRATION.md](POSTGRESQL-MIGRATION.md) before deploying it.
+Stage both apps from the same release, use `/api/health` for Coolify liveness
+checks, and enable `DATABASE_MAINTENANCE_MODE=true` on both services while
+performing the final copy and validation. Keep automatic deployments paused
+throughout cutover.
 
-```sh
-bun run db:push          # prisma db push from packages/db (uses its DATABASE_URL)
-# or run apps/genbooks/scripts/sql/add-file-pagecount.sql against MySQL
-```
-
-Then, whenever convenient (optional, improves speed for existing modules):
-
-```sh
-bun apps/genbooks/scripts/backfill-file-page-counts.ts --apply
-bun apps/genbooks/scripts/backfill-grayscale-variants.ts --apply
-```
+Apply the reviewed PostgreSQL migrations once with `bun run db:migrate`
+against the isolated empty target before copying data. Never run `db:push`,
+`db:generate` (which means `migrate dev`), or seeds against production.
 
 ## 1. Push the monorepo to GitHub
 
@@ -71,34 +67,46 @@ Notes:
 Copy the full env set from each **old** Coolify service to its new one.
 `NEXT_PUBLIC_*` variables must be present at **build** time, not just runtime.
 The important ones per app: `DATABASE_URL`, `AUTH_*`, `STRIPE_*`,
-`GHOST_GRAYSCALE_API_KEY`, `UPLOAD_URL_LINK`, `UPLOAD_API_KEY`,
+`GHOST_GRAYSCALE_API_KEY`, `S3_BUCKET`, `S3_ENDPOINT`, `AWS_REGION`,
+`S3_PREFIX`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
 `NEXT_PUBLIC_CDN_SERVER_URL`, `CUSTOM_COVER_TEMPLATE_URL` (see each app's
 `.env.example`).
 
 ## 4. Verify, then cut over
 
-1. Deploy both new services and test them on their temporary Coolify URLs
-   (generate a planner preview + a print PDF in the panel; place a test
-   config in the shop).
-2. Move the domains from the old services to the new ones.
-3. Keep the old services stopped-but-configured for a week, then delete them
-   and archive the two old GitHub repos (their history, including the final
-   `pdf-pipeline-refactor` snapshot branches, stays available).
+1. Build both services from the same release and test their temporary URLs
+   against a disposable PostgreSQL rehearsal copy. Test planner previews,
+   print PDFs, and checkout there before the final data comparison.
+2. Complete the final backup, frozen copy, and independent verification in
+   [POSTGRESQL-MIGRATION.md](POSTGRESQL-MIGRATION.md). Keep both production
+   services in maintenance until the recorded first-write decision.
+3. Point both services and all writers at the exact verified PostgreSQL URL
+   using the `public` schema, restart them, reconcile outstanding payments,
+   and move the domains. Disable maintenance and resume jobs in a controlled
+   order.
+4. Retain the stopped MySQL services, source database, verified backups, and
+   exact old release artifacts for the agreed recovery period. Archive old
+   repositories only after recovery and retention requirements are satisfied.
 
 ## Rollback
 
-- **Before cutover:** nothing to do — old services were never touched.
-- **After cutover:** point the domains back at the old services (their repos
-  still contain the pre-refactor `main` and the refactor snapshot branch).
-- Local git-history backups of the old repos also sit in
-  `_archive/git-backups/` (untracked).
+- Before any PostgreSQL application or reconciliation write: keep maintenance
+  active, restore the exact MySQL release/configuration, verify the frozen
+  source, lift its write fence, and reopen.
+- After PostgreSQL accepts new writes: repair the PostgreSQL release or use a
+  separately verified reverse migration. Pointing domains back to services
+  using the frozen MySQL copy would lose those writes.
+- Local git-history backups of the old repos sit in `_archive/git-backups/`
+  (untracked); they preserve source history, not database contents.
 
 ## Database package
 
-Both apps share one MySQL database through `packages/db`, which owns the
+Both apps share one PostgreSQL database through `packages/db`, which owns the
 single `prisma/schema.prisma`, the migrations, the seed scripts, and the
 exported `db` client (each app's `src/server/db.ts` re-exports it).
 `prisma generate` runs once via the package's `postinstall` and serves both
 apps. Run migrations with `bun run db:migrate` — available on `main` and on
 both deploy branches (locally it reads `DATABASE_URL` from `packages/db/.env`;
 on the server from the service env).
+
+Before deploying the storage change, complete the per-client migration and verification in [STORAGE.md](STORAGE.md). Both app services need the same client prefix.

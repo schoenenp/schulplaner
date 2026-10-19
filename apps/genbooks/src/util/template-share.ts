@@ -70,7 +70,7 @@ export function createTemplateInviteEmail(params: {
             Fuer Sie wurde die Vorlage <strong>${safeTemplateName}</strong> freigegeben.
           </p>
           <p style="font-size:16px;margin:0 0 24px 0;">
-            Mit dem Button bestaetigen Sie Ihre E-Mail-Adresse und die Vorlage wird als eigener Planer in Ihrem Dashboard angelegt.
+            Öffnen Sie die Einladung und melden Sie sich mit Ihrer eingeladenen E-Mail-Adresse an. Danach können Sie die Vorlage als eigenen Planer übernehmen und direkt bearbeiten.
           </p>
           <div style="text-align:center;margin:28px 0;">
             <a href="${safeClaimUrl}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:14px 24px;border-radius:8px;font-weight:700;font-size:16px;">
@@ -118,6 +118,7 @@ async function getExistingClaimResult(
           book: {
             select: {
               id: true,
+              createdById: true,
               deletedAt: true,
             },
           },
@@ -128,7 +129,11 @@ async function getExistingClaimResult(
   });
 
   const existingBook = share?.claims[0]?.book;
-  if (!existingBook || existingBook.deletedAt) {
+  if (
+    !existingBook ||
+    existingBook.deletedAt ||
+    existingBook.createdById !== params.userId
+  ) {
     return null;
   }
 
@@ -164,7 +169,8 @@ export async function claimTemplateShareForUser(
         include: {
           template: {
             include: {
-              modules: true,
+              modules: { include: { locations: { select: { id: true } } } },
+              customDates: true,
             },
           },
           claims: {
@@ -173,6 +179,7 @@ export async function claimTemplateShareForUser(
               book: {
                 select: {
                   id: true,
+                  createdById: true,
                   deletedAt: true,
                 },
               },
@@ -189,20 +196,6 @@ export async function claimTemplateShareForUser(
         });
       }
 
-      if (share.expiresAt.getTime() < Date.now()) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Dieser Template-Link ist abgelaufen.",
-        });
-      }
-
-      if (!share.template.isTemplate || share.template.deletedAt) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Diese Vorlage ist nicht mehr verfuegbar.",
-        });
-      }
-
       const recipientEmail = share.recipientEmail
         ? normalizeTemplateShareEmail(share.recipientEmail)
         : null;
@@ -214,12 +207,30 @@ export async function claimTemplateShareForUser(
       }
 
       const existingClaim = share.claims[0];
-      if (existingClaim?.book && !existingClaim.book.deletedAt) {
+      if (
+        existingClaim?.book &&
+        !existingClaim.book.deletedAt &&
+        existingClaim.book.createdById === params.userId
+      ) {
         return {
           bookId: existingClaim.book.id,
           alreadyClaimed: true,
           templateName: share.template.name ?? "Vorlage",
         };
+      }
+
+      if (share.expiresAt.getTime() <= Date.now()) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Dieser Template-Link ist abgelaufen.",
+        });
+      }
+
+      if (!share.template.isTemplate || share.template.deletedAt) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Diese Vorlage ist nicht mehr verfuegbar.",
+        });
       }
 
       if (share.kind === "INVITE") {
@@ -246,6 +257,13 @@ export async function claimTemplateShareForUser(
           planStart: share.template.planStart,
           planEnd: share.template.planEnd,
           country: share.template.country,
+          clientRef: share.template.clientRef,
+          customDates: {
+            create: share.template.customDates.map(({ date, name }) => ({
+              date,
+              name,
+            })),
+          },
           copyFromId: share.template.id,
           createdById: params.userId,
           sourceType: "TEMPLATE_SHARE",
@@ -254,6 +272,9 @@ export async function claimTemplateShareForUser(
               idx: moduleItem.idx,
               moduleId: moduleItem.moduleId,
               colorCode: moduleItem.colorCode,
+              locations: {
+                connect: moduleItem.locations.map(({ id }) => ({ id })),
+              },
             })),
           },
         },

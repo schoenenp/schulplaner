@@ -38,10 +38,10 @@ function buildOrderWhere(input: z.infer<typeof listInput>): Prisma.OrderWhereInp
     ...(query
       ? {
           OR: [
-            { orderKey: { contains: query } },
-            { user: { email: { contains: query } } },
-            { user: { name: { contains: query } } },
-            { bookOrder: { book: { name: { contains: query } } } },
+            { orderKey: { contains: query, mode: "insensitive" } },
+            { user: { email: { contains: query, mode: "insensitive" } } },
+            { user: { name: { contains: query, mode: "insensitive" } } },
+            { bookOrder: { book: { name: { contains: query, mode: "insensitive" } } } },
           ],
         }
       : {}),

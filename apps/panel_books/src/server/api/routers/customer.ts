@@ -29,8 +29,8 @@ function buildUserWhere(input: z.infer<typeof listInput>): Prisma.UserWhereInput
     ...(query
       ? {
           OR: [
-            { email: { contains: query } },
-            { name: { contains: query } },
+            { email: { contains: query, mode: "insensitive" } },
+            { name: { contains: query, mode: "insensitive" } },
             { id: query },
           ],
         }

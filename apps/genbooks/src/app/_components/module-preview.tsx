@@ -1,4 +1,5 @@
 "use client";
+import { cdnAssetUrl } from "@/util/cdn-asset-url";
 
 import LoadingSpinner from "@/app/_components/loading-spinner";
 import { api } from "@/trpc/react";
@@ -20,9 +21,7 @@ export default function ModulePreview(props: {
   const rawPreview = moduleData.data;
   const previewImage =
     typeof rawPreview === "string" && rawPreview.length > 0
-      ? rawPreview === "/default.png" || /^https?:\/\//i.test(rawPreview)
-        ? rawPreview
-        : `https://cdn.pirrot.de${rawPreview}`
+      ? cdnAssetUrl(rawPreview)
       : "/default.png";
 
   return (

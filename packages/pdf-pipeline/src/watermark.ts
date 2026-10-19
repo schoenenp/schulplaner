@@ -1,3 +1,4 @@
+import { fetchCdnAsset } from "./cdn-fetch";
 import type { PDFDocument } from "pdf-lib";
 import { logger } from "./logger";
 
@@ -9,7 +10,9 @@ export async function addWatermark(pdfDoc: PDFDocument): Promise<void> {
 
   try {
     const pngUrl = "/assets/watermark.png";
-    const pngImageBytes = await fetch(pngUrl).then((res) => res.arrayBuffer());
+    const pngImageBytes = await fetchCdnAsset(pngUrl).then((res) =>
+      res.arrayBuffer(),
+    );
     const pngImage = await pdfDoc.embedPng(pngImageBytes);
     const pngDims = pngImage.scale(1.4);
 

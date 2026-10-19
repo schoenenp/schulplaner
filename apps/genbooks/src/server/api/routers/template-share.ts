@@ -16,7 +16,9 @@ import {
   normalizeTemplateShareEmail,
 } from "@/util/template-share";
 import { buildAppUrl, getAppOriginFromHeaders } from "@/util/app-origin";
-import { sendOrderVerification } from "@/util/order/functions";
+import { sendTemplateInvitation } from "@/util/template-invitation-email";
+import { templateSharePath } from "@/util/template-share-navigation";
+import { logger } from "@/util/logger";
 import { maskEmail } from "@/util/partner-claim";
 import { enforceProcedureRateLimit } from "@/util/rate-limit";
 
@@ -116,7 +118,7 @@ async function createShareRecord(params: {
     const tokenHash = hashTemplateShareToken(token);
 
     try {
-      await params.ctx.db.templateShare.create({
+      const share = await params.ctx.db.templateShare.create({
         data: {
           templateId: params.templateId,
           createdById: params.ctx.session.user.id,
@@ -126,7 +128,7 @@ async function createShareRecord(params: {
           expiresAt: params.expiresAt,
         },
       });
-      return token;
+      return { token, shareId: share.id };
     } catch (error) {
       const code =
         error && typeof error === "object" && "code" in error
@@ -161,16 +163,14 @@ export const templateShareRouter = createTRPCRouter({
 
       const template = await assertShareableTemplate(ctx, input.templateId);
       const expiresAt = getTemplateShareExpiry("LINK", input.validForDays);
-      const token = await createShareRecord({
+      const origin = getAppOriginFromHeaders(ctx.headers);
+      const { token } = await createShareRecord({
         ctx,
         templateId: template.id,
         kind: "LINK",
         expiresAt,
       });
-      const shareUrl = buildAppUrl(
-        getAppOriginFromHeaders(ctx.headers),
-        `/template/share?claim=${encodeURIComponent(token)}`,
-      );
+      const shareUrl = buildAppUrl(origin, templateSharePath(token));
 
       return {
         token,
@@ -197,17 +197,15 @@ export const templateShareRouter = createTRPCRouter({
       const template = await assertShareableTemplate(ctx, input.templateId);
       const recipientEmail = normalizeTemplateShareEmail(input.email);
       const expiresAt = getTemplateShareExpiry("INVITE", input.validForDays);
-      const token = await createShareRecord({
+      const origin = getAppOriginFromHeaders(ctx.headers);
+      const { token, shareId } = await createShareRecord({
         ctx,
         templateId: template.id,
         kind: "INVITE",
         recipientEmail,
         expiresAt,
       });
-      const claimUrl = buildAppUrl(
-        getAppOriginFromHeaders(ctx.headers),
-        `/template/share/claim?token=${encodeURIComponent(token)}`,
-      );
+      const claimUrl = buildAppUrl(origin, templateSharePath(token));
       const templateName = template.name ?? template.bookTitle ?? "Vorlage";
       const html = createTemplateInviteEmail({
         claimUrl,
@@ -215,11 +213,20 @@ export const templateShareRouter = createTRPCRouter({
         expiresAt,
       });
 
-      await sendOrderVerification(
-        recipientEmail,
-        "Planer-Vorlage beanspruchen",
-        html,
-      );
+      try {
+        await sendTemplateInvitation(recipientEmail, html);
+      } catch (error) {
+        await ctx.db.templateShare.update({
+          where: { id: shareId },
+          data: { revokedAt: new Date() },
+        });
+        logger.warn("template_invitation_delivery_failed", { shareId, error });
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            "Die Einladung konnte nicht versendet werden. Bitte versuchen Sie es erneut.",
+        });
+      }
 
       return {
         inviteSent: true,
@@ -239,10 +246,15 @@ export const templateShareRouter = createTRPCRouter({
       const share = await ctx.db.templateShare.findUnique({
         where: { tokenHash },
         include: {
-          template: {
-            include: {
-              modules: true,
+          template: { include: { modules: true } },
+          claims: {
+            where: { userId: ctx.session?.user.id ?? "" },
+            select: {
+              book: {
+                select: { id: true, createdById: true, deletedAt: true },
+              },
             },
+            take: 1,
           },
         },
       });
@@ -254,14 +266,24 @@ export const templateShareRouter = createTRPCRouter({
         });
       }
 
-      if (share.expiresAt.getTime() < Date.now()) {
+      const claimedBook = share.claims[0]?.book;
+      const existingBookId =
+        claimedBook &&
+        !claimedBook.deletedAt &&
+        claimedBook.createdById === ctx.session?.user.id
+          ? claimedBook.id
+          : null;
+      if (!existingBookId && share.expiresAt.getTime() <= Date.now()) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Dieser Template-Link ist abgelaufen.",
         });
       }
 
-      if (!share.template.isTemplate || share.template.deletedAt) {
+      if (
+        !existingBookId &&
+        (!share.template.isTemplate || share.template.deletedAt)
+      ) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Diese Vorlage ist nicht mehr verfuegbar.",
@@ -271,6 +293,12 @@ export const templateShareRouter = createTRPCRouter({
       return {
         kind: share.kind,
         expiresAt: share.expiresAt,
+        existingBookId,
+        recipientMatchesSession: !ctx.session?.user.email
+          ? null
+          : !share.recipientEmail ||
+            normalizeTemplateShareEmail(share.recipientEmail) ===
+              normalizeTemplateShareEmail(ctx.session.user.email),
         recipientEmail: share.recipientEmail
           ? maskEmail(share.recipientEmail)
           : null,

@@ -1,3 +1,5 @@
+import { signFileUpload } from "@/server/cdn-upload-proof";
+import { fetchCdnAsset } from "pdf-pipeline";
 import { NextResponse } from "next/server";
 import { PDFDocument } from "pdf-lib";
 
@@ -74,7 +76,7 @@ async function getCustomCoverTemplateBytes(): Promise<Uint8Array> {
     );
   }
 
-  const response = await fetch(env.CUSTOM_COVER_TEMPLATE_URL);
+  const response = await fetchCdnAsset(env.CUSTOM_COVER_TEMPLATE_URL);
   if (!response.ok) {
     throw new Error(
       `Failed to fetch custom cover template: ${response.status}`,
@@ -236,7 +238,14 @@ export async function POST(req: Request) {
       response.file = { ...response.file, srcGrayscale: grayscaleSrc };
     }
 
-    return NextResponse.json(response);
+    return NextResponse.json({
+      file: response.file
+        ? signFileUpload(response.file, session.user.id)
+        : undefined,
+      thumbnail: response.thumbnail
+        ? signFileUpload(response.thumbnail, session.user.id)
+        : undefined,
+    });
   } catch (error) {
     return NextResponse.json(
       {

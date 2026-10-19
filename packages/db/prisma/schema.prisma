@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -49,6 +49,10 @@ model Book {
   partnerOrder           PartnerOrder?
   templateShares         TemplateShare[]     @relation("TemplateShareTemplate")
   templateShareClaim     TemplateShareClaim? @relation("TemplateShareClaimBook")
+
+  @@index([createdById])
+
+  @@index([copyFromId])
 }
 
 model BookModule {
@@ -66,6 +70,8 @@ model BookModule {
   module   Module @relation(fields: [moduleId], references: [id])
 
   @@unique([bookId, moduleId])
+
+  @@index([moduleId])
 }
 
 model ModuleType {
@@ -107,6 +113,10 @@ model Module {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+
+  @@index([typeId])
+
+  @@index([createdById])
 }
 
 model File {
@@ -141,6 +151,8 @@ model Account {
   refresh_token_expires_in Int?
 
   @@unique([provider, providerAccountId])
+
+  @@index([userId])
 }
 
 model Session {
@@ -149,13 +161,15 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model User {
   id            String    @id @default(cuid())
   name          String?
   role          UserRole  @default(USER)
-  email         String?   @unique
+  email         String?   @unique @db.Citext
   emailVerified DateTime?
   image         String?
 
@@ -196,6 +210,8 @@ model Order {
   canceledAt DateTime?
   shippingId String?   @unique
   shipping   Shipping? @relation(fields: [shippingId], references: [id])
+
+  @@index([userId])
 }
 
 model Payment {
@@ -229,6 +245,8 @@ model BookOrder {
 
   orderId Int?   @unique
   order   Order? @relation(fields: [orderId], references: [id])
+
+  @@index([bookId])
 }
 
 model Tooltip {
@@ -245,7 +263,7 @@ model Tooltip {
 }
 
 model VerificationToken {
-  identifier String
+  identifier String @db.Citext
   token      String   @unique
   expires    DateTime
 
@@ -301,6 +319,10 @@ model Location {
 
   creatorId String
   creator   User   @relation(fields: [creatorId], references: [id])
+
+  @@index([addressId])
+
+  @@index([creatorId])
 }
 
 model Tag {
@@ -506,6 +528,12 @@ model PartnerOrder {
   @@index([partnerUserId, status, updatedAt])
   @@index([status, submittedAt])
   @@index([partnerUserId, settlementBatchId, status])
+
+  @@index([schoolUserId])
+
+  @@index([reviewedByUserId])
+
+  @@index([settlementBatchId])
 }
 
 model PartnerNotification {
@@ -524,6 +552,8 @@ model PartnerNotification {
 
   @@index([partnerUserId, readAt, createdAt])
   @@index([type, createdAt])
+
+  @@index([partnerOrderId])
 }
 
 model PartnerOrderTransition {
@@ -590,6 +620,8 @@ model PartnerClaim {
 
   @@index([email, status])
   @@index([promotionCodeId, status])
+
+  @@index([userId])
 }
 
 model TemplateShare {
@@ -626,4 +658,6 @@ model TemplateShareClaim {
 
   @@unique([shareId, userId])
   @@index([email])
+
+  @@index([userId])
 }

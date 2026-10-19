@@ -1,5 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 
+export { finalizeBookOrder } from "./finalize-order";
+
 export {
   BookPart,
   BookSourceType,

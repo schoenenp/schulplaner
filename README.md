@@ -7,10 +7,11 @@ apps/genbooks       customer shop (Next 15)          — was schoenenp/genbooks
 apps/panel_books    staff dashboard (Next 16)        — was schoenenp/panel_books
 packages/pdf-pipeline  shared PDF book generation (TS source, transpiled by the apps)
 packages/db         shared Prisma schema, migrations, and db client (TS source)
+packages/storage    private Hetzner uploads, reads and storage audit (S3 API)
 _archive/           retired code + local git-history backups (not committed)
 ```
 
-Both apps share one MySQL database through `packages/db`: the single
+Both apps share one PostgreSQL database through `packages/db`: the single
 `schema.prisma`, its migrations, and the exported `db` client live there, and
 each app's `src/server/db.ts` just re-exports it.
 
@@ -30,7 +31,7 @@ bun run dev:genbooks     bun run dev:panel
 bun run build:genbooks   bun run build:panel
 bun run start:genbooks   bun run start:panel
 bun run test             # pdf-pipeline tests + genbooks tests
-bun run typecheck        # all four workspaces
+bun run typecheck        # all workspaces
 bun run db:generate      # prisma migrate dev        (packages/db)
 bun run db:migrate       # prisma migrate deploy     (packages/db)
 bun run db:push          # prisma db push            (packages/db)
@@ -65,3 +66,9 @@ from a deploy branch back into `main`.
 
 Coolify + Nixpacks, one service per deploy branch (`gen-main`, `panel-main`) —
 see [DEPLOY.md](DEPLOY.md).
+
+See [STORAGE.md](STORAGE.md) for the Hetzner bucket configuration, migration, and cost controls.
+
+## MySQL to PostgreSQL migration
+
+This checkout prepares the PostgreSQL release. Follow [POSTGRESQL-MIGRATION.md](POSTGRESQL-MIGRATION.md) for local rehearsal, auditing, copying, verification, and cutover. Existing MySQL deployments need the verified data transfer before deploying this release.

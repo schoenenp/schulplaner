@@ -1,12 +1,16 @@
 "use client";
 
-import { useMemo } from "react";
+import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, Mail, TriangleAlert } from "lucide-react";
 
 import LoadingSpinner from "@/app/_components/loading-spinner";
 import { api } from "@/trpc/react";
+import {
+  claimedPlannerPath,
+  templateSignInPath,
+} from "@/util/template-share-navigation";
 
 type TemplateShareEntryProps = {
   token?: string;
@@ -35,12 +39,7 @@ export default function TemplateShareEntry({
   sessionEmail,
 }: TemplateShareEntryProps) {
   const router = useRouter();
-  const callbackUrl = useMemo(() => {
-    if (!token) {
-      return "/template/share";
-    }
-    return `/template/share?claim=${encodeURIComponent(token)}`;
-  }, [token]);
+  const utils = api.useUtils();
   const routeError = getErrorMessage(errorCode);
 
   const share = api.templateShare.getShare.useQuery(
@@ -51,10 +50,9 @@ export default function TemplateShareEntry({
     },
   );
   const claim = api.templateShare.claim.useMutation({
-    onSuccess: (data) => {
-      router.push(
-        `/dashboard?claimedTemplate=${encodeURIComponent(data.bookId)}`,
-      );
+    onSuccess: async (data) => {
+      await utils.book.getUserBooks.invalidate();
+      router.push(claimedPlannerPath(data.bookId));
     },
   });
 
@@ -90,6 +88,22 @@ export default function TemplateShareEntry({
         <p className="mt-3">
           {share.error?.message ?? "Die Vorlage konnte nicht geladen werden."}
         </p>
+        {!isLoggedIn && (
+          <Link
+            className="btn-solid mt-4 inline-flex px-4 py-3"
+            href={templateSignInPath(token)}
+          >
+            Anmelden und vorhandenen Planer öffnen
+          </Link>
+        )}
+        {isLoggedIn && (
+          <Link
+            className="btn-soft mt-4 inline-flex px-4 py-3"
+            href="/dashboard?view=planer"
+          >
+            Zu meinen Planern
+          </Link>
+        )}
       </section>
     );
   }
@@ -122,14 +136,41 @@ export default function TemplateShareEntry({
               Angemeldet als {sessionEmail}
             </p>
           ) : null}
-          <button
-            type="button"
-            onClick={() => claim.mutate({ token })}
-            disabled={claim.isPending}
-            className="btn-solid w-fit px-4 py-3 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {claim.isPending ? "Wird beansprucht..." : "Jetzt beanspruchen!"}
-          </button>
+          {share.data.existingBookId ? (
+            <Link
+              href={claimedPlannerPath(share.data.existingBookId)}
+              className="btn-solid w-fit px-4 py-3"
+            >
+              Meinen Planer öffnen
+            </Link>
+          ) : share.data.recipientMatchesSession === false ? (
+            <div className="flex flex-col gap-3">
+              <p>
+                Diese Einladung gehört zu einer anderen E-Mail-Adresse. Bitte
+                melden Sie sich mit der eingeladenen Adresse an.
+              </p>
+              <button
+                type="button"
+                className="btn-solid w-fit px-4 py-3"
+                onClick={() =>
+                  void signOut({ callbackUrl: templateSignInPath(token) })
+                }
+              >
+                Mit anderer E-Mail anmelden
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => claim.mutate({ token })}
+              disabled={claim.isPending}
+              className="btn-solid w-fit px-4 py-3 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {claim.isPending
+                ? "Wird übernommen..."
+                : "Vorlage übernehmen und öffnen"}
+            </button>
+          )}
           {claim.error ? (
             <p className="border-pirrot-red-200 bg-pirrot-red-50 text-pirrot-red-500 rounded border p-3 text-sm">
               {claim.error.message}
@@ -138,7 +179,7 @@ export default function TemplateShareEntry({
           {claim.data ? (
             <p className="border-pirrot-blue-200 bg-pirrot-blue-50 text-pirrot-blue-700 flex items-center gap-2 rounded border p-3 text-sm">
               <CheckCircle size={16} />
-              Vorlage wurde beansprucht. Weiterleitung zum Dashboard...
+              Vorlage wurde übernommen. Der Planer wird geöffnet.
             </p>
           ) : null}
         </div>
@@ -149,7 +190,7 @@ export default function TemplateShareEntry({
             nach der E-Mail-Bestaetigung automatisch erstellt.
           </p>
           <Link
-            href={`/auth/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`}
+            href={templateSignInPath(token)}
             className="btn-solid mt-4 inline-flex px-4 py-3"
           >
             Anmelden und beanspruchen

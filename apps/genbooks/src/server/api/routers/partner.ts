@@ -1,3 +1,4 @@
+import { cdnAssetUrl } from "@/util/cdn-asset-url";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import type { PartnerOrderStatus, PrismaClient } from "db";
@@ -2798,16 +2799,14 @@ export const partnerRouter = createTRPCRouter({
           ...order.book,
           modules: order.book.modules.map((moduleItem) => {
             const pickedFile = pickModulePdfFile(moduleItem.module.files);
-            const pickedCoverImage = pickCoverImageFile(moduleItem.module.files);
+            const pickedCoverImage = pickCoverImageFile(
+              moduleItem.module.files,
+            );
             const modulePdfUrl = pickedFile
-              ? /^https?:\/\//i.test(pickedFile.src)
-                ? pickedFile.src
-                : `${env.NEXT_PUBLIC_CDN_SERVER_URL}${pickedFile.src}`
-              : `${env.NEXT_PUBLIC_CDN_SERVER_URL}/storage/notizen.pdf`;
+              ? cdnAssetUrl(pickedFile.src)
+              : cdnAssetUrl("/storage/notizen.pdf");
             const coverImageUrl = pickedCoverImage
-              ? /^https?:\/\//i.test(pickedCoverImage.src)
-                ? pickedCoverImage.src
-                : `${env.NEXT_PUBLIC_CDN_SERVER_URL}${pickedCoverImage.src}`
+              ? cdnAssetUrl(pickedCoverImage.src)
               : null;
             return {
               ...moduleItem,
@@ -2821,9 +2820,7 @@ export const partnerRouter = createTRPCRouter({
               coverImageUrl,
               modulePageCount: pickedFile?.pageCount ?? null,
               moduleGrayscalePdfUrl: pickedFile?.srcGrayscale
-                ? /^https?:\/\//i.test(pickedFile.srcGrayscale)
-                  ? pickedFile.srcGrayscale
-                  : `${env.NEXT_PUBLIC_CDN_SERVER_URL}${pickedFile.srcGrayscale}`
+                ? cdnAssetUrl(pickedFile.srcGrayscale)
                 : null,
             };
           }),

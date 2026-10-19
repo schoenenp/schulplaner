@@ -1,3 +1,5 @@
+import { fetchCdnAsset } from "pdf-pipeline";
+import { cdnAssetUrl } from "@/util/cdn-asset-url";
 import type { BookPart } from "db";
 import { PDFDocument, PDFName, PDFBool } from "pdf-lib";
 import type { TagItem } from "@/app/dashboard/module/manage/_components/module-form";
@@ -119,10 +121,8 @@ export const fileToBase64 = (file: File): Promise<string> => {
 
 export const urlToFile = async (url: string, fileName: string) => {
   try {
-    const targetUrl = /^https?:\/\//i.test(url)
-      ? url
-      : `https://cdn.pirrot.de${url}`;
-    const response = await fetch(targetUrl);
+    const targetUrl = cdnAssetUrl(url);
+    const response = await fetchCdnAsset(targetUrl);
     if (!response.ok)
       throw new Error(
         `Failed to fetch the file: ${response.status} ${response.statusText} ${JSON.stringify(response)}`,

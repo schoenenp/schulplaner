@@ -1,20 +1,21 @@
+import { fetchCdnAsset } from "pdf-pipeline";
+import { uploadStorageFiles } from "books-storage";
 /**
  * Backfill File.srcGrayscale for content-module PDFs uploaded before variants
  * existed. Downloads each PDF, converts it once through the grayscale API,
- * uploads the result to the CDN, and stores the variant src. Generation then
+ * uploads the result to object storage, and stores the variant src. Generation then
  * fetches the stored variant instead of converting on every book.
  *
  * Only DEFAULT/PLANNER modules benefit (covers are re-filled per book), and
  * files above the API's 20 MiB limit are skipped.
  *
  * Usage (from apps/genbooks, needs DATABASE_URL, GHOST_GRAYSCALE_API_KEY,
- * UPLOAD_URL_LINK and UPLOAD_API_KEY in the environment):
+ * S3_BUCKET, S3_ENDPOINT, AWS_REGION and S3 credentials in the environment):
  *   bun scripts/backfill-grayscale-variants.ts           # dry run
  *   bun scripts/backfill-grayscale-variants.ts --apply   # convert + write
  */
 import { PrismaClient } from "db";
 
-const CDN_BASE = "https://cdn.pirrot.de";
 const GRAYSCALE_ENDPOINT =
   "https://api.ghost.miomideal.com/api/process/grayscale";
 const GRAYSCALE_UPLOAD_LIMIT_BYTES = 20 * 1024 * 1024;
@@ -23,15 +24,14 @@ const apply = process.argv.includes("--apply");
 const prisma = new PrismaClient();
 
 const ghostApiKey = process.env.GHOST_GRAYSCALE_API_KEY;
-const uploadUrl = process.env.UPLOAD_URL_LINK;
-const uploadApiKey = process.env.UPLOAD_API_KEY;
+
 
 function toAbsoluteUrl(src: string): string {
-  return /^https?:\/\//i.test(src) ? src : `${CDN_BASE}${src}`;
+  return /^https?:\/\//i.test(src) ? src : src;
 }
 
 async function download(url: string): Promise<Uint8Array> {
-  const response = await fetch(url);
+  const response = await fetchCdnAsset(url);
   if (!response.ok) throw new Error(`download failed: ${response.status}`);
   return new Uint8Array(await response.arrayBuffer());
 }
@@ -54,36 +54,16 @@ async function convertToGrayscale(bytes: Uint8Array): Promise<Uint8Array> {
   return new Uint8Array(await response.arrayBuffer());
 }
 
-async function uploadVariant(
-  bytes: Uint8Array,
-  name: string,
-): Promise<string> {
-  const formData = new FormData();
-  formData.append(
-    "file",
-    new File([bytes.slice().buffer], name, { type: "application/pdf" }),
-    name,
-  );
-  const response = await fetch(`${uploadUrl}single`, {
-    method: "post",
-    headers: { "X-API-Key": uploadApiKey! },
-    body: formData,
-  });
-  if (!response.ok) throw new Error(`upload failed: ${response.status}`);
-  const payload = (await response.json()) as {
-    files: { url: string } | Array<{ url: string }>;
-  };
-  const uploaded = Array.isArray(payload.files)
-    ? payload.files[0]
-    : payload.files;
-  if (!uploaded?.url) throw new Error("upload response missing url");
-  return uploaded.url;
+async function uploadVariant(bytes: Uint8Array, name: string): Promise<string> {
+  const [uploaded] = await uploadStorageFiles([{ data: bytes, name }]);
+  if (!uploaded) throw new Error("Missing uploaded grayscale variant");
+  return uploaded.src;
 }
 
 async function main() {
-  if (apply && (!ghostApiKey || !uploadUrl || !uploadApiKey)) {
+  if (apply && (!ghostApiKey || !process.env.S3_BUCKET || !process.env.S3_ENDPOINT || !process.env.AWS_REGION)) {
     throw new Error(
-      "GHOST_GRAYSCALE_API_KEY, UPLOAD_URL_LINK and UPLOAD_API_KEY are required with --apply",
+      "GHOST_GRAYSCALE_API_KEY, S3_BUCKET, S3_ENDPOINT, AWS_REGION and S3 credentials are required with --apply",
     );
   }
 

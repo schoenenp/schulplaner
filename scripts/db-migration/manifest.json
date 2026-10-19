@@ -1,0 +1,3128 @@
+{
+  "version": 1,
+  "schemaSha256": "4df35dfe7ee7e20a2ceae7d8c74cddef9ab8dbbeed210e95b790e0d0b6c20d80",
+  "migrationSha256": "e4ae74921b30cf139c8941c99d4688b9a2c7eeef8a552f5345336dcaaa44dbfb",
+  "targetIndexes": [
+    {
+      "name": "Book_partnerClaimId_key",
+      "table": "Book",
+      "columns": [
+        "partnerClaimId"
+      ]
+    },
+    {
+      "name": "Book_createdById_idx",
+      "table": "Book",
+      "columns": [
+        "createdById"
+      ]
+    },
+    {
+      "name": "Book_copyFromId_idx",
+      "table": "Book",
+      "columns": [
+        "copyFromId"
+      ]
+    },
+    {
+      "name": "BookModule_moduleId_idx",
+      "table": "BookModule",
+      "columns": [
+        "moduleId"
+      ]
+    },
+    {
+      "name": "BookModule_bookId_moduleId_key",
+      "table": "BookModule",
+      "columns": [
+        "bookId",
+        "moduleId"
+      ]
+    },
+    {
+      "name": "ModuleType_name_idx",
+      "table": "ModuleType",
+      "columns": [
+        "name"
+      ]
+    },
+    {
+      "name": "Module_typeId_idx",
+      "table": "Module",
+      "columns": [
+        "typeId"
+      ]
+    },
+    {
+      "name": "Module_createdById_idx",
+      "table": "Module",
+      "columns": [
+        "createdById"
+      ]
+    },
+    {
+      "name": "File_id_name_key",
+      "table": "File",
+      "columns": [
+        "id",
+        "name"
+      ]
+    },
+    {
+      "name": "Account_userId_idx",
+      "table": "Account",
+      "columns": [
+        "userId"
+      ]
+    },
+    {
+      "name": "Account_provider_providerAccountId_key",
+      "table": "Account",
+      "columns": [
+        "provider",
+        "providerAccountId"
+      ]
+    },
+    {
+      "name": "Session_sessionToken_key",
+      "table": "Session",
+      "columns": [
+        "sessionToken"
+      ]
+    },
+    {
+      "name": "Session_userId_idx",
+      "table": "Session",
+      "columns": [
+        "userId"
+      ]
+    },
+    {
+      "name": "User_email_key",
+      "table": "User",
+      "columns": [
+        "email"
+      ]
+    },
+    {
+      "name": "Order_orderKey_key",
+      "table": "Order",
+      "columns": [
+        "orderKey"
+      ]
+    },
+    {
+      "name": "Order_shippingId_key",
+      "table": "Order",
+      "columns": [
+        "shippingId"
+      ]
+    },
+    {
+      "name": "Order_userId_idx",
+      "table": "Order",
+      "columns": [
+        "userId"
+      ]
+    },
+    {
+      "name": "BookOrder_paymentId_key",
+      "table": "BookOrder",
+      "columns": [
+        "paymentId"
+      ]
+    },
+    {
+      "name": "BookOrder_orderId_key",
+      "table": "BookOrder",
+      "columns": [
+        "orderId"
+      ]
+    },
+    {
+      "name": "BookOrder_bookId_idx",
+      "table": "BookOrder",
+      "columns": [
+        "bookId"
+      ]
+    },
+    {
+      "name": "Tooltip_title_idx",
+      "table": "Tooltip",
+      "columns": [
+        "title"
+      ]
+    },
+    {
+      "name": "VerificationToken_token_key",
+      "table": "VerificationToken",
+      "columns": [
+        "token"
+      ]
+    },
+    {
+      "name": "VerificationToken_identifier_token_key",
+      "table": "VerificationToken",
+      "columns": [
+        "identifier",
+        "token"
+      ]
+    },
+    {
+      "name": "Location_addressId_idx",
+      "table": "Location",
+      "columns": [
+        "addressId"
+      ]
+    },
+    {
+      "name": "Location_creatorId_idx",
+      "table": "Location",
+      "columns": [
+        "creatorId"
+      ]
+    },
+    {
+      "name": "CustomDate_bookId_idx",
+      "table": "CustomDate",
+      "columns": [
+        "bookId"
+      ]
+    },
+    {
+      "name": "Campaign_promotionCodeId_key",
+      "table": "Campaign",
+      "columns": [
+        "promotionCodeId"
+      ]
+    },
+    {
+      "name": "PartnerOrder_bookId_key",
+      "table": "PartnerOrder",
+      "columns": [
+        "bookId"
+      ]
+    },
+    {
+      "name": "PartnerOrder_orderId_key",
+      "table": "PartnerOrder",
+      "columns": [
+        "orderId"
+      ]
+    },
+    {
+      "name": "PartnerOrder_partnerUserId_status_updatedAt_idx",
+      "table": "PartnerOrder",
+      "columns": [
+        "partnerUserId",
+        "status",
+        "updatedAt"
+      ]
+    },
+    {
+      "name": "PartnerOrder_status_submittedAt_idx",
+      "table": "PartnerOrder",
+      "columns": [
+        "status",
+        "submittedAt"
+      ]
+    },
+    {
+      "name": "PartnerOrder_partnerUserId_settlementBatchId_status_idx",
+      "table": "PartnerOrder",
+      "columns": [
+        "partnerUserId",
+        "settlementBatchId",
+        "status"
+      ]
+    },
+    {
+      "name": "PartnerOrder_schoolUserId_idx",
+      "table": "PartnerOrder",
+      "columns": [
+        "schoolUserId"
+      ]
+    },
+    {
+      "name": "PartnerOrder_reviewedByUserId_idx",
+      "table": "PartnerOrder",
+      "columns": [
+        "reviewedByUserId"
+      ]
+    },
+    {
+      "name": "PartnerOrder_settlementBatchId_idx",
+      "table": "PartnerOrder",
+      "columns": [
+        "settlementBatchId"
+      ]
+    },
+    {
+      "name": "PartnerNotification_partnerUserId_readAt_createdAt_idx",
+      "table": "PartnerNotification",
+      "columns": [
+        "partnerUserId",
+        "readAt",
+        "createdAt"
+      ]
+    },
+    {
+      "name": "PartnerNotification_type_createdAt_idx",
+      "table": "PartnerNotification",
+      "columns": [
+        "type",
+        "createdAt"
+      ]
+    },
+    {
+      "name": "PartnerNotification_partnerOrderId_idx",
+      "table": "PartnerNotification",
+      "columns": [
+        "partnerOrderId"
+      ]
+    },
+    {
+      "name": "PartnerOrderTransition_partnerOrderId_createdAt_idx",
+      "table": "PartnerOrderTransition",
+      "columns": [
+        "partnerOrderId",
+        "createdAt"
+      ]
+    },
+    {
+      "name": "PartnerOrderTransition_actorUserId_createdAt_idx",
+      "table": "PartnerOrderTransition",
+      "columns": [
+        "actorUserId",
+        "createdAt"
+      ]
+    },
+    {
+      "name": "PartnerSettlementBatch_partnerUserId_status_cycleStart_cycl_idx",
+      "table": "PartnerSettlementBatch",
+      "columns": [
+        "partnerUserId",
+        "status",
+        "cycleStart",
+        "cycleEnd"
+      ]
+    },
+    {
+      "name": "PartnerClaim_verifyTokenHash_key",
+      "table": "PartnerClaim",
+      "columns": [
+        "verifyTokenHash"
+      ]
+    },
+    {
+      "name": "PartnerClaim_email_status_idx",
+      "table": "PartnerClaim",
+      "columns": [
+        "email",
+        "status"
+      ]
+    },
+    {
+      "name": "PartnerClaim_promotionCodeId_status_idx",
+      "table": "PartnerClaim",
+      "columns": [
+        "promotionCodeId",
+        "status"
+      ]
+    },
+    {
+      "name": "PartnerClaim_userId_idx",
+      "table": "PartnerClaim",
+      "columns": [
+        "userId"
+      ]
+    },
+    {
+      "name": "TemplateShare_tokenHash_key",
+      "table": "TemplateShare",
+      "columns": [
+        "tokenHash"
+      ]
+    },
+    {
+      "name": "TemplateShare_templateId_kind_expiresAt_idx",
+      "table": "TemplateShare",
+      "columns": [
+        "templateId",
+        "kind",
+        "expiresAt"
+      ]
+    },
+    {
+      "name": "TemplateShare_createdById_createdAt_idx",
+      "table": "TemplateShare",
+      "columns": [
+        "createdById",
+        "createdAt"
+      ]
+    },
+    {
+      "name": "TemplateShare_recipientEmail_idx",
+      "table": "TemplateShare",
+      "columns": [
+        "recipientEmail"
+      ]
+    },
+    {
+      "name": "TemplateShareClaim_bookId_key",
+      "table": "TemplateShareClaim",
+      "columns": [
+        "bookId"
+      ]
+    },
+    {
+      "name": "TemplateShareClaim_email_idx",
+      "table": "TemplateShareClaim",
+      "columns": [
+        "email"
+      ]
+    },
+    {
+      "name": "TemplateShareClaim_userId_idx",
+      "table": "TemplateShareClaim",
+      "columns": [
+        "userId"
+      ]
+    },
+    {
+      "name": "TemplateShareClaim_shareId_userId_key",
+      "table": "TemplateShareClaim",
+      "columns": [
+        "shareId",
+        "userId"
+      ]
+    },
+    {
+      "name": "_BookModuleToLocation_B_index",
+      "table": "_BookModuleToLocation",
+      "columns": [
+        "B"
+      ]
+    },
+    {
+      "name": "_ModuleToTag_B_index",
+      "table": "_ModuleToTag",
+      "columns": [
+        "B"
+      ]
+    },
+    {
+      "name": "_FileToModule_B_index",
+      "table": "_FileToModule",
+      "columns": [
+        "B"
+      ]
+    }
+  ],
+  "tables": [
+    {
+      "name": "Book",
+      "columns": [
+        {
+          "name": "id",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "bookTitle",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "subTitle",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "format",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": "A5"
+        },
+        {
+          "name": "region",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "planStart",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": "__now__"
+        },
+        {
+          "name": "planEnd",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "country",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": "DE"
+        },
+        {
+          "name": "createdById",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "copyFromId",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "isTemplate",
+          "type": "Boolean",
+          "pgType": "bool",
+          "required": true,
+          "dbDefault": "false"
+        },
+        {
+          "name": "isFeatured",
+          "type": "Boolean",
+          "pgType": "bool",
+          "required": true,
+          "dbDefault": "false"
+        },
+        {
+          "name": "isPublic",
+          "type": "Boolean",
+          "pgType": "bool",
+          "required": true,
+          "dbDefault": "false"
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": "__now__"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "deletedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "clientRef",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": "pirrot"
+        },
+        {
+          "name": "sourceType",
+          "type": "Enum",
+          "pgType": "BookSourceType",
+          "required": true,
+          "dbDefault": "STANDARD",
+          "values": [
+            "STANDARD",
+            "PARTNER_TEMPLATE",
+            "TEMPLATE_SHARE"
+          ]
+        },
+        {
+          "name": "partnerClaimId",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "partnerPromotionCodeId",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "partnerSnapshotBookId",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        }
+      ],
+      "keys": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "partnerClaimId"
+        ]
+      ],
+      "references": [
+        {
+          "columns": [
+            "createdById"
+          ],
+          "table": "User",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "SetNull",
+          "onUpdate": "Cascade"
+        },
+        {
+          "columns": [
+            "copyFromId"
+          ],
+          "table": "Book",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "SetNull",
+          "onUpdate": "Cascade"
+        },
+        {
+          "columns": [
+            "partnerClaimId"
+          ],
+          "table": "PartnerClaim",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "SetNull",
+          "onUpdate": "Cascade"
+        }
+      ]
+    },
+    {
+      "name": "BookModule",
+      "columns": [
+        {
+          "name": "id",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "idx",
+          "type": "Int",
+          "pgType": "int4",
+          "required": true,
+          "dbDefault": "0"
+        },
+        {
+          "name": "colorCode",
+          "type": "Enum",
+          "pgType": "ModuleColors",
+          "required": false,
+          "dbDefault": null,
+          "values": [
+            "GRAYSCALE",
+            "COLOR"
+          ]
+        },
+        {
+          "name": "bookId",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "moduleId",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        }
+      ],
+      "keys": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "bookId",
+          "moduleId"
+        ]
+      ],
+      "references": [
+        {
+          "columns": [
+            "bookId"
+          ],
+          "table": "Book",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "Cascade",
+          "onUpdate": "Cascade"
+        },
+        {
+          "columns": [
+            "moduleId"
+          ],
+          "table": "Module",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "Restrict",
+          "onUpdate": "Cascade"
+        }
+      ]
+    },
+    {
+      "name": "ModuleType",
+      "columns": [
+        {
+          "name": "id",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "minPages",
+          "type": "Int",
+          "pgType": "int4",
+          "required": true,
+          "dbDefault": "0"
+        },
+        {
+          "name": "maxPages",
+          "type": "Int",
+          "pgType": "int4",
+          "required": true,
+          "dbDefault": "-1"
+        },
+        {
+          "name": "deletedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": false,
+          "dbDefault": null
+        }
+      ],
+      "keys": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ]
+      ],
+      "references": []
+    },
+    {
+      "name": "Module",
+      "columns": [
+        {
+          "name": "id",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "typeId",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "part",
+          "type": "Enum",
+          "pgType": "BookPart",
+          "required": true,
+          "dbDefault": "DEFAULT",
+          "values": [
+            "COVER",
+            "DEFAULT",
+            "PLANNER",
+            "BINDING",
+            "SETTINGS"
+          ]
+        },
+        {
+          "name": "theme",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "visible",
+          "type": "Enum",
+          "pgType": "Visibility",
+          "required": true,
+          "dbDefault": "PRIVATE",
+          "values": [
+            "PUBLIC",
+            "SHARED",
+            "PRIVATE"
+          ]
+        },
+        {
+          "name": "createdById",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": "__now__"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "deletedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": false,
+          "dbDefault": null
+        }
+      ],
+      "keys": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ]
+      ],
+      "references": [
+        {
+          "columns": [
+            "typeId"
+          ],
+          "table": "ModuleType",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "Restrict",
+          "onUpdate": "Cascade"
+        },
+        {
+          "columns": [
+            "createdById"
+          ],
+          "table": "User",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "SetNull",
+          "onUpdate": "Cascade"
+        }
+      ]
+    },
+    {
+      "name": "File",
+      "columns": [
+        {
+          "name": "id",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "size",
+          "type": "Int",
+          "pgType": "int4",
+          "required": true,
+          "dbDefault": "15"
+        },
+        {
+          "name": "src",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "type",
+          "type": "Enum",
+          "pgType": "FileType",
+          "required": true,
+          "dbDefault": "PDF",
+          "values": [
+            "PDF",
+            "IMAGE_PNG",
+            "IMAGE_JPEG"
+          ]
+        },
+        {
+          "name": "pageCount",
+          "type": "Int",
+          "pgType": "int4",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "srcGrayscale",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        }
+      ],
+      "keys": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "id",
+          "name"
+        ]
+      ],
+      "references": []
+    },
+    {
+      "name": "Account",
+      "columns": [
+        {
+          "name": "id",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "userId",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "type",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "provider",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "providerAccountId",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "refresh_token",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "access_token",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "expires_at",
+          "type": "Int",
+          "pgType": "int4",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "token_type",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "scope",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "id_token",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "session_state",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "refresh_token_expires_in",
+          "type": "Int",
+          "pgType": "int4",
+          "required": false,
+          "dbDefault": null
+        }
+      ],
+      "keys": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "provider",
+          "providerAccountId"
+        ]
+      ],
+      "references": [
+        {
+          "columns": [
+            "userId"
+          ],
+          "table": "User",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "Cascade",
+          "onUpdate": "Cascade"
+        }
+      ]
+    },
+    {
+      "name": "Session",
+      "columns": [
+        {
+          "name": "id",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "sessionToken",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "userId",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "expires",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": null
+        }
+      ],
+      "keys": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "sessionToken"
+        ]
+      ],
+      "references": [
+        {
+          "columns": [
+            "userId"
+          ],
+          "table": "User",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "Cascade",
+          "onUpdate": "Cascade"
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "columns": [
+        {
+          "name": "id",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "role",
+          "type": "Enum",
+          "pgType": "UserRole",
+          "required": true,
+          "dbDefault": "USER",
+          "values": [
+            "ADMIN",
+            "STAFF",
+            "MODERATOR",
+            "USER",
+            "SPONSOR",
+            "PARTNER"
+          ]
+        },
+        {
+          "name": "email",
+          "type": "String",
+          "pgType": "citext",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "emailVerified",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "image",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        }
+      ],
+      "keys": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "email"
+        ]
+      ],
+      "references": []
+    },
+    {
+      "name": "Order",
+      "columns": [
+        {
+          "name": "id",
+          "type": "Int",
+          "pgType": "int4",
+          "required": true,
+          "dbDefault": "__sequence__",
+          "autoIncrement": true
+        },
+        {
+          "name": "userId",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "orderKey",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "status",
+          "type": "Enum",
+          "pgType": "OrderStatus",
+          "required": true,
+          "dbDefault": "PENDING",
+          "values": [
+            "PENDING",
+            "COMPLETED",
+            "SHIPPED",
+            "CANCELED",
+            "FAILED"
+          ]
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": "__now__"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "deletedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "canceledAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "shippingId",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        }
+      ],
+      "keys": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "orderKey"
+        ],
+        [
+          "shippingId"
+        ]
+      ],
+      "references": [
+        {
+          "columns": [
+            "userId"
+          ],
+          "table": "User",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "SetNull",
+          "onUpdate": "Cascade"
+        },
+        {
+          "columns": [
+            "shippingId"
+          ],
+          "table": "Shipping",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "SetNull",
+          "onUpdate": "Cascade"
+        }
+      ]
+    },
+    {
+      "name": "Payment",
+      "columns": [
+        {
+          "name": "id",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "status",
+          "type": "Enum",
+          "pgType": "PaymentStatus",
+          "required": true,
+          "dbDefault": "PENDING",
+          "values": [
+            "PENDING",
+            "SUCCEEDED",
+            "FAILED",
+            "CANCELLED",
+            "REFUNDED"
+          ]
+        },
+        {
+          "name": "currency",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": "EUR"
+        },
+        {
+          "name": "shippingCost",
+          "type": "Int",
+          "pgType": "int4",
+          "required": true,
+          "dbDefault": "0"
+        },
+        {
+          "name": "price",
+          "type": "Int",
+          "pgType": "int4",
+          "required": true,
+          "dbDefault": "0"
+        },
+        {
+          "name": "total",
+          "type": "Int",
+          "pgType": "int4",
+          "required": true,
+          "dbDefault": "0"
+        },
+        {
+          "name": "shopId",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "cancelKey",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "refundId",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "refundedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": false,
+          "dbDefault": null
+        }
+      ],
+      "keys": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ]
+      ],
+      "references": []
+    },
+    {
+      "name": "BookOrder",
+      "columns": [
+        {
+          "name": "id",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "quantity",
+          "type": "Int",
+          "pgType": "int4",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "bookId",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "paymentId",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "orderId",
+          "type": "Int",
+          "pgType": "int4",
+          "required": false,
+          "dbDefault": null
+        }
+      ],
+      "keys": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "paymentId"
+        ],
+        [
+          "orderId"
+        ]
+      ],
+      "references": [
+        {
+          "columns": [
+            "bookId"
+          ],
+          "table": "Book",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "Cascade",
+          "onUpdate": "Cascade"
+        },
+        {
+          "columns": [
+            "paymentId"
+          ],
+          "table": "Payment",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "Cascade",
+          "onUpdate": "Cascade"
+        },
+        {
+          "columns": [
+            "orderId"
+          ],
+          "table": "Order",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "SetNull",
+          "onUpdate": "Cascade"
+        }
+      ]
+    },
+    {
+      "name": "Tooltip",
+      "columns": [
+        {
+          "name": "id",
+          "type": "Int",
+          "pgType": "int4",
+          "required": true,
+          "dbDefault": "__sequence__",
+          "autoIncrement": true
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "tip",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": "__now__"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "deletedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": false,
+          "dbDefault": null
+        }
+      ],
+      "keys": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ]
+      ],
+      "references": []
+    },
+    {
+      "name": "VerificationToken",
+      "columns": [
+        {
+          "name": "identifier",
+          "type": "String",
+          "pgType": "citext",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "token",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "expires",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": null
+        }
+      ],
+      "keys": [
+        "token"
+      ],
+      "uniques": [
+        [
+          "token"
+        ],
+        [
+          "identifier",
+          "token"
+        ]
+      ],
+      "references": []
+    },
+    {
+      "name": "Shipping",
+      "columns": [
+        {
+          "name": "id",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "trackId",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "status",
+          "type": "Enum",
+          "pgType": "DeliveryStatus",
+          "required": true,
+          "dbDefault": "PENDING",
+          "values": [
+            "PENDING",
+            "PREPARING",
+            "SHIPPED",
+            "COMPLETED",
+            "RETOURING",
+            "RETOURED"
+          ]
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": "__now__"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "deletedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "shippedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "retouredAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": false,
+          "dbDefault": null
+        }
+      ],
+      "keys": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ]
+      ],
+      "references": []
+    },
+    {
+      "name": "Address",
+      "columns": [
+        {
+          "name": "id",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "street",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "streetNr",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "city",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "zip",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "state",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "optional",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "country",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": "DE"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": "__now__"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "deletedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": false,
+          "dbDefault": null
+        }
+      ],
+      "keys": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ]
+      ],
+      "references": []
+    },
+    {
+      "name": "Location",
+      "columns": [
+        {
+          "name": "id",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "type",
+          "type": "Enum",
+          "pgType": "LocationType",
+          "required": true,
+          "dbDefault": "OTHER",
+          "values": [
+            "ORGANIZATION",
+            "SCHOOL",
+            "WAREHOUSE",
+            "OTHER"
+          ]
+        },
+        {
+          "name": "addressId",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "creatorId",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        }
+      ],
+      "keys": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ]
+      ],
+      "references": [
+        {
+          "columns": [
+            "addressId"
+          ],
+          "table": "Address",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "Cascade",
+          "onUpdate": "Cascade"
+        },
+        {
+          "columns": [
+            "creatorId"
+          ],
+          "table": "User",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "Restrict",
+          "onUpdate": "Cascade"
+        }
+      ]
+    },
+    {
+      "name": "Tag",
+      "columns": [
+        {
+          "name": "id",
+          "type": "Int",
+          "pgType": "int4",
+          "required": true,
+          "dbDefault": "__sequence__",
+          "autoIncrement": true
+        },
+        {
+          "name": "type",
+          "type": "Enum",
+          "pgType": "TagType",
+          "required": true,
+          "dbDefault": "DEFAULT",
+          "values": [
+            "CONFIG",
+            "FUNCTION",
+            "DEFAULT"
+          ]
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "desc",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "output",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "status",
+          "type": "Enum",
+          "pgType": "TagStatus",
+          "required": true,
+          "dbDefault": "UNRELEASED",
+          "values": [
+            "RELEASED",
+            "BETA",
+            "UNRELEASED"
+          ]
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": "__now__"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "deletedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": false,
+          "dbDefault": null
+        }
+      ],
+      "keys": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ]
+      ],
+      "references": []
+    },
+    {
+      "name": "CustomDate",
+      "columns": [
+        {
+          "name": "id",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "date",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "bookId",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        }
+      ],
+      "keys": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ]
+      ],
+      "references": [
+        {
+          "columns": [
+            "bookId"
+          ],
+          "table": "Book",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "Cascade",
+          "onUpdate": "Cascade"
+        }
+      ]
+    },
+    {
+      "name": "Campaign",
+      "columns": [
+        {
+          "name": "id",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "sponsorUserId",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "templateId",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "snapshotBookId",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "promotionCodeId",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "maxRedemptions",
+          "type": "Int",
+          "pgType": "int4",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "timesRedeemed",
+          "type": "Int",
+          "pgType": "int4",
+          "required": true,
+          "dbDefault": "0"
+        },
+        {
+          "name": "expiresAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": "__now__"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": null
+        }
+      ],
+      "keys": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "promotionCodeId"
+        ]
+      ],
+      "references": []
+    },
+    {
+      "name": "PartnerOrder",
+      "columns": [
+        {
+          "name": "id",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "partnerUserId",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "schoolUserId",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "reviewedByUserId",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "bookId",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "orderId",
+          "type": "Int",
+          "pgType": "int4",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "status",
+          "type": "Enum",
+          "pgType": "PartnerOrderStatus",
+          "required": true,
+          "dbDefault": "SUBMITTED_BY_SCHOOL",
+          "values": [
+            "SUBMITTED_BY_SCHOOL",
+            "UNDER_PARTNER_REVIEW",
+            "PARTNER_CONFIRMED",
+            "PARTNER_DECLINED",
+            "RELEASED_TO_PRODUCTION",
+            "FULFILLED"
+          ]
+        },
+        {
+          "name": "submittedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": "__now__"
+        },
+        {
+          "name": "reviewedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "declineReason",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "releasedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "fulfilledAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "schoolSnapshot",
+          "type": "Json",
+          "pgType": "jsonb",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "partnerSnapshot",
+          "type": "Json",
+          "pgType": "jsonb",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "lineItemsSnapshot",
+          "type": "Json",
+          "pgType": "jsonb",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "sourceCampaignId",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "sourceClaimId",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "settlementBatchId",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": "__now__"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": null
+        }
+      ],
+      "keys": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "bookId"
+        ],
+        [
+          "orderId"
+        ]
+      ],
+      "references": [
+        {
+          "columns": [
+            "partnerUserId"
+          ],
+          "table": "User",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "Cascade",
+          "onUpdate": "Cascade"
+        },
+        {
+          "columns": [
+            "schoolUserId"
+          ],
+          "table": "User",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "SetNull",
+          "onUpdate": "Cascade"
+        },
+        {
+          "columns": [
+            "reviewedByUserId"
+          ],
+          "table": "User",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "SetNull",
+          "onUpdate": "Cascade"
+        },
+        {
+          "columns": [
+            "bookId"
+          ],
+          "table": "Book",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "Cascade",
+          "onUpdate": "Cascade"
+        },
+        {
+          "columns": [
+            "orderId"
+          ],
+          "table": "Order",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "SetNull",
+          "onUpdate": "Cascade"
+        },
+        {
+          "columns": [
+            "settlementBatchId"
+          ],
+          "table": "PartnerSettlementBatch",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "SetNull",
+          "onUpdate": "Cascade"
+        }
+      ]
+    },
+    {
+      "name": "PartnerNotification",
+      "columns": [
+        {
+          "name": "id",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "partnerUserId",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "partnerOrderId",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "type",
+          "type": "Enum",
+          "pgType": "PartnerNotificationType",
+          "required": true,
+          "dbDefault": null,
+          "values": [
+            "INCOMING_PARTNER_ORDER",
+            "PARTNER_ORDER_CONFIRMED",
+            "PARTNER_ORDER_DECLINED",
+            "PARTNER_ORDER_RELEASED"
+          ]
+        },
+        {
+          "name": "payload",
+          "type": "Json",
+          "pgType": "jsonb",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "readAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": "__now__"
+        }
+      ],
+      "keys": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ]
+      ],
+      "references": [
+        {
+          "columns": [
+            "partnerUserId"
+          ],
+          "table": "User",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "Cascade",
+          "onUpdate": "Cascade"
+        },
+        {
+          "columns": [
+            "partnerOrderId"
+          ],
+          "table": "PartnerOrder",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "SetNull",
+          "onUpdate": "Cascade"
+        }
+      ]
+    },
+    {
+      "name": "PartnerOrderTransition",
+      "columns": [
+        {
+          "name": "id",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "partnerOrderId",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "actorUserId",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "fromStatus",
+          "type": "Enum",
+          "pgType": "PartnerOrderStatus",
+          "required": false,
+          "dbDefault": null,
+          "values": [
+            "SUBMITTED_BY_SCHOOL",
+            "UNDER_PARTNER_REVIEW",
+            "PARTNER_CONFIRMED",
+            "PARTNER_DECLINED",
+            "RELEASED_TO_PRODUCTION",
+            "FULFILLED"
+          ]
+        },
+        {
+          "name": "toStatus",
+          "type": "Enum",
+          "pgType": "PartnerOrderStatus",
+          "required": false,
+          "dbDefault": null,
+          "values": [
+            "SUBMITTED_BY_SCHOOL",
+            "UNDER_PARTNER_REVIEW",
+            "PARTNER_CONFIRMED",
+            "PARTNER_DECLINED",
+            "RELEASED_TO_PRODUCTION",
+            "FULFILLED"
+          ]
+        },
+        {
+          "name": "correlationId",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "payloadHash",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "payload",
+          "type": "Json",
+          "pgType": "jsonb",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": "__now__"
+        }
+      ],
+      "keys": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ]
+      ],
+      "references": [
+        {
+          "columns": [
+            "partnerOrderId"
+          ],
+          "table": "PartnerOrder",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "Cascade",
+          "onUpdate": "Cascade"
+        },
+        {
+          "columns": [
+            "actorUserId"
+          ],
+          "table": "User",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "SetNull",
+          "onUpdate": "Cascade"
+        }
+      ]
+    },
+    {
+      "name": "PartnerSettlementBatch",
+      "columns": [
+        {
+          "name": "id",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "partnerUserId",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "cycleStart",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "cycleEnd",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "status",
+          "type": "Enum",
+          "pgType": "PartnerSettlementBatchStatus",
+          "required": true,
+          "dbDefault": "DRAFT",
+          "values": [
+            "DRAFT",
+            "FINALIZED",
+            "EXPORTED",
+            "PAID",
+            "CANCELLED"
+          ]
+        },
+        {
+          "name": "currency",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": "EUR"
+        },
+        {
+          "name": "summary",
+          "type": "Json",
+          "pgType": "jsonb",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": "__now__"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "finalizedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": false,
+          "dbDefault": null
+        }
+      ],
+      "keys": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ]
+      ],
+      "references": [
+        {
+          "columns": [
+            "partnerUserId"
+          ],
+          "table": "User",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "Cascade",
+          "onUpdate": "Cascade"
+        }
+      ]
+    },
+    {
+      "name": "PartnerClaim",
+      "columns": [
+        {
+          "name": "id",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "campaignId",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "promotionCodeId",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "snapshotBookId",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "email",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "userId",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "bookId",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "status",
+          "type": "Enum",
+          "pgType": "PartnerClaimStatus",
+          "required": true,
+          "dbDefault": "PENDING",
+          "values": [
+            "PENDING",
+            "VERIFIED",
+            "CONSUMED",
+            "EXPIRED"
+          ]
+        },
+        {
+          "name": "verifyTokenHash",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "expiresAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "verifiedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "consumedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": "__now__"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": null
+        }
+      ],
+      "keys": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "verifyTokenHash"
+        ]
+      ],
+      "references": [
+        {
+          "columns": [
+            "userId"
+          ],
+          "table": "User",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "SetNull",
+          "onUpdate": "Cascade"
+        }
+      ]
+    },
+    {
+      "name": "TemplateShare",
+      "columns": [
+        {
+          "name": "id",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "templateId",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "createdById",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "kind",
+          "type": "Enum",
+          "pgType": "TemplateShareKind",
+          "required": true,
+          "dbDefault": "LINK",
+          "values": [
+            "LINK",
+            "INVITE"
+          ]
+        },
+        {
+          "name": "recipientEmail",
+          "type": "String",
+          "pgType": "text",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "tokenHash",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "expiresAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "revokedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": false,
+          "dbDefault": null
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": "__now__"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": null
+        }
+      ],
+      "keys": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "tokenHash"
+        ]
+      ],
+      "references": [
+        {
+          "columns": [
+            "templateId"
+          ],
+          "table": "Book",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "Cascade",
+          "onUpdate": "Cascade"
+        },
+        {
+          "columns": [
+            "createdById"
+          ],
+          "table": "User",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "Cascade",
+          "onUpdate": "Cascade"
+        }
+      ]
+    },
+    {
+      "name": "TemplateShareClaim",
+      "columns": [
+        {
+          "name": "id",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "shareId",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "userId",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "bookId",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "email",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "claimedAt",
+          "type": "DateTime",
+          "pgType": "timestamp",
+          "required": true,
+          "dbDefault": "__now__"
+        }
+      ],
+      "keys": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "bookId"
+        ],
+        [
+          "shareId",
+          "userId"
+        ]
+      ],
+      "references": [
+        {
+          "columns": [
+            "shareId"
+          ],
+          "table": "TemplateShare",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "Cascade",
+          "onUpdate": "Cascade"
+        },
+        {
+          "columns": [
+            "userId"
+          ],
+          "table": "User",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "Cascade",
+          "onUpdate": "Cascade"
+        },
+        {
+          "columns": [
+            "bookId"
+          ],
+          "table": "Book",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "Cascade",
+          "onUpdate": "Cascade"
+        }
+      ]
+    },
+    {
+      "name": "_BookModuleToLocation",
+      "columns": [
+        {
+          "name": "A",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "B",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        }
+      ],
+      "keys": [
+        "A",
+        "B"
+      ],
+      "uniques": [
+        [
+          "A",
+          "B"
+        ]
+      ],
+      "references": [
+        {
+          "columns": [
+            "A"
+          ],
+          "table": "BookModule",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "Cascade",
+          "onUpdate": "Cascade"
+        },
+        {
+          "columns": [
+            "B"
+          ],
+          "table": "Location",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "Cascade",
+          "onUpdate": "Cascade"
+        }
+      ]
+    },
+    {
+      "name": "_ModuleToTag",
+      "columns": [
+        {
+          "name": "A",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "B",
+          "type": "Int",
+          "pgType": "int4",
+          "required": true,
+          "dbDefault": null
+        }
+      ],
+      "keys": [
+        "A",
+        "B"
+      ],
+      "uniques": [
+        [
+          "A",
+          "B"
+        ]
+      ],
+      "references": [
+        {
+          "columns": [
+            "A"
+          ],
+          "table": "Module",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "Cascade",
+          "onUpdate": "Cascade"
+        },
+        {
+          "columns": [
+            "B"
+          ],
+          "table": "Tag",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "Cascade",
+          "onUpdate": "Cascade"
+        }
+      ]
+    },
+    {
+      "name": "_FileToModule",
+      "columns": [
+        {
+          "name": "A",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        },
+        {
+          "name": "B",
+          "type": "String",
+          "pgType": "text",
+          "required": true,
+          "dbDefault": null
+        }
+      ],
+      "keys": [
+        "A",
+        "B"
+      ],
+      "uniques": [
+        [
+          "A",
+          "B"
+        ]
+      ],
+      "references": [
+        {
+          "columns": [
+            "A"
+          ],
+          "table": "File",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "Cascade",
+          "onUpdate": "Cascade"
+        },
+        {
+          "columns": [
+            "B"
+          ],
+          "table": "Module",
+          "targets": [
+            "id"
+          ],
+          "onDelete": "Cascade",
+          "onUpdate": "Cascade"
+        }
+      ]
+    }
+  ]
+}

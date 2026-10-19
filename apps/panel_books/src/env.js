@@ -18,14 +18,17 @@ export const env = createEnv({
     EMAIL_SERVER_SECURE: z.enum(["true", "false"]).optional(),
     EMAIL_SERVER_TIMEOUT_MS: z.coerce.number().int().positive().default(10000),
     EMAIL_FROM: z.string(),
-    UPLOAD_URL_LINK: z.string(),
-    UPLOAD_API_KEY: z.string(),
+    S3_BUCKET: z.string().min(1),
+    AWS_REGION: z.string().min(1),
+    S3_ENDPOINT: z.string().url(),
+    S3_PREFIX: z.string().optional(),
     CUSTOM_COVER_TEMPLATE_URL: z.string().optional(),
     STRIPE_SECRET_KEY: z.string(),
     PARTNER_CONTROLLED_FULFILLMENT_ENABLED: z.string().optional(),
     PARTNER_EU_LEGAL_TEXT: z.string().optional(),
     GHOST_GRAYSCALE_API_KEY: z.string().optional(),
     DATABASE_URL: z.string().url(),
+    DATABASE_MAINTENANCE_MODE: z.enum(["true", "false"]).default("false"),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
@@ -37,7 +40,7 @@ export const env = createEnv({
    * `NEXT_PUBLIC_`.
    */
   client: {
-    NEXT_PUBLIC_CDN_SERVER_URL: z.string(),
+    NEXT_PUBLIC_CDN_SERVER_URL: z.string().default(""),
   },
 
   /**
@@ -54,8 +57,11 @@ export const env = createEnv({
     EMAIL_SERVER_TIMEOUT_MS: process.env.EMAIL_SERVER_TIMEOUT_MS,
     EMAIL_FROM: process.env.EMAIL_FROM,
     DATABASE_URL: process.env.DATABASE_URL,
-    UPLOAD_URL_LINK: process.env.UPLOAD_URL_LINK,
-    UPLOAD_API_KEY: process.env.UPLOAD_API_KEY,
+    DATABASE_MAINTENANCE_MODE: process.env.DATABASE_MAINTENANCE_MODE,
+    S3_BUCKET: process.env.S3_BUCKET,
+    AWS_REGION: process.env.AWS_REGION,
+    S3_ENDPOINT: process.env.S3_ENDPOINT,
+    S3_PREFIX: process.env.S3_PREFIX,
     CUSTOM_COVER_TEMPLATE_URL: process.env.CUSTOM_COVER_TEMPLATE_URL,
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
     PARTNER_CONTROLLED_FULFILLMENT_ENABLED:

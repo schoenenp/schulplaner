@@ -63,6 +63,7 @@ export async function cloneBookForOrder(
     const clonedBook = await tx.book.create({
       data: {
         bookTitle,
+        quantity,
         name,
         subTitle,
         format,

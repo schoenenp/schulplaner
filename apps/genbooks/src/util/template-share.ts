@@ -253,6 +253,7 @@ export async function claimTemplateShareForUser(
           bookTitle: share.template.bookTitle,
           subTitle: share.template.subTitle,
           format: share.template.format,
+          quantity: share.template.quantity,
           region: share.template.region,
           planStart: share.template.planStart,
           planEnd: share.template.planEnd,

@@ -14,13 +14,16 @@ type InitialModuleItem = {
 
 export function useModuleState(initialBook?: {
   name?: string | null;
+  quantity?: number;
   modules?: InitialModuleItem[];
 }) {
   const [previewPrice, setPreviewPrice] = useState<{
     single: number;
     total: number;
   }>({ single: 200, total: 200 });
-  const [orderAmount, setOrderAmount] = useState<number>(1);
+  const [orderAmount, setOrderAmount] = useState<number>(
+    initialBook?.quantity ?? 1,
+  );
   const [nameInput, setNameInput] = useState<string | null>(
     initialBook?.name ?? null,
   );

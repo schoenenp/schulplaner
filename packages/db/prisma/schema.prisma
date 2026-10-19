@@ -13,6 +13,7 @@ model Book {
   name      String?
   bookTitle String?
   subTitle  String?
+  quantity  Int     @default(1)
 
   format    String    @default("A5")
   region    String?

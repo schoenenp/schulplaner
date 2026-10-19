@@ -147,6 +147,7 @@ export const bookRouter = createTRPCRouter({
     .input(
       z.object({
         bookId: z.string(),
+        quantity: z.number().int().min(1).max(5000).optional(),
         modules: z
           .object({
             id: z.string(),
@@ -162,7 +163,7 @@ export const bookRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { bookId, modules: bookModules } = input;
+      const { bookId, quantity, modules: bookModules } = input;
       const book = await getBookAccessMeta(ctx, bookId);
       const sessionUserId = ctx.session?.user.id;
 
@@ -181,6 +182,7 @@ export const bookRouter = createTRPCRouter({
             id: bookId,
           },
           data: {
+            quantity,
             createdBy: ctx.session?.user.id
               ? {
                   connect: {
@@ -449,7 +451,12 @@ export const bookRouter = createTRPCRouter({
     .input(z.object({ templateId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const template = await ctx.db.book.findFirst({
-        where: { id: input.templateId, isTemplate: true, isPublic: true, deletedAt: null },
+        where: {
+          id: input.templateId,
+          isTemplate: true,
+          isPublic: true,
+          deletedAt: null,
+        },
         include: {
           modules: true,
         },
@@ -468,6 +475,7 @@ export const bookRouter = createTRPCRouter({
           bookTitle: template.bookTitle,
           subTitle: template.subTitle,
           format: template.format,
+          quantity: template.quantity,
           region: template.region,
           planStart: template.planStart,
           planEnd: template.planEnd,

@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "schemaSha256": "4df35dfe7ee7e20a2ceae7d8c74cddef9ab8dbbeed210e95b790e0d0b6c20d80",
-  "migrationSha256": "e4ae74921b30cf139c8941c99d4688b9a2c7eeef8a552f5345336dcaaa44dbfb",
+  "schemaSha256": "c7d9db83a03f387fe879b0dba4a59f01681b531438d8da96ed5bcac06015e88b",
+  "migrationSha256": "891e5b72d9dbf12e168b9fba537f04fb79f686c26191b14fe0e27ab51fd09b37",
   "targetIndexes": [
     {
       "name": "Book_partnerClaimId_key",
@@ -450,6 +450,14 @@
           "pgType": "text",
           "required": false,
           "dbDefault": null
+        },
+        {
+          "name": "quantity",
+          "type": "Int",
+          "pgType": "int4",
+          "required": true,
+          "sourceDefault": "1",
+          "dbDefault": "1"
         },
         {
           "name": "format",

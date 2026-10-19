@@ -35,6 +35,11 @@ instead use `MIGRATION_TEST_MYSQL_ADMIN_URL` and
 only their own databases under the `migration_test_*` prefix. Run them with
 `bun --no-env-file test scripts/db-migration`.
 
+The draft quantity migration adds `Book.quantity` with a default of 1.
+The reviewed source mapping initializes this field to 1 when copying legacy
+MySQL planners, which had no saved draft quantity. Unexpected source columns
+still block the migration; existing values are never silently discarded.
+
 The active Prisma migrations are PostgreSQL-only. The archived MySQL schema,
 generated fixture DDL, incremental migration, and old backfill SQL live in
 `packages/db/prisma/mysql/`. That archive is not a production backup.

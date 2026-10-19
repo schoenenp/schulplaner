@@ -87,7 +87,8 @@ suite("MySQL to PostgreSQL rehearsal", () => {
   }
 
   async function insertSource(table: Table, row: Row) {
-    await source.unsafe(`INSERT INTO ${quote(table.name, "mysql")} (${table.columns.map(c => quote(c.name, "mysql")).join(",")}) VALUES (${table.columns.map(() => "?").join(",")})`, table.columns.map(c => row[c.name]));
+    const columns = table.columns.filter(c => c.sourceDefault === undefined);
+    await source.unsafe(`INSERT INTO ${quote(table.name, "mysql")} (${columns.map(c => quote(c.name, "mysql")).join(",")}) VALUES (${columns.map(() => "?").join(",")})`, columns.map(c => row[c.name]));
   }
 
   beforeAll(async () => {
@@ -100,7 +101,7 @@ suite("MySQL to PostgreSQL rehearsal", () => {
     pg.pathname = `/${rollbackName}`; rollbackUrl = pg.toString();
     pg.pathname = `/${deployName}`; deployUrl = pg.toString();
     await loadSchema(source, await readFile(resolve(import.meta.dir, "../../packages/db/prisma/mysql/schema.sql"), "utf8"));
-    const targetDDL = await readFile(resolve(import.meta.dir, "../../packages/db/prisma/migrations/0_postgresql_init/migration.sql"), "utf8");
+    const targetDDL = (await Promise.all(["0_postgresql_init", "20261019170000_draft_quantity"].map(name => readFile(resolve(import.meta.dir, `../../packages/db/prisma/migrations/${name}/migration.sql`), "utf8")))).join("\n");
     await loadSchema(target, targetDDL);
     // A role-named schema normally precedes public in PostgreSQL's search path.
     // Prove the CLI never copies/compares a shadow set of application tables.
@@ -139,7 +140,7 @@ suite("MySQL to PostgreSQL rehearsal", () => {
     }
     const deployed = connect(deployUrl, "postgresql");
     try {
-      expect((await deployed.unsafe('SELECT migration_name FROM "_prisma_migrations" WHERE finished_at IS NOT NULL')).map((r: { migration_name: string }) => r.migration_name)).toEqual(["0_postgresql_init"]);
+      expect((await deployed.unsafe('SELECT migration_name FROM "_prisma_migrations" WHERE finished_at IS NOT NULL ORDER BY migration_name')).map((r: { migration_name: string }) => r.migration_name)).toEqual(["0_postgresql_init", "20261019170000_draft_quantity"]);
     } finally { await deployed.close(); }
   }, 30000);
 
@@ -167,6 +168,7 @@ suite("MySQL to PostgreSQL rehearsal", () => {
   }, 30000);
 
   it("preserves mapped columns, self-references, JSON precision, Unicode, dates and joins", async () => {
+    expect((await target.unsafe('SELECT "quantity" FROM "Book" ORDER BY id')).map((row: { quantity: number }) => row.quantity)).toEqual([1, 1]);
     expect((await target.unsafe('SELECT "copyFromId" FROM "Book" WHERE id=\'copy\''))[0].copyFromId).toBe("template");
     expect((await target.unsafe('SELECT "partnerSnapshot"::text AS value FROM "PartnerOrder"'))[0].value).toContain("9007199254740993123");
     expect((await target.unsafe('SELECT "schoolSnapshot"::text AS value, "schoolSnapshot" IS NULL AS sql_null FROM "PartnerOrder"'))[0]).toEqual({ value: "null", sql_null: false });

@@ -22,6 +22,7 @@ export default async function ConfigPage({
         <div className="subtle-grid pointer-events-none absolute inset-0 opacity-30" />
         <Navigation />
         <BookConfig
+          key={bookId}
           bookId={bookId}
           isLoggedIn={isLoggedIn}
           partnerToken={pt ?? st}

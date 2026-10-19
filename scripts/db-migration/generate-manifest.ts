@@ -15,6 +15,8 @@ const tables = models.map(model => ({
     pgType: f.kind === "enum" ? f.type : f.nativeType?.[0] === "Citext" ? "citext"
       : ({ String: "text", Int: "int4", Boolean: "bool", DateTime: "timestamp", Json: "jsonb" }[f.type]),
     required: f.isRequired,
+    // Draft quantity did not exist in the legacy MySQL source.
+    ...(model.name === "Book" && f.name === "quantity" ? { sourceDefault: "1" } : {}),
     dbDefault: typeof f.default === "object" && f.default !== null && "name" in f.default
       ? f.default.name === "now" ? "__now__" : f.default.name === "autoincrement" ? "__sequence__" : null
       : f.hasDefaultValue ? String(f.default) : null,

@@ -474,6 +474,7 @@ export default function BookConfig(props: {
     setIsMakingPreview,
   } = useModuleState({
     name: existingBook?.name,
+    quantity: existingBook?.quantity,
     modules: existingBook?.modules.map((moduleItem) => ({
       id: moduleItem.moduleId,
       idx: moduleItem.idx,
@@ -1188,6 +1189,7 @@ export default function BookConfig(props: {
 
     await saveConfigModules({
       bookId,
+      quantity: orderAmount,
       modules: [
         ...pickedModules.COVER.map((id) => ({
           id,
@@ -2708,6 +2710,8 @@ export default function BookConfig(props: {
                     className="field-shell w-full px-3 py-2.5"
                     type="number"
                     min={1}
+                    max={5000}
+                    step={1}
                     onChange={(event) =>
                       setOrderAmount(Number(event.target.value))
                     }

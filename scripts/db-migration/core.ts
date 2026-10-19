@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import rawManifest from "./manifest.json";
 import { canonicalJson, normalizeValue } from "./canonical";
 
-export type Column = { name: string; type: string; pgType: string; dbDefault: string | null; required: boolean; values?: string[]; autoIncrement?: boolean };
+export type Column = { name: string; type: string; pgType: string; dbDefault: string | null; required: boolean; values?: string[]; autoIncrement?: boolean; sourceDefault?: string };
 export type Reference = { columns: string[]; table: string; targets: string[]; onDelete: string; onUpdate: string };
 export type Table = { name: string; columns: Column[]; keys: string[]; uniques: string[][]; references: Reference[] };
 export type Row = Record<string, string | null>;
@@ -76,10 +76,11 @@ export async function inventory(db: Database, engine: Engine) {
     : "SELECT table_name, column_name AS name, data_type, udt_name AS native_type, is_nullable AS nullable, collation_name, column_default AS default_value, datetime_precision FROM information_schema.columns WHERE table_schema = 'public' ORDER BY table_name, ordinal_position");
   for (const table of manifest.tables) {
     const actual = columnRows.filter((c: { table_name: string }) => c.table_name === table.name);
-    if (actual.length !== table.columns.length || table.columns.some(c => !actual.some((a: { name: string }) => a.name === c.name))) {
+    const columns = table.columns.filter(c => engine !== "mysql" || c.sourceDefault === undefined);
+    if (actual.length !== columns.length || columns.some(c => !actual.some((a: { name: string }) => a.name === c.name))) {
       throw new Error(`Column inventory mismatch in ${table.name}; preserve and explicitly map schema drift first`);
     }
-    for (const column of table.columns) {
+    for (const column of columns) {
       const live = actual.find((a: { name: string }) => a.name === column.name)!;
       if ((live.nullable === "NO") !== column.required) throw new Error(`Nullability drift in ${table.name}.${column.name}`);
       const allowed: Record<string, string[]> = engine === "mysql"
@@ -156,6 +157,9 @@ export async function inventory(db: Database, engine: Engine) {
 function selectColumns(table: Table, engine: Engine) {
   return table.columns.map(c => {
     const name = quote(c.name, engine);
+    if (engine === "mysql" && c.sourceDefault !== undefined) {
+      return `'${c.sourceDefault.replaceAll("'", "''")}' AS ${name}`;
+    }
     const expression = c.type === "DateTime"
       ? engine === "mysql" ? `DATE_FORMAT(${name}, '%Y-%m-%d %H:%i:%s.%f')` : `to_char(${name}, 'YYYY-MM-DD HH24:MI:SS.US')`
       : engine === "mysql" ? `CAST(${name} AS CHAR CHARACTER SET utf8mb4)` : `${name}::text`;

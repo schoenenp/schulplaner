@@ -1,0 +1,2 @@
+ALTER TABLE "Book" ADD COLUMN "quantity" INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE "Book" ADD CONSTRAINT "Book_quantity_range" CHECK ("quantity" BETWEEN 1 AND 5000);

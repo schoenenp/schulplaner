@@ -2,6 +2,7 @@ import { cdnAssetUrl } from "@/util/cdn-asset-url";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import type { Prisma } from "db";
+import { catalogModuleWhere } from "@/server/util/module/catalog";
 
 import { protectedProcedure, createTRPCRouter } from "@/server/api/trpc";
 import { enforceProcedureRateLimit } from "@/server/util/rate-limit";
@@ -65,17 +66,21 @@ export const plannerRouter = createTRPCRouter({
         where: { deletedAt: null, isTemplate: true, isFeatured: true },
       }),
       ctx.db.book.count({
-        where: { deletedAt: null, isTemplate: false, createdById: { not: null } },
+        where: {
+          deletedAt: null,
+          isTemplate: false,
+          createdById: { not: null },
+        },
       }),
-      ctx.db.module.count({ where: { deletedAt: null } }),
+      ctx.db.module.count({ where: catalogModuleWhere }),
       ctx.db.module.groupBy({
         by: ["visible"],
-        where: { deletedAt: null },
+        where: catalogModuleWhere,
         _count: { _all: true },
       }),
       ctx.db.module.groupBy({
         by: ["typeId"],
-        where: { deletedAt: null },
+        where: catalogModuleWhere,
         _count: { _all: true },
       }),
       ctx.db.moduleType.findMany({

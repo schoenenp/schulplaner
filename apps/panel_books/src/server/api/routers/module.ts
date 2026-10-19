@@ -8,6 +8,7 @@ import {
   publicProcedure,
 } from "@/server/api/trpc";
 import { handleBookPart } from "@/server/util/module/functions";
+import { catalogModuleWhere } from "@/server/util/module/catalog";
 import {
   isModulePdfFile,
   isThumbnailFile,
@@ -39,10 +40,6 @@ const uploadedFileInput = z.object({
   srcGrayscale: z.string().nullish(),
 });
 
-const activeModuleWhere: Prisma.ModuleWhereInput = {
-  deletedAt: null,
-};
-
 function buildModuleListWhere(filters: {
   search?: string;
   type?: string;
@@ -56,7 +53,7 @@ function buildModuleListWhere(filters: {
   const typeTerm = type?.trim();
 
   return {
-    ...activeModuleWhere,
+    ...catalogModuleWhere,
     ...(visibility ? { visible: visibility } : {}),
     ...(part ? { part } : {}),
     ...(origin
@@ -79,7 +76,10 @@ function buildModuleListWhere(filters: {
             { theme: { contains: searchTerm, mode: "insensitive" } },
             {
               type: {
-                name: { contains: searchTerm.toLowerCase(), mode: "insensitive" },
+                name: {
+                  contains: searchTerm.toLowerCase(),
+                  mode: "insensitive",
+                },
               },
             },
           ],
@@ -130,7 +130,7 @@ export const moduleRouter = createTRPCRouter({
   initPage: protectedProcedure.query(async ({ ctx }) => {
     const [modules, tags, types] = await Promise.all([
       ctx.db.module.findMany({
-        where: activeModuleWhere,
+        where: catalogModuleWhere,
         include: {
           type: true,
           files: true,
@@ -266,7 +266,7 @@ export const moduleRouter = createTRPCRouter({
       tooltipTotal,
     ] = await Promise.all([
       ctx.db.module.findMany({
-        where: activeModuleWhere,
+        where: catalogModuleWhere,
         select: {
           id: true,
           name: true,
@@ -296,14 +296,14 @@ export const moduleRouter = createTRPCRouter({
       }),
       ctx.db.module.groupBy({
         by: ["visible"],
-        where: activeModuleWhere,
+        where: catalogModuleWhere,
         _count: {
           _all: true,
         },
       }),
       ctx.db.module.groupBy({
         by: ["part"],
-        where: activeModuleWhere,
+        where: catalogModuleWhere,
         _count: {
           _all: true,
         },
@@ -318,7 +318,7 @@ export const moduleRouter = createTRPCRouter({
           _count: {
             select: {
               modules: {
-                where: activeModuleWhere,
+                where: catalogModuleWhere,
               },
             },
           },

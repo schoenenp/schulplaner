@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { catalogModuleWhere } from "@/server/util/module/catalog";
 
 import {
   createTRPCRouter,
@@ -27,7 +28,7 @@ export const typeRouter = createTRPCRouter({
       },
       include: {
         _count: {
-          select: { modules: { where: { deletedAt: null } } },
+          select: { modules: { where: catalogModuleWhere } },
         },
       },
     });

@@ -148,29 +148,34 @@ export default function ModuleCarousel(props: ModuleCarouselProps) {
         />
       ) : null}
 
-      <section className="content-card overflow-hidden p-3">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex max-w-full gap-2 overflow-x-auto py-1">
+      <section className="content-card overflow-hidden p-3 max-md:p-2">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3 max-md:mb-1 max-md:flex-nowrap max-md:gap-2">
+          <div className="flex max-w-full gap-2 overflow-x-auto py-1 max-md:min-w-0 max-md:flex-1 max-md:gap-0 max-md:py-0">
             {props.items.map((item, index) => (
               <button
                 key={item.id}
                 type="button"
                 onClick={() => scrollTo(index)}
-                className={`h-2.5 shrink-0 rounded-full transition-all ${
-                  selectedIndex === index
-                    ? `${carouselAccent.indicatorActive} w-8`
-                    : `${carouselAccent.indicatorIdle} w-2.5`
-                }`}
+                className="flex h-11 shrink-0 items-center max-md:px-1.5 md:h-auto"
                 aria-label={`Zu Modul ${index + 1}`}
-              />
+                aria-current={selectedIndex === index ? "true" : undefined}
+              >
+                <span
+                  className={`block h-2.5 rounded-full transition-all ${
+                    selectedIndex === index
+                      ? `${carouselAccent.indicatorActive} w-8`
+                      : `${carouselAccent.indicatorIdle} w-2.5`
+                  }`}
+                />
+              </button>
             ))}
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex shrink-0 gap-2">
             <button
               type="button"
               onClick={scrollPrev}
-              className="btn-soft rounded-full p-2"
+              className="btn-soft rounded-full p-2 max-md:p-3"
               aria-label="Vorheriges Modul"
             >
               <ChevronLeft className="size-5" />
@@ -178,7 +183,7 @@ export default function ModuleCarousel(props: ModuleCarouselProps) {
             <button
               type="button"
               onClick={scrollNext}
-              className="btn-soft rounded-full p-2"
+              className="btn-soft rounded-full p-2 max-md:p-3"
               aria-label="Nächstes Modul"
             >
               <ChevronRight className="size-5" />
@@ -193,6 +198,38 @@ export default function ModuleCarousel(props: ModuleCarouselProps) {
               };
               const selected = props.isPicked(item.id);
               const accent = getAccentClasses(item.type);
+              const renderPickButton = (className: string) => (
+                <button
+                  type="button"
+                  disabled={disabledState.disabled}
+                  aria-pressed={selected}
+                  onClick={() =>
+                    props.onPickedItem({
+                      id: item.id,
+                      type: item.type,
+                    })
+                  }
+                  className={`flex items-center justify-between gap-2 p-3 ${
+                    selected ? "btn-soft" : "btn-solid"
+                  } ${
+                    disabledState.disabled
+                      ? "cursor-not-allowed opacity-60"
+                      : ""
+                  } ${className}`}
+                >
+                  {selected ? (
+                    <>
+                      <MinusIcon className="size-5" />
+                      Abwählen
+                    </>
+                  ) : (
+                    <>
+                      <PlusIcon className="size-5" />
+                      Auswählen
+                    </>
+                  )}
+                </button>
+              );
               const imageSrc =
                 imageFallbacks[item.id] ??
                 (item.thumbnail && item.thumbnail.length > 0
@@ -210,11 +247,11 @@ export default function ModuleCarousel(props: ModuleCarouselProps) {
                     <div
                       className={`absolute inset-x-0 top-0 h-1 ${accent.bar}`}
                     />
-                    <div className="grid min-h-[560px] grid-cols-1 lg:grid-cols-[2fr_1fr] 2xl:min-h-[720px] 2xl:grid-cols-[minmax(0,1fr)_18rem]">
+                    <div className="grid grid-cols-1 md:min-h-[560px] lg:grid-cols-[2fr_1fr] 2xl:min-h-[720px] 2xl:grid-cols-[minmax(0,1fr)_18rem]">
                       <button
                         type="button"
                         onClick={() => setPreviewModule(item)}
-                        className="field-shell group relative m-3 min-h-[360px] overflow-hidden rounded-lg text-left lg:min-h-[536px] 2xl:min-h-[696px]"
+                        className="field-shell group relative m-3 h-[clamp(10rem,calc(100dvh-31rem),19rem)] overflow-hidden rounded-lg text-left max-md:mb-2 md:h-auto md:min-h-[360px] lg:min-h-[536px] 2xl:min-h-[696px]"
                         aria-label={`${item.name} Vorschau öffnen`}
                       >
                         <Image
@@ -237,8 +274,17 @@ export default function ModuleCarousel(props: ModuleCarouselProps) {
                         </span>
                       </button>
 
-                      <aside className="flex min-h-0 flex-col justify-between gap-4 border-t border-white/70 p-4 lg:border-t-0 lg:border-l">
-                        <div className="flex flex-col gap-4">
+                      <div className="mx-3 mb-3 grid gap-2 md:hidden">
+                        {renderPickButton("min-h-12")}
+                        {disabledState.disabled && disabledState.reason ? (
+                          <p className="border-warning-300 bg-warning-100/70 text-warning-900 rounded-lg border px-3 py-2 text-sm font-bold">
+                            {disabledState.reason}
+                          </p>
+                        ) : null}
+                      </div>
+
+                      <aside className="flex min-h-0 flex-col justify-between gap-4 border-t border-white/70 p-4 max-md:gap-3 max-md:p-3 lg:border-t-0 lg:border-l">
+                        <div className="flex flex-col gap-4 max-md:gap-3">
                           <div className="flex flex-wrap items-center gap-2">
                             <span
                               className={`rounded-full px-3 py-1 text-xs font-bold tracking-wide uppercase ${accent.badge}`}
@@ -256,31 +302,31 @@ export default function ModuleCarousel(props: ModuleCarouselProps) {
                             <p className={`text-sm font-bold ${accent.text}`}>
                               Modul {index + 1} von {props.items.length}
                             </p>
-                            <h3 className="text-info-950 mt-1 text-2xl font-bold">
+                            <h3 className="text-info-950 mt-1 text-2xl font-bold max-md:text-xl">
                               {item.name}
                             </h3>
                           </div>
 
-                          <dl className="grid gap-2 text-sm">
-                            <div className="field-shell flex flex-wrap items-start justify-between gap-x-3 gap-y-1 px-3 py-2">
+                          <dl className="grid gap-2 text-sm max-md:grid-cols-3 max-md:gap-1.5 max-md:text-xs">
+                            <div className="field-shell flex flex-wrap items-start justify-between gap-x-3 gap-y-1 px-3 py-2 max-md:flex-col max-md:justify-start max-md:px-2 max-md:py-1.5">
                               <dt className="text-info-800 font-bold">Thema</dt>
-                              <dd className="min-w-0 text-right font-bold break-words">
+                              <dd className="min-w-0 text-right font-bold break-words max-md:text-left">
                                 {item.theme ?? "Ohne Thema"}
                               </dd>
                             </div>
-                            <div className="field-shell flex flex-wrap items-start justify-between gap-x-3 gap-y-1 px-3 py-2">
+                            <div className="field-shell flex flex-wrap items-start justify-between gap-x-3 gap-y-1 px-3 py-2 max-md:flex-col max-md:justify-start max-md:px-2 max-md:py-1.5">
                               <dt className="text-info-800 font-bold">
                                 Bereich
                               </dt>
-                              <dd className="min-w-0 text-right font-bold break-words">
+                              <dd className="min-w-0 text-right font-bold break-words max-md:text-left">
                                 {MODULE_PART_LABELS[item.part] ?? item.part}
                               </dd>
                             </div>
-                            <div className="field-shell flex flex-wrap items-start justify-between gap-x-3 gap-y-1 px-3 py-2">
+                            <div className="field-shell flex flex-wrap items-start justify-between gap-x-3 gap-y-1 px-3 py-2 max-md:flex-col max-md:justify-start max-md:px-2 max-md:py-1.5">
                               <dt className="text-info-800 font-bold">
                                 Seitenzahl
                               </dt>
-                              <dd className="min-w-0 text-right font-bold">
+                              <dd className="min-w-0 text-right font-bold max-md:text-left">
                                 {typeof item.pageCount === "number" &&
                                 item.pageCount > 0
                                   ? `${item.pageCount} ${item.pageCount === 1 ? "Seite" : "Seiten"}`
@@ -290,42 +336,14 @@ export default function ModuleCarousel(props: ModuleCarouselProps) {
                           </dl>
 
                           {disabledState.disabled && disabledState.reason ? (
-                            <p className="border-warning-300 bg-warning-100/70 text-warning-900 rounded-lg border px-3 py-2 text-sm font-bold">
+                            <p className="border-warning-300 bg-warning-100/70 text-warning-900 rounded-lg border px-3 py-2 text-sm font-bold max-md:hidden">
                               {disabledState.reason}
                             </p>
                           ) : null}
                         </div>
 
                         <div className="grid gap-2">
-                          <button
-                            type="button"
-                            disabled={disabledState.disabled}
-                            onClick={() =>
-                              props.onPickedItem({
-                                id: item.id,
-                                type: item.type,
-                              })
-                            }
-                            className={`flex items-center justify-between gap-2 p-3 ${
-                              selected ? "btn-soft" : "btn-solid"
-                            } ${
-                              disabledState.disabled
-                                ? "cursor-not-allowed opacity-60"
-                                : ""
-                            }`}
-                          >
-                            {selected ? (
-                              <>
-                                <MinusIcon className="size-5" />
-                                Abwählen
-                              </>
-                            ) : (
-                              <>
-                                <PlusIcon className="size-5" />
-                                Auswählen
-                              </>
-                            )}
-                          </button>
+                          {renderPickButton("max-md:hidden")}
                           {typeof item.booksCount === "number" &&
                           item.booksCount > 0 ? (
                             <div className="text-info-800 mt-1 flex flex-wrap items-start gap-x-2 gap-y-1 border-t border-white/70 pt-3 text-xs">

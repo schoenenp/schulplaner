@@ -162,6 +162,8 @@ export default function ModuleChanger(props: {
             <div className="flex size-12 items-center justify-center p-0.5">
               <button
                 type="button"
+                aria-label={`${item.name} entfernen`}
+                className="max-md:flex max-md:size-11 max-md:items-center max-md:justify-center"
                 onClick={() => handleRemoveItem(item.id, bucket)}
               >
                 <XIcon />
@@ -223,7 +225,7 @@ export default function ModuleChanger(props: {
                       : "BINDING",
                 )
               }
-              className="text-info-950"
+              className="text-info-950 max-md:flex max-md:size-11 max-md:items-center max-md:justify-center"
             >
               <XIcon />
             </button>
@@ -276,14 +278,14 @@ export default function ModuleChanger(props: {
           <button
             type="button"
             onClick={() => setAllModuleColors(1)}
-            className={`btn-soft flex-1 p-1 ${contentIsColor !== null && !contentIsColor ? "border-pirrot-blue-700/50 border-2" : ""}`}
+            className={`btn-soft flex-1 p-1 max-md:min-h-11 ${contentIsColor !== null && !contentIsColor ? "border-pirrot-blue-700/50 border-2" : ""}`}
           >
             S/W
           </button>
           <button
             type="button"
             onClick={() => setAllModuleColors(4)}
-            className={`btn-soft flex-1 p-1 ${contentIsColor !== null && contentIsColor ? "border-pirrot-blue-700/50 border-2" : ""}`}
+            className={`btn-soft flex-1 p-1 max-md:min-h-11 ${contentIsColor !== null && contentIsColor ? "border-pirrot-blue-700/50 border-2" : ""}`}
           >
             Farbe
           </button>
@@ -355,14 +357,14 @@ function ModuleColorChanger(props: {
       <button
         type="button"
         onClick={() => onColorChange(moduleId, 1)}
-        className={`rounded-full px-2 py-1 ${currentColor === 1 ? "bg-info-950 text-white" : ""}`}
+        className={`rounded-full px-2 py-1 max-md:min-h-9 max-md:px-3 max-md:text-sm ${currentColor === 1 ? "bg-info-950 text-white" : ""}`}
       >
         S/W
       </button>
       <button
         type="button"
         onClick={() => onColorChange(moduleId, 4)}
-        className={`rounded-full px-2 py-1 ${currentColor === 4 ? "bg-pirrot-blue-600 text-white" : ""}`}
+        className={`rounded-full px-2 py-1 max-md:min-h-9 max-md:px-3 max-md:text-sm ${currentColor === 4 ? "bg-pirrot-blue-600 text-white" : ""}`}
       >
         Farbe
       </button>

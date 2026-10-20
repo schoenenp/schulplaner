@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type ModalType =
   | "info"
@@ -17,6 +17,20 @@ export function useUIState() {
   const [isBookInfoOpen, setIsBookInfoOpen] = useState(true);
   const [isCostOpen, setIsCostOpen] = useState(true);
   const [onlyPickedModules, setOnlyPickedModules] = useState(false);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
+  useEffect(() => {
+    const mobile = window.matchMedia("(max-width: 767px)");
+    // On mobile both panels are bottom sheets, so they start closed.
+    const syncViewport = () => {
+      setIsMobileViewport(mobile.matches);
+      if (!mobile.matches) return;
+      setIsFilterOpen(false);
+      setIsBookInfoOpen(false);
+    };
+    syncViewport();
+    mobile.addEventListener("change", syncViewport);
+    return () => mobile.removeEventListener("change", syncViewport);
+  }, []);
   const [previewFileURL, setPreviewFileURL] = useState<string | undefined>();
   const [configWarnings, setConfigWarnings] = useState<string[]>([]);
   const [acceptPolicies, setAcceptPolicies] = useState({
@@ -40,6 +54,7 @@ export function useUIState() {
     setIsCostOpen,
     onlyPickedModules,
     setOnlyPickedModules,
+    isMobileViewport,
     configWarnings,
     setConfigWarnings,
   };

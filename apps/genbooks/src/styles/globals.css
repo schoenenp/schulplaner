@@ -262,3 +262,18 @@ textarea:focus-visible {
   animation: rise 420ms ease both;
   animation-delay: var(--stagger-delay, 0ms);
 }
+
+/* Configurator dialogs on phones: content dialogs fill the screen, short ones
+   sit at the bottom. Unlayered like .content-card so it can override it. */
+@media (max-width: 767px) {
+  .mobile-dialog { padding: 0; align-items: stretch; }
+  .mobile-dialog > * { max-width: none; max-height: none; height: 100%; border-radius: 0; border-width: 0; overflow-y: auto; padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
+  .mobile-dialog > * > .content-card { flex: 1; border-radius: 0; border-width: 0; }
+  .mobile-dialog--sheet { align-items: flex-end; }
+  .mobile-dialog--sheet > * { height: auto; max-height: 90dvh; border-radius: 1rem 1rem 0 0; }
+}
+
+/* iOS zooms into text fields below 16px; keep every field at 16px on phones. */
+@media (max-width: 767px) {
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]), select, textarea { font-size: 16px; }
+}

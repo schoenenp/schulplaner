@@ -9,13 +9,17 @@ import {
 import Link from "next/link";
 import { auth } from "@/server/auth";
 
-export default async function Navigation() {
+export default async function Navigation({
+  compact = false,
+}: {
+  compact?: boolean;
+}) {
   const session = await auth();
 
   return (
     <header
       id="navigation"
-      className="sticky top-0 z-[101] mt-4 w-full px-3 sm:px-5"
+      className={`sticky top-0 z-[101] w-full shrink-0 px-3 sm:px-5 ${compact ? "mt-1 md:mt-4" : "mt-4"}`}
     >
       <div className="content-card relative mx-auto flex w-full max-w-screen-xl items-center justify-between px-3 py-2 text-info-900">
         <Link

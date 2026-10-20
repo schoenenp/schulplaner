@@ -6,6 +6,7 @@ import {
   ClipboardCopy,
   LoaderCircle,
   Mail,
+  PencilLine,
   PlusIcon,
   Send,
   TrashIcon,
@@ -348,14 +349,17 @@ export default function PlanerSection() {
           </p>
         ) : null}
       </div>
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
         <Link
           href="/"
           aria-label="Neuen Planer erstellen"
           title="Neuen Planer erstellen"
-          className="content-card text-pirrot-blue-500 hover:text-pirrot-blue-700 flex min-h-48 cursor-pointer items-center justify-center p-1"
+          className="content-card text-pirrot-blue-500 hover:text-pirrot-blue-700 flex min-h-48 cursor-pointer items-center justify-center gap-3 p-1 max-md:min-h-16 max-md:justify-start max-md:px-4 max-md:py-3"
         >
           <PlusIcon className="size-8" />
+          <span className="text-info-900 font-bold md:hidden">
+            Neuen Planer erstellen
+          </span>
         </Link>
         {userBooks.map((book, index) => {
           const isDeletingThisBook =
@@ -371,12 +375,12 @@ export default function PlanerSection() {
           const shareFeedback = shareFeedbackByBookId[book.id];
           return (
             <div
-              className="field-shell stagger-item flex min-h-48 flex-col p-3"
+              className="field-shell stagger-item flex min-h-48 flex-col p-3 max-md:min-h-0"
               key={book.id}
               style={{ animationDelay: `${(index + 1) * 60}ms` }}
             >
               <Link
-                className="text-info-900 hover:text-pirrot-blue-700 font-bold"
+                className="text-info-900 hover:text-pirrot-blue-700 font-bold max-md:text-lg"
                 href={`/config?bookId=${book.id}`}
               >
                 {book.name}
@@ -431,7 +435,7 @@ export default function PlanerSection() {
                       createShareLink.mutate({ templateId: book.id })
                     }
                     disabled={isCreatingShareLink}
-                    className="btn-soft inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-xs uppercase disabled:cursor-not-allowed disabled:opacity-60"
+                    className="btn-soft inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-xs uppercase disabled:cursor-not-allowed disabled:opacity-60 max-md:min-h-11"
                   >
                     {isCreatingShareLink ? (
                       <LoaderCircle className="size-4 animate-spin" />
@@ -452,7 +456,7 @@ export default function PlanerSection() {
                       <button
                         type="button"
                         onClick={() => void copyShareLink(book.id, shareLink)}
-                        className="btn-soft inline-flex size-9 shrink-0 items-center justify-center rounded-md"
+                        className="btn-soft inline-flex size-9 shrink-0 items-center justify-center rounded-md max-md:size-11"
                         aria-label="Template-Link kopieren"
                         title="Template-Link kopieren"
                       >
@@ -489,7 +493,7 @@ export default function PlanerSection() {
                       <button
                         type="submit"
                         disabled={isSendingInvite || !inviteEmail.trim()}
-                        className="btn-soft inline-flex size-9 shrink-0 items-center justify-center rounded-md disabled:cursor-not-allowed disabled:opacity-60"
+                        className="btn-soft inline-flex size-9 shrink-0 items-center justify-center rounded-md disabled:cursor-not-allowed disabled:opacity-60 max-md:size-11"
                         aria-label="Einladung senden"
                         title="Einladung senden"
                       >
@@ -507,19 +511,26 @@ export default function PlanerSection() {
                 </div>
               )}
 
-              <div className="mt-auto flex gap-2">
+              <div className="mt-auto flex gap-2 max-md:mt-3">
                 <Link
-                  className="btn-soft flex items-center justify-center rounded-md px-3 text-xs uppercase"
+                  className="btn-soft flex items-center justify-center rounded-md px-3 text-xs uppercase max-md:hidden"
                   href={`/config?bookId=${book.id}`}
                 >
                   Bearbeiten
+                </Link>
+                <Link
+                  className="btn-solid flex min-h-11 flex-1 items-center justify-center gap-2 px-4 md:hidden"
+                  href={`/config?bookId=${book.id}`}
+                >
+                  <PencilLine className="size-4" />
+                  Weiter bearbeiten
                 </Link>
                 <button
                   type="button"
                   disabled={isDeletingThisBook}
                   id={book.id}
                   onClick={handleDeleteBook}
-                  className="btn-soft cursor-pointer rounded-md px-3 py-1 text-xs uppercase"
+                  className="btn-soft cursor-pointer rounded-md px-3 py-1 text-xs uppercase max-md:flex max-md:min-h-11 max-md:min-w-11 max-md:items-center max-md:justify-center"
                 >
                   {isDeletingThisBook ? <LoadingSpinner /> : <TrashIcon />}
                 </button>

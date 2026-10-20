@@ -53,7 +53,7 @@ export default function ModulePreviewDialog({
           onClose();
         }
       }}
-      className="border-pirrot-blue-200 bg-info-50 text-pirrot-blue-950 backdrop:bg-info-950/90 fixed inset-0 m-auto h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-[96rem] overflow-hidden rounded-2xl border p-0 shadow-2xl open:flex open:flex-col"
+      className="border-pirrot-blue-200 bg-info-50 text-pirrot-blue-950 backdrop:bg-info-950/90 fixed inset-0 m-auto h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-[96rem] overflow-hidden rounded-2xl border p-0 shadow-2xl open:flex open:flex-col max-md:h-dvh max-md:max-h-dvh max-md:w-full max-md:max-w-none max-md:rounded-none max-md:border-0"
     >
       <header className="border-info-200 flex shrink-0 items-center justify-between gap-3 border-b bg-white p-3 sm:p-4">
         <h3 id={titleId} className="min-w-0 truncate text-xl font-bold">

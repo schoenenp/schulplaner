@@ -20,7 +20,7 @@ export default async function ConfigPage({
     <HydrateClient>
       <main className="from-pirrot-blue-50 to-pirrot-blue-100/20 text-info-900 relative flex h-dvh w-full flex-col overflow-hidden bg-gradient-to-b">
         <div className="subtle-grid pointer-events-none absolute inset-0 opacity-30" />
-        <Navigation />
+        <Navigation compact />
         <BookConfig
           key={bookId}
           bookId={bookId}

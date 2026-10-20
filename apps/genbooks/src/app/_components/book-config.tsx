@@ -9,6 +9,7 @@ import {
   CalendarDays,
   CheckIcon,
   ChevronDown,
+  ChevronUp,
   Component,
   EyeIcon,
   GiftIcon,
@@ -18,6 +19,7 @@ import {
   Plus,
   SaveIcon,
   ShellIcon,
+  SlidersHorizontal,
   XIcon,
 } from "lucide-react";
 import Modal from "./modal";
@@ -501,6 +503,7 @@ export default function BookConfig(props: {
     setIsCostOpen,
     onlyPickedModules,
     setOnlyPickedModules,
+    isMobileViewport,
   } = useUIState();
 
   const [searchFilterValue, setSearchFilterValue] = useState("");
@@ -543,6 +546,8 @@ export default function BookConfig(props: {
   );
   const mainContentRef = useRef<HTMLDivElement>(null);
   const stickyStepHeaderRef = useRef<HTMLDivElement>(null);
+  const summaryPanelRef = useRef<HTMLElement>(null);
+  const configPanelRef = useRef<HTMLElement>(null);
   const prepareCheckoutStepRef = useRef<(() => Promise<void>) | null>(null);
   const calcRequestIdRef = useRef(0);
   const previousCalculationRef = useRef<CalculationSnapshot | null>(null);
@@ -588,6 +593,33 @@ export default function BookConfig(props: {
   useEffect(() => {
     mainContentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentStep]);
+
+  const isMobileSheetOpen =
+    isMobileViewport && (isFilterOpen || isBookInfoOpen);
+
+  useEffect(() => {
+    if (!isMobileSheetOpen) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    (isFilterOpen ? summaryPanelRef : configPanelRef).current?.focus({
+      preventScroll: true,
+    });
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setIsFilterOpen(false);
+      setIsBookInfoOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      previousFocus?.focus({ preventScroll: true });
+    };
+  }, [isMobileSheetOpen, isFilterOpen, setIsFilterOpen, setIsBookInfoOpen]);
+
+  useEffect(() => {
+    if (!isMobileViewport || modalId === undefined) return;
+    setIsFilterOpen(false);
+    setIsBookInfoOpen(false);
+  }, [isMobileViewport, modalId, setIsFilterOpen, setIsBookInfoOpen]);
 
   useEffect(() => {
     const updateStickyOffset = () => {
@@ -986,7 +1018,7 @@ export default function BookConfig(props: {
       }));
       activateStep("COVER");
       setPendingAutoAdvanceStep("COVER");
-      setIsBookInfoOpen(true);
+      if (!isMobileViewport) setIsBookInfoOpen(true);
       announceChange(
         "Bild-Umschlag erstellt und als aktiver Umschlag ausgewählt.",
       );
@@ -1369,7 +1401,7 @@ export default function BookConfig(props: {
       announceChange(
         `${pickedModule.name} wurde in den ${getBucketLabel(targetContentBucket)} verschoben.`,
       );
-      setIsBookInfoOpen(true);
+      if (!isMobileViewport) setIsBookInfoOpen(true);
       return;
     }
 
@@ -1449,7 +1481,7 @@ export default function BookConfig(props: {
       setPendingAutoAdvanceStep(autoAdvanceStep);
     }
 
-    setIsBookInfoOpen(true);
+    if (!isMobileViewport) setIsBookInfoOpen(true);
   }
 
   function isStepAccessible(stepId: ConfigStepId): boolean {
@@ -1532,6 +1564,36 @@ export default function BookConfig(props: {
   function handlePreviousStep() {
     if (currentStepIndex <= 0) return;
     activateStep(CONFIG_STEP_ORDER[currentStepIndex - 1]!);
+  }
+
+  function getContinueBlockedReason(): string | undefined {
+    if (canContinueCurrentStep()) return undefined;
+    switch (currentStep) {
+      case "COVER":
+      case "PRE":
+        return "Bitte wählen Sie zuerst einen Umschlag.";
+      case "PLANNER":
+      case "POST":
+        return "Bitte wählen Sie einen Wochenplaner.";
+      case "BINDING":
+        return completionStatus.hasBindingModule
+          ? "Bitte vervollständigen Sie die Konfiguration."
+          : "Bitte wählen Sie eine Bindung.";
+      case "CHECKOUT":
+        return undefined;
+    }
+  }
+
+  // Mobile only: the two side panels are bottom sheets, one open at a time.
+  function toggleMobileSheet(sheet: "summary" | "config") {
+    const isOpen = sheet === "summary" ? isFilterOpen : isBookInfoOpen;
+    setIsFilterOpen(sheet === "summary" && !isOpen);
+    setIsBookInfoOpen(sheet === "config" && !isOpen);
+  }
+
+  function closeMobileSheets() {
+    setIsFilterOpen(false);
+    setIsBookInfoOpen(false);
   }
 
   prepareCheckoutStepRef.current = prepareCheckoutStep;
@@ -1866,7 +1928,7 @@ export default function BookConfig(props: {
         );
       case "preview":
         return (
-          <div className="content-card text-info-950 w-full max-w-[90vw] p-3">
+          <div className="content-card text-info-950 w-full max-w-[90vw] p-3 max-md:flex max-md:flex-col">
             <div className="flex items-center justify-between">
               <h3 className="text-2xl font-bold">Vorschau</h3>
               <button
@@ -1877,7 +1939,7 @@ export default function BookConfig(props: {
                 <XIcon className="size-6" />
               </button>
             </div>
-            <div className="flex h-[85vh] min-h-0 w-full flex-col gap-2 p-1">
+            <div className="flex h-[85vh] min-h-0 w-full flex-col gap-2 p-1 max-md:h-auto max-md:flex-1">
               {previewFileURL ? (
                 <>
                   {renderPreviewDisclaimer()}
@@ -1980,16 +2042,234 @@ export default function BookConfig(props: {
   const showPartnerTemplateBanner =
     Boolean(partnerToken) || isPartnerTemplateFlagActive;
 
+  const continueBlockedReason = getContinueBlockedReason();
+  const mobileSheetClasses = (open: boolean) =>
+    `max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:z-[103] max-md:max-h-[85dvh] max-md:rounded-t-2xl max-md:border-t max-md:bg-pirrot-blue-50 max-md:pb-[env(safe-area-inset-bottom)] max-md:shadow-2xl max-md:outline-none max-md:duration-300 ${open ? "max-md:transition-transform" : "max-md:invisible max-md:translate-y-full max-md:transition-[transform,visibility]"}`;
+
+  const renderMobileStepBar = () => {
+    return (
+      <>
+        <div className="border-pirrot-blue-950/10 sticky top-0 z-[59] -mx-2 -mt-2 border-b bg-white/95 px-3 pt-1.5 pb-2 backdrop-blur-sm md:hidden">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setModalId("name")}
+              className="flex min-h-11 min-w-0 flex-1 items-center gap-1.5 text-left"
+              aria-label={`Projektname „${nameInput ?? ""}“ ändern`}
+            >
+              <span className="font-cairo truncate text-lg font-bold">
+                {nameInput}
+              </span>
+              <PenBox className="text-info-800 size-4 shrink-0" />
+            </button>
+            <button
+              type="button"
+              disabled={isSavingConfig}
+              onClick={() => void handleSaveConfig()}
+              className="btn-soft flex min-h-11 shrink-0 items-center gap-1.5 px-3 text-sm font-bold disabled:opacity-60"
+            >
+              {isSavingConfig ? (
+                <LoaderCircle className="size-4 animate-spin" />
+              ) : (
+                <SaveIcon className="size-4" />
+              )}
+              {isSavingConfig ? "Speichert …" : "Speichern"}
+            </button>
+          </div>
+
+          <ol className="mt-1 grid grid-cols-6 gap-1.5" aria-label="Schritte">
+            {configSteps.map((step, index) => {
+              const isCurrentStep = step.id === currentStep;
+              const isAccessible = isStepAccessible(step.id);
+              // Optional steps count as done only once the steps before them are.
+              const isDone = configSteps
+                .slice(0, index + 1)
+                .every((previous) => isStepComplete(previous.id));
+
+              return (
+                <li key={step.id}>
+                  <button
+                    type="button"
+                    disabled={!isAccessible || isMakingPreview}
+                    onClick={() => void handleStepChange(step.id)}
+                    aria-current={isCurrentStep ? "step" : undefined}
+                    aria-label={`Schritt ${index + 1}: ${step.title}${isDone ? ", erledigt" : ""}${isAccessible ? "" : ", noch gesperrt"}`}
+                    className={`flex h-11 w-full flex-col items-center justify-center gap-1 rounded-lg border text-xs font-bold transition ${
+                      isCurrentStep
+                        ? `${getStepThemeClasses(step.id)} bg-white shadow-sm`
+                        : isDone
+                          ? "border-pirrot-green-300 bg-pirrot-green-100/60 text-pirrot-green-800"
+                          : "border-info-950/10 text-info-800 bg-white/60"
+                    } ${isAccessible ? "" : "opacity-50"}`}
+                  >
+                    <span className="flex items-center gap-1">
+                      {isDone && !isCurrentStep ? (
+                        <CheckIcon className="size-3.5" />
+                      ) : (
+                        index + 1
+                      )}
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className={`h-1 w-6 rounded-full ${
+                        isCurrentStep
+                          ? "bg-current"
+                          : isDone
+                            ? "bg-pirrot-green-500"
+                            : "bg-info-950/10"
+                      }`}
+                    />
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+
+          <p className="mt-1.5 text-sm font-bold">
+            <span className="text-info-800 font-normal">
+              Schritt {currentStepIndex + 1} von {configSteps.length} ·{" "}
+            </span>
+            <span className={STEP_ACCENTS[currentStep]}>
+              {currentStepConfig.title}
+            </span>
+          </p>
+        </div>
+
+        <div
+          className={`field-shell flex items-start gap-2 px-3 py-2 md:hidden ${getStepThemeClasses(currentStep)}`}
+        >
+          <InfoIcon
+            className={`mt-0.5 size-4 shrink-0 ${STEP_ACCENTS[currentStep]}`}
+          />
+          <p className="text-info-800 min-w-0 text-sm leading-snug">
+            {currentStepConfig.hint}
+          </p>
+        </div>
+      </>
+    );
+  };
+
+  const renderMobileActionBar = () => {
+    const nextLabel =
+      currentStep === "CHECKOUT"
+        ? "Aktualisieren"
+        : currentStep === "BINDING"
+          ? "Checkout"
+          : "Weiter";
+    const canContinue = canContinueCurrentStep() && !isMakingPreview;
+
+    return (
+      <div className="border-pirrot-blue-950/10 relative z-[60] shrink-0 border-t bg-white/95 px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-sm md:hidden">
+        {/* The summary sheet that lists these is closed on phones, so surface them here. */}
+        {configWarnings.length > 0 ? (
+          <div role="alert" className="flex flex-col gap-1.5 pb-2">
+            {configWarnings.map((warning, index) => (
+              <button
+                key={warning}
+                type="button"
+                onClick={() =>
+                  setConfigWarnings((prev) =>
+                    prev.filter((_, warningIndex) => warningIndex !== index),
+                  )
+                }
+                aria-label={`${warning} – Hinweis schließen`}
+                className="border-pirrot-red-500/50 bg-pirrot-red-300/80 flex w-full items-start gap-2 rounded-lg border p-2 text-start text-sm"
+              >
+                <XIcon className="mt-0.5 size-4 shrink-0" />
+                <span>{warning}</span>
+              </button>
+            ))}
+          </div>
+        ) : null}
+        {continueBlockedReason ? (
+          <p className="text-info-800 px-1 pb-1.5 text-xs">
+            {continueBlockedReason}
+          </p>
+        ) : null}
+        <div className="flex items-stretch gap-2">
+          <button
+            type="button"
+            disabled={currentStepIndex === 0 || isMakingPreview}
+            onClick={handlePreviousStep}
+            aria-label="Zurück"
+            className="btn-soft flex min-h-12 min-w-12 shrink-0 items-center justify-center disabled:opacity-40"
+          >
+            <ArrowLeft className="size-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => toggleMobileSheet("summary")}
+            aria-expanded={isFilterOpen}
+            aria-controls="planner-summary-panel"
+            aria-label={`Statistik und Kosten: ${lastCalculation ? `${totalPagesCount} Seiten, ${`${(previewPrice.total / 100).toFixed(2)} €`}` : "noch nicht berechnet"}`}
+            className="btn-soft flex min-h-12 min-w-0 flex-1 items-center justify-between gap-1 px-2.5 text-left"
+          >
+            <span className="flex min-w-0 flex-col leading-tight">
+              <span className="text-info-800 truncate text-[11px] font-semibold">
+                {lastCalculation
+                  ? `${totalPagesCount} Seiten`
+                  : "Seiten · Preis"}
+              </span>
+              <span className="truncate text-sm font-bold">
+                {lastCalculation
+                  ? `${(previewPrice.total / 100).toFixed(2)} €`
+                  : "Noch offen"}
+              </span>
+            </span>
+            {isLiveCalculating ? (
+              <LoaderCircle className="size-4 shrink-0 animate-spin" />
+            ) : (
+              <ChevronUp className="size-4 shrink-0" />
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => toggleMobileSheet("config")}
+            aria-expanded={isBookInfoOpen}
+            aria-controls="planner-config-panel"
+            className="btn-soft flex min-h-12 shrink-0 flex-col items-center justify-center gap-0.5 px-2.5 text-[11px] font-semibold"
+          >
+            <SlidersHorizontal className="size-4" />
+            Anpassen
+          </button>
+          {currentStep === "CHECKOUT" && !isCheckoutPreviewStale ? null : (
+            <button
+              type="button"
+              disabled={!canContinue}
+              onClick={() => void handleNextStep()}
+              className={`flex min-h-12 shrink-0 items-center justify-center gap-1.5 px-3 text-sm font-bold ${
+                canContinue
+                  ? "btn-solid"
+                  : "btn-soft cursor-not-allowed opacity-70"
+              }`}
+            >
+              {isMakingPreview ? (
+                <LoaderCircle className="size-4 animate-spin" />
+              ) : null}
+              {nextLabel}
+              {currentStep === "BINDING" ? null : (
+                <ArrowRight className="size-4" />
+              )}
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
       <div
         className={`${modalId !== undefined && modalId !== "login-prompt" ? "blur" : ""} relative z-10 flex min-h-0 w-full flex-1 flex-col justify-between overflow-hidden md:flex-row`}
       >
         <aside
+          id="planner-summary-panel"
+          ref={summaryPanelRef}
+          tabIndex={-1}
           aria-labelledby="planner-summary-heading"
-          className={`${isFilterOpen ? "md:w-60 2xl:w-72" : ""} border-pirrot-blue-950/10 bg-pirrot-blue-100/65 relative flex flex-col gap-2 overflow-y-auto border-b backdrop-blur-sm md:h-full md:shrink-0 md:border-r`}
+          className={`${isFilterOpen ? "md:w-60 2xl:w-72" : ""} border-pirrot-blue-950/10 bg-pirrot-blue-100/65 flex flex-col gap-2 overflow-y-auto backdrop-blur-sm md:relative md:h-full md:shrink-0 md:border-r md:border-b ${mobileSheetClasses(isFilterOpen)}`}
         >
-          <div className="flex items-center justify-between gap-2 p-2">
+          <div className="max-md:bg-pirrot-blue-50 flex items-center justify-between gap-2 p-2 max-md:sticky max-md:top-0 max-md:z-10 max-md:px-3 max-md:pt-3">
             <h2
               id="planner-summary-heading"
               className={`${isFilterOpen ? "" : "md:hidden"} text-sm font-bold`}
@@ -1999,7 +2279,7 @@ export default function BookConfig(props: {
             <button
               type="button"
               onClick={() => setIsFilterOpen((prev) => !prev)}
-              className="btn-soft p-2"
+              className="btn-soft p-2 max-md:min-h-11 max-md:min-w-11"
               aria-expanded={isFilterOpen}
               aria-label={
                 isFilterOpen
@@ -2176,7 +2456,9 @@ export default function BookConfig(props: {
           ref={mainContentRef}
           className="flex min-w-0 flex-1 flex-col gap-8 overflow-y-auto"
         >
-          <div className="flex w-full flex-col gap-8 p-2 lg:p-4">
+          <div className="flex w-full flex-col gap-8 p-2 max-md:gap-2 lg:p-4">
+            {renderMobileStepBar()}
+
             {showPartnerTemplateBanner ? (
               <div className="bg-pirrot-green-100 border-pirrot-green-300 flex flex-col items-start justify-between gap-4 rounded-lg border p-4 sm:flex-row sm:items-center">
                 <div className="flex items-center gap-3">
@@ -2199,7 +2481,7 @@ export default function BookConfig(props: {
               </div>
             ) : null}
 
-            <div className="content-card flex w-full flex-col gap-4 p-3">
+            <div className="content-card flex w-full flex-col gap-4 p-3 max-md:hidden">
               <div className="pb-1">
                 <Link
                   href="/"
@@ -2224,7 +2506,7 @@ export default function BookConfig(props: {
 
             <div
               ref={stickyStepHeaderRef}
-              className="content-card sticky top-2 z-[59] flex w-full flex-col gap-2 p-2"
+              className="content-card sticky top-2 z-[59] flex w-full flex-col gap-2 p-2 max-md:hidden"
             >
               <div className="flex gap-2 overflow-x-auto px-1 pt-2 pb-2">
                 {configSteps.map((step, index) => {
@@ -2628,10 +2910,13 @@ export default function BookConfig(props: {
         </div>
 
         <aside
+          id="planner-config-panel"
+          ref={configPanelRef}
+          tabIndex={-1}
           aria-labelledby="planner-config-heading"
-          className={`${isBookInfoOpen ? "h-full md:w-72 2xl:w-80" : ""} border-pirrot-blue-950/10 bg-pirrot-blue-100/65 relative flex flex-col gap-2 overflow-y-auto border-t backdrop-blur-sm md:h-full md:shrink-0 md:border-l`}
+          className={`${isBookInfoOpen ? "md:w-72 2xl:w-80" : ""} border-pirrot-blue-950/10 bg-pirrot-blue-100/65 flex flex-col gap-2 overflow-y-auto backdrop-blur-sm md:relative md:h-full md:shrink-0 md:border-t md:border-l ${mobileSheetClasses(isBookInfoOpen)}`}
         >
-          <div className="flex items-center justify-between gap-2 p-2">
+          <div className="max-md:bg-pirrot-blue-50 flex items-center justify-between gap-2 p-2 max-md:sticky max-md:top-0 max-md:z-10 max-md:px-3 max-md:pt-3">
             <h2
               id="planner-config-heading"
               className={`${isBookInfoOpen ? "" : "md:hidden"} text-sm font-bold`}
@@ -2643,17 +2928,20 @@ export default function BookConfig(props: {
                 <button
                   type="button"
                   onClick={() => setModalId("custom-modules")}
-                  className="btn-solid p-2"
+                  className="btn-solid flex items-center gap-1.5 p-2 max-md:min-h-11 max-md:px-3"
                   aria-label="Eigene Inhalte öffnen"
                   title="Eigene Inhalte"
                 >
                   <Plus className="size-5" />
+                  <span className="text-sm font-semibold md:hidden">
+                    Eigene Inhalte
+                  </span>
                 </button>
               ) : null}
               <button
                 type="button"
                 onClick={() => setIsBookInfoOpen((prev) => !prev)}
-                className="btn-soft p-2"
+                className="btn-soft p-2 max-md:min-h-11 max-md:min-w-11"
                 aria-expanded={isBookInfoOpen}
                 aria-label={
                   isBookInfoOpen
@@ -2661,7 +2949,11 @@ export default function BookConfig(props: {
                     : "Planerkonfiguration öffnen"
                 }
               >
-                <BookA className="size-5" />
+                {isMobileViewport && isBookInfoOpen ? (
+                  <XIcon className="size-5" />
+                ) : (
+                  <BookA className="size-5" />
+                )}
               </button>
             </div>
           </div>
@@ -2669,7 +2961,7 @@ export default function BookConfig(props: {
           {isBookInfoOpen ? (
             <>
               <div className="flex flex-col gap-2 px-2">
-                <div className="content-card flex flex-col gap-2 p-3">
+                <div className="content-card flex flex-col gap-2 p-3 max-md:hidden">
                   <h3 className="font-bold">Aktueller Schritt</h3>
                   <p
                     className={`text-xl font-bold ${STEP_ACCENTS[currentStep]}`}
@@ -2707,8 +2999,9 @@ export default function BookConfig(props: {
                 <div className="flex flex-col gap-2">
                   <h3 className="font-bold">Stückzahl</h3>
                   <input
-                    className="field-shell w-full px-3 py-2.5"
+                    className="field-shell w-full px-3 py-2.5 max-md:text-base"
                     type="number"
+                    inputMode="numeric"
                     min={1}
                     max={5000}
                     step={1}
@@ -2749,7 +3042,7 @@ export default function BookConfig(props: {
                 />
               </div>
 
-              <div className="border-info-950/5 bg-pirrot-blue-100/85 sticky bottom-1 mt-auto flex w-full flex-col gap-2 border-t p-2 backdrop-blur-sm">
+              <div className="border-info-950/5 bg-pirrot-blue-100/85 sticky bottom-1 mt-auto flex w-full flex-col gap-2 border-t p-2 backdrop-blur-sm max-md:hidden">
                 <button
                   type="button"
                   disabled={isSavingConfig}
@@ -2787,6 +3080,16 @@ export default function BookConfig(props: {
             </>
           ) : null}
         </aside>
+
+        {isMobileSheetOpen ? (
+          <div
+            aria-hidden="true"
+            className="bg-info-950/40 fixed inset-0 z-[102] md:hidden"
+            onClick={closeMobileSheets}
+          />
+        ) : null}
+
+        {renderMobileActionBar()}
       </div>
 
       <Modal
@@ -2794,7 +3097,7 @@ export default function BookConfig(props: {
         show={modalId !== undefined && modalId !== "login-prompt"}
       >
         <div
-          className="bg-info-950/95 fixed inset-0 z-[69] flex items-center justify-center p-4"
+          className={`mobile-dialog ${modalId === "name" || modalId === "binding-overflow" ? "mobile-dialog--sheet" : ""} bg-info-950/95 fixed inset-0 z-[69] flex items-center justify-center p-4`}
           onClick={(event) => {
             if (
               modalId === "custom-modules" &&

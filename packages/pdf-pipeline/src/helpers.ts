@@ -74,6 +74,25 @@ export async function fetchPdfBytes(url: string): Promise<Uint8Array> {
 }
 
 /**
+ * Fetch PDF bytes the document cannot be built without (the cover). Unlike
+ * fetchPdfBytes this throws, so a failed download is reported as a download
+ * error instead of surfacing later as a wrong page count.
+ */
+export async function fetchRequiredPdfBytes(url: string): Promise<Uint8Array> {
+  let response: Response;
+  try {
+    response = await fetchCdnAsset(url);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to download PDF (${reason})`, { cause: error });
+  }
+  if (!response.ok) {
+    throw new Error(`Failed to download PDF (HTTP ${response.status})`);
+  }
+  return new Uint8Array(await response.arrayBuffer());
+}
+
+/**
  * Fetch PDF bytes from a URL, returning undefined on any failure.
  * Used for optional resources (like stored grayscale variants) where the
  * caller has a better fallback than a blank page.

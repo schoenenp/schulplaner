@@ -6,7 +6,11 @@ import { registry } from "./handlers";
 import { addPageNumbers, DEFAULT_PAGE_NUMBER_OPTIONS } from "./pagination";
 import { addWatermark } from "./watermark";
 import { finalizeDocument } from "./alignment";
-import { fetchPdfBytes, fetchPdfBytesOrNull } from "./helpers";
+import {
+  fetchPdfBytes,
+  fetchPdfBytesOrNull,
+  fetchRequiredPdfBytes,
+} from "./helpers";
 import type {
   BookDetails,
   BookFormat,
@@ -26,6 +30,10 @@ class PDFProcessor {
    * downloads every module at most once.
    */
   private readonly templateCache = new Map<string, Promise<Uint8Array>>();
+  private readonly requiredTemplateCache = new Map<
+    string,
+    Promise<Uint8Array>
+  >();
   private readonly optionalTemplateCache = new Map<
     string,
     Promise<Uint8Array | undefined>
@@ -52,6 +60,16 @@ class PDFProcessor {
     return cached;
   }
 
+  /** Like getTemplateBytes, but a failed download rejects (used for the cover). */
+  private getRequiredTemplateBytes(url: string): Promise<Uint8Array> {
+    let cached = this.requiredTemplateCache.get(url);
+    if (!cached) {
+      cached = fetchRequiredPdfBytes(url);
+      this.requiredTemplateCache.set(url, cached);
+    }
+    return cached;
+  }
+
   /**
    * Start fetching every module PDF in parallel so the sequential processing
    * below never waits on the network for the next module.
@@ -68,10 +86,12 @@ class PDFProcessor {
         moduleItem.grayscalePdfUrl?.trim();
       const pending = useVariantFirst
         ? this.fetchOptionalPdfBytes(moduleItem.grayscalePdfUrl)
-        : this.getTemplateBytes(moduleItem.pdfUrl);
+        : moduleItem.type === "umschlag"
+          ? this.getRequiredTemplateBytes(moduleItem.pdfUrl)
+          : this.getTemplateBytes(moduleItem.pdfUrl);
       void pending.catch(() => {
-        // fetchPdfBytes resolves with a blank-page fallback; this guard only
-        // exists so an unexpected rejection cannot become unhandled.
+        // A failed cover download is reported where the cover is processed;
+        // this guard only keeps the prefetch rejection from going unhandled.
       });
     }
   }
@@ -205,7 +225,9 @@ class PDFProcessor {
       throw new Error("Cover handler not found");
     }
     const coverResult = await this.runModuleStep(coverModule, async () => {
-      const coverBytes = await this.getTemplateBytes(coverModule.pdfUrl);
+      const coverBytes = await this.getRequiredTemplateBytes(
+        coverModule.pdfUrl,
+      );
       return coverHandler.process(
         { ...context, moduleItem: coverModule },
         coverBytes,

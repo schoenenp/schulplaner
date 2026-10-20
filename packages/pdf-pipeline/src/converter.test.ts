@@ -128,6 +128,21 @@ describe("module download selection", () => {
     expect(output.getPageCount()).toBe(8);
   });
 
+  for (const failure of ["missing", "network-error"] as const) {
+    it(`reports a ${failure} cover as a download error, not a page-count error`, async () => {
+      const assets = new Map<string, Uint8Array | "network-error">([
+        [originalUrl, await pdfBytes(3)],
+      ]);
+      if (failure === "network-error") assets.set(coverUrl, "network-error");
+      mockDownloads(assets);
+
+      const run = processPdfModules(bookDetails, [cover, notes], options);
+
+      await expect(run).rejects.toThrow(/Failed to download PDF/);
+      await expect(run).rejects.not.toThrow(/exactly 4 pages/);
+    });
+  }
+
   it("uses the original for color output without downloading a grayscale variant", async () => {
     const calls = mockDownloads(new Map([
       [coverUrl, await pdfBytes(4)],

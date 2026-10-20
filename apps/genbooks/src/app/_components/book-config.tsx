@@ -1333,6 +1333,11 @@ export default function BookConfig(props: {
     }
 
     switch (true) {
+      // Before the cover check: download errors can mention the cover too.
+      case /failed to (download|fetch)|fetch failed|networkerror|load failed/i.test(
+        normalizedText,
+      ):
+        return configWarningTexts.download;
       case normalizedText.toLocaleLowerCase().includes("cover"):
         return configWarningTexts.cover;
       case normalizedText.toLocaleLowerCase().includes("planner"):
@@ -3124,6 +3129,8 @@ export const configWarningTexts = {
     "Umschläge müssen genau 4 Seiten haben. Beachten Sie die Datei größe. (max. 5MB)",
   planner:
     "Der Planer konnte nicht für den Checkout vorbereitet werden. Bitte prüfen Sie die ausgewählten Planer-Module und versuchen Sie es erneut.",
+  download:
+    "Eine Datei für Ihren Planer konnte nicht geladen werden. Bitte prüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.",
   default:
     "Der Checkout konnte nicht vorbereitet werden. Bitte versuchen Sie es erneut.",
 };

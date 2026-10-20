@@ -65,6 +65,7 @@ export {
   generateWeekDates,
   fetchPdfBytes,
   fetchPdfBytesOrNull,
+  fetchRequiredPdfBytes,
   getBlankPagePdfBytes,
   getPageSizeWithBleed,
   getA4WithBleeding,

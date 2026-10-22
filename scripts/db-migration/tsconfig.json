@@ -1,5 +1,0 @@
-{
-  "extends": "../../tsconfig.json",
-  "compilerOptions": { "resolveJsonModule": true, "noUncheckedIndexedAccess": true },
-  "include": ["./**/*.ts", "./manifest.json"]
-}

@@ -3,7 +3,7 @@
 import { api } from "@/trpc/react";
 import { BookTemplate, ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import BookPreview from "./book-preview";
+import TemplateCoverPreview from "./template-cover-preview";
 import LoadingSpinner from "./loading-spinner";
 import { useState, useEffect, useRef, useCallback } from "react";
 import prices from "@/util/prices";
@@ -25,6 +25,7 @@ interface TemplatePreviewProps {
     format: string;
     modules: Array<{
       module: {
+        part: string;
         files: Array<{ name?: string | null; src: string }>;
       };
     } | null>;
@@ -35,11 +36,15 @@ function useCoverPreview(template: TemplatePreviewProps["template"]) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [hasTried, setHasTried] = useState(false);
+  const started = useRef(false);
 
   const generatePreview = useCallback(async () => {
-    if (isGenerating || hasTried) return;
+    if (started.current) return;
+    started.current = true;
 
-    const pdfUrl = getCoverPdfUrl(template.modules);
+    const pdfUrl = getCoverPdfUrl(
+      template.modules.filter((entry) => entry?.module.part === "COVER"),
+    );
     if (!pdfUrl) {
       setHasTried(true);
       return;
@@ -69,12 +74,14 @@ function useCoverPreview(template: TemplatePreviewProps["template"]) {
       setIsGenerating(false);
       setHasTried(true);
     }
-  }, [template, isGenerating, hasTried]);
+  }, [template]);
 
   return {
     previewUrl,
-    fallbackUrl: getCoverThumbnail(template.modules),
-    isGenerating,
+    fallbackUrl: getCoverThumbnail(
+      template.modules.filter((entry) => entry?.module.part === "COVER"),
+    ),
+    isLoading: !hasTried || isGenerating,
     generatePreview,
   };
 }
@@ -92,7 +99,7 @@ function TemplateCard({
       },
     });
 
-  const { previewUrl, fallbackUrl, isGenerating, generatePreview } =
+  const { previewUrl, fallbackUrl, isLoading, generatePreview } =
     useCoverPreview(template);
 
   useEffect(() => {
@@ -118,19 +125,13 @@ function TemplateCard({
   return (
     <div id={`template-${template.id}`} className="w-full min-w-0">
       <div className="content-card flex h-full w-full flex-col gap-4 p-4 transition-shadow hover:shadow-md">
-        <div className="bg-pirrot-blue-50 flex aspect-square min-h-52 items-center justify-center overflow-hidden rounded-lg p-4">
-          <div className="origin-center scale-75">
-            <BookPreview
-              name={template.bookTitle ?? "Vorlage"}
-              period={{
-                start: template.planStart.toISOString().slice(0, 16),
-                end: template.planEnd?.toISOString().slice(0, 16) ?? "",
-              }}
-              sub={template.subTitle ?? ""}
-              coverThumbnail={previewUrl ?? fallbackUrl}
-              isLoading={isGenerating}
-            />
-          </div>
+        <div className="bg-pirrot-blue-50 relative aspect-square w-full overflow-hidden rounded-lg">
+          <TemplateCoverPreview
+            key={previewUrl ?? fallbackUrl ?? "empty"}
+            src={isLoading ? null : (previewUrl ?? fallbackUrl)}
+            name={template.bookTitle ?? template.name ?? "Vorlage"}
+            isLoading={isLoading}
+          />
         </div>
 
         <div className="flex flex-col gap-2">
@@ -286,10 +287,11 @@ export default function TemplateGallery() {
                   inline: "start",
                 });
               }}
-              className={`h-3 w-3 rounded-full transition-colors ${index === activeIndex
+              className={`h-3 w-3 rounded-full transition-colors ${
+                index === activeIndex
                   ? "bg-pirrot-blue-500"
                   : "bg-pirrot-blue-200 hover:bg-pirrot-blue-300"
-                }`}
+              }`}
               aria-label={`Gehe zu Vorlage ${index + 1}`}
             />
           ))}

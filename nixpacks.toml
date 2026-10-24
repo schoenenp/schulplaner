@@ -1,0 +1,9 @@
+[phases.setup]
+aptPkgs = ["...", "openssl", "curl", "ca-certificates"]
+# Put the verified official release ahead of the Node package from nixpkgs.
+cmds = ["...", "sh deploy/install-node.sh"]
+paths = ["/opt/node/bin", "..."]
+
+[phases.build]
+# Fail the deployment if another PATH setting selects an outdated runtime.
+cmds = ["node -e \"if (process.version !== 'v22.23.4') throw new Error('Expected Node v22.23.4, got ' + process.version)\"", "..."]

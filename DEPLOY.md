@@ -110,3 +110,23 @@ both deploy branches (locally it reads `DATABASE_URL` from `packages/db/.env`;
 on the server from the service env).
 
 Before deploying the storage change, complete the per-client migration and verification in [STORAGE.md](STORAGE.md). Both app services need the same client prefix.
+
+## Node.js security runtime
+
+Node.js is pinned to `22.23.4` in `package.json` and `.node-version`.
+Nixpacks only selects a major version from its Nix archive, so `nixpacks.toml`
+also runs `deploy/install-node.sh` during setup. It installs the official Linux
+Node.js archive under `/opt/node` after checking its pinned SHA-256. The
+configured path takes precedence during build and runtime, and a build guard
+rejects a different Node version. Both x64 and arm64 Linux builds are supported.
+
+The existing branch-sync workflow retains these files in `gen-main` and
+`panel-main`. Push the source changes to `main`, wait for branch sync, then
+rebuild both Coolify services using their existing Nixpacks configuration.
+A `NIXPACKS_NODE_VERSION=22` build variable may remain; it is not the patch pin.
+Keep the existing build/start commands. After deployment, confirm
+`node --version` is `v22.23.4` inside both replacement containers and verify
+sign-in and PDF generation. Restarting an old container does not patch it.
+
+For a future security release, update the version declarations, installer
+version and both official archive checksums, and the Nixpacks build guard.

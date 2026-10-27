@@ -44,6 +44,16 @@ export const env = createEnv({
     GHOST_GRAYSCALE_API_KEY: z.string().optional(),
     DATABASE_URL: z.string().url(),
     DATABASE_MAINTENANCE_MODE: z.enum(["true", "false"]).default("false"),
+    // Prices are managed by admins in the panel, which serves them here.
+    // Outside production the shop falls back to the built-in default prices.
+    PRICING_SOURCE_URL:
+      process.env.NODE_ENV === "production"
+        ? z.string().url()
+        : z.string().url().optional(),
+    PRICING_API_TOKEN:
+      process.env.NODE_ENV === "production"
+        ? z.string().min(32)
+        : z.string().min(32).optional(),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
@@ -106,6 +116,8 @@ export const env = createEnv({
     SHOP_EMAIL: process.env.SHOP_EMAIL,
     DATABASE_URL: process.env.DATABASE_URL,
     DATABASE_MAINTENANCE_MODE: process.env.DATABASE_MAINTENANCE_MODE,
+    PRICING_SOURCE_URL: process.env.PRICING_SOURCE_URL,
+    PRICING_API_TOKEN: process.env.PRICING_API_TOKEN,
     NODE_ENV: process.env.NODE_ENV,
     CANCEL_SECRET: process.env.CANCEL_SECRET,
     STRIPE_SUCCESS_URL: process.env.STRIPE_SUCCESS_URL,

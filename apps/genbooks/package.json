@@ -43,6 +43,7 @@
     "parent-module": "^1.0.1",
     "pdf-lib": "^1.17.1",
     "pdf-pipeline": "workspace:*",
+    "pricing": "workspace:*",
     "pdfjs-dist": "^6.1.200",
     "posthog-js": "^1.360.0",
     "react": "^19.2.4",

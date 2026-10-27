@@ -2,7 +2,7 @@
  * Regenerates the per-app deploy branches (gen-main, panel-main) from main.
  *
  * Each deploy branch is a pruned snapshot of main containing one app plus the
- * shared packages/ (pdf-pipeline, db, storage). Deploy branches are force-updated and must
+ * shared packages/ (pdf-pipeline, db, storage, pricing). Deploy branches are force-updated and must
  * never be merged back into main — change main, then re-run this script.
  *
  * Usage (from main, clean worktree):
@@ -37,8 +37,8 @@ const appConfigs: AppConfig[] = [
       "build:genbooks": "bun run --cwd packages/db generate && bun run --cwd apps/genbooks build",
       "start:genbooks": "bun run --cwd apps/genbooks start",
       "db:migrate": "bun run --cwd packages/db db:migrate",
-      "test": "bun run --cwd packages/pdf-pipeline test && bun run --cwd apps/genbooks test",
-      "typecheck": "bun run --cwd packages/storage typecheck && bun run --cwd packages/pdf-pipeline typecheck && bun run --cwd packages/db typecheck && bun run --cwd apps/genbooks typecheck",
+      "test": "bun run --cwd packages/pdf-pipeline test && bun run --cwd packages/pricing test && bun run --cwd apps/genbooks test",
+      "typecheck": "bun run --cwd packages/storage typecheck && bun run --cwd packages/pdf-pipeline typecheck && bun run --cwd packages/db typecheck && bun run --cwd packages/pricing typecheck && bun run --cwd apps/genbooks typecheck",
     },
   },
   {
@@ -53,8 +53,8 @@ const appConfigs: AppConfig[] = [
       "build:panel": "bun run --cwd packages/db generate && bun run --cwd apps/panel_books build",
       "start:panel": "bun run --cwd apps/panel_books start",
       "db:migrate": "bun run --cwd packages/db db:migrate",
-      "test": "bun run --cwd packages/pdf-pipeline test",
-      "typecheck": "bun run --cwd packages/storage typecheck && bun run --cwd packages/pdf-pipeline typecheck && bun run --cwd packages/db typecheck && bun run --cwd apps/panel_books typecheck",
+      "test": "bun run --cwd packages/pdf-pipeline test && bun run --cwd packages/pricing test",
+      "typecheck": "bun run --cwd packages/storage typecheck && bun run --cwd packages/pdf-pipeline typecheck && bun run --cwd packages/db typecheck && bun run --cwd packages/pricing typecheck && bun run --cwd apps/panel_books typecheck",
     },
   },
 ];

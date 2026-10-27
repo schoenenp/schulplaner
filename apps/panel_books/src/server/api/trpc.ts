@@ -133,3 +133,16 @@ export const protectedProcedure = t.procedure
       },
     });
   });
+
+/**
+ * Admin-only procedure. Staff and moderators get FORBIDDEN, e.g. for prices.
+ */
+export const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (ctx.session.user.role !== "ADMIN") {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Nur Admins dürfen diese Aktion ausführen.",
+    });
+  }
+  return next({ ctx });
+});

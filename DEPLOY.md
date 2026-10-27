@@ -99,6 +99,58 @@ The important ones per app: `DATABASE_URL`, `AUTH_*`, `STRIPE_*`,
 - Local git-history backups of the old repos sit in `_archive/git-backups/`
   (untracked); they preserve source history, not database contents.
 
+## Admin-managed prices
+
+Admins edit print, binding, markup, minimum and shipping prices in the panel
+under **Dashboard → Preise** (role `ADMIN` only; staff and moderators cannot
+open the page or call its API). The prices are kept apart from PostgreSQL in
+their own SQLite file, owned by the panel. Every save is a new version with
+author, note and a restorable history. The shop loads the current version from
+the panel's `GET /api/pricing`, authenticated with a shared token.
+
+Configure both services **before** deploying this release. Both variables are
+required in production builds, so a missing value fails the build and the
+running containers stay untouched.
+
+| Service     | Setting                                                                  |
+| ----------- | ------------------------------------------------------------------------ |
+| panel_books | Persistent storage (volume) mounted at e.g. `/data/pricing`              |
+| panel_books | `PRICING_DB_PATH=/data/pricing/pricing.sqlite`                           |
+| panel_books | `PRICING_API_TOKEN=<openssl rand -hex 32>`                               |
+| genbooks    | `PRICING_SOURCE_URL=https://<panel domain>/api/pricing`                  |
+| genbooks    | `PRICING_API_TOKEN=<the same token>`                                     |
+
+Without the volume every redeploy starts an empty database and the shop falls
+back to the seeded default prices. `PRICING_SOURCE_URL` may also use the
+panel's internal Coolify network address if both services share a server.
+Run the panel as a single container: the price file belongs to that one
+instance and its volume.
+
+Deploy the panel first. On its first start it creates the file and stores the
+prices that were previously hard-coded as version 1, so nothing changes for
+customers until an admin saves new prices. It logs
+`pricing_db_initialized_with_defaults` exactly once; that line after a later
+redeploy means the volume is not mounted. The page also shows when the price
+database was created. Check the endpoint, then deploy the shop:
+
+```sh
+curl -H "Authorization: Bearer $PRICING_API_TOKEN" https://<panel domain>/api/pricing
+```
+
+The shop caches prices for 30 seconds, so saved prices reach customers within
+a minute. If the panel is unreachable the shop keeps selling with the last
+prices it loaded. A shop that has never loaded prices refuses to quote rather
+than guess. Checkout recomputes prices on the server and records the price
+version in the Stripe session metadata (`priceBookVersion`). Existing orders
+keep their stored amounts. `/api/pricing` stays available during
+`DATABASE_MAINTENANCE_MODE` because it never touches PostgreSQL.
+
+Back up the price database from the volume with `sqlite3 pricing.sqlite
+".backup pricing-backup.sqlite"` (the file runs in WAL mode; copy all
+`pricing.sqlite*` files together only while the panel is stopped). Node 22
+prints a one-time `ExperimentalWarning` for its built-in SQLite module; it is
+harmless.
+
 ## Database package
 
 Both apps share one PostgreSQL database through `packages/db`, which owns the

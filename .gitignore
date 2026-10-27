@@ -12,6 +12,8 @@ out/
 !.env.example
 
 # misc
+# local panel price database (production uses PRICING_DB_PATH on a volume)
+.data/
 .DS_Store
 *.log
 coverage/

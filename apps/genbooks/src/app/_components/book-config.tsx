@@ -1,6 +1,5 @@
 "use client";
 
-import prices from "@/util/prices";
 import {
   ArrowLeft,
   ArrowRight,
@@ -528,8 +527,24 @@ export default function BookConfig(props: {
   const [liveChangeNotice, setLiveChangeNotice] = useState<string>();
   const [lastCalculation, setLastCalculation] =
     useState<CalculationSnapshot | null>(null);
-  const [isLiveCalculating, setIsLiveCalculating] = useState(false);
-  const [liveCalculationError, setLiveCalculationError] = useState<string>();
+  const [isCountingPages, setIsLiveCalculating] = useState(false);
+  const [pageCountError, setLiveCalculationError] = useState<string>();
+  // Prices are managed by admins in the panel; the server checks them again
+  // at checkout.
+  const priceBookQuery = api.config.getPriceBook.useQuery(undefined, {
+    staleTime: 30_000,
+  });
+  const priceBook = priceBookQuery.data?.priceBook;
+  // Lets the page-count effect price new counts without recounting when the
+  // price book loads or changes.
+  const priceBookRef = useRef(priceBook);
+  useEffect(() => {
+    priceBookRef.current = priceBook;
+  }, [priceBook]);
+  const isLiveCalculating = isCountingPages || priceBookQuery.isPending;
+  const liveCalculationError =
+    pageCountError ??
+    (priceBookQuery.isError ? priceBookQuery.error.message : undefined);
   const [liveDelta, setLiveDelta] = useState<LiveDelta | null>(null);
   const [previewConfigKey, setPreviewConfigKey] = useState<string | null>(null);
   const [customCoverPreviewUrl, setCustomCoverPreviewUrl] = useState<
@@ -766,20 +781,21 @@ export default function BookConfig(props: {
     pickedModules.COVER.length === 1 && pickedModules.PLANNER.length >= 1;
 
   useEffect(() => {
-    if (!lastCalculation) return;
+    if (!lastCalculation || !priceBook) return;
     const estimatedCost = calculatePrintCost({
       amount: orderAmount,
       bPages: lastCalculation.bPages,
       cPages: lastCalculation.cPages,
       format: pickedFormat,
       bindingName: selectedBindingRuleKey,
-      prices,
+      priceBook,
     });
     setPreviewPrice(estimatedCost);
   }, [
     lastCalculation,
     orderAmount,
     pickedFormat,
+    priceBook,
     selectedBindingRuleKey,
     setPreviewPrice,
   ]);
@@ -1134,38 +1150,43 @@ export default function BookConfig(props: {
           };
 
           const previousCalculation = previousCalculationRef.current;
-          const nextPrice = calculatePrintCost({
-            amount: orderAmount,
-            bPages: counts.bPages,
-            cPages: counts.cPages,
-            format: pickedFormat,
-            bindingName: selectedBindingRuleKey,
-            prices,
-          });
-
-          if (previousCalculation) {
-            const previousPrice = calculatePrintCost({
+          const currentPriceBook = priceBookRef.current;
+          if (currentPriceBook) {
+            const nextPrice = calculatePrintCost({
               amount: orderAmount,
-              bPages: previousCalculation.bPages,
-              cPages: previousCalculation.cPages,
+              bPages: counts.bPages,
+              cPages: counts.cPages,
               format: pickedFormat,
               bindingName: selectedBindingRuleKey,
-              prices,
+              priceBook: currentPriceBook,
             });
 
-            setLiveDelta({
-              pageDelta:
-                nextCalculation.fullPageCount -
-                previousCalculation.fullPageCount,
-              priceDelta: nextPrice.total - previousPrice.total,
-            });
+            if (previousCalculation) {
+              const previousPrice = calculatePrintCost({
+                amount: orderAmount,
+                bPages: previousCalculation.bPages,
+                cPages: previousCalculation.cPages,
+                format: pickedFormat,
+                bindingName: selectedBindingRuleKey,
+                priceBook: currentPriceBook,
+              });
+
+              setLiveDelta({
+                pageDelta:
+                  nextCalculation.fullPageCount -
+                  previousCalculation.fullPageCount,
+                priceDelta: nextPrice.total - previousPrice.total,
+              });
+            } else {
+              setLiveDelta(null);
+            }
+            setPreviewPrice(nextPrice);
           } else {
             setLiveDelta(null);
           }
 
           previousCalculationRef.current = nextCalculation;
           setLastCalculation(nextCalculation);
-          setPreviewPrice(nextPrice);
           setTotalPagesCount(nextCalculation.fullPageCount);
           triggerBindingOverflowIfNeeded(nextCalculation.fullPageCount);
         } catch (error) {

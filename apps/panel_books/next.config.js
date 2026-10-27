@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 
 /** @type {import("next").NextConfig} */
 const config = {
-  transpilePackages: ["pdf-pipeline", "db", "books-storage"],
+  transpilePackages: ["pdf-pipeline", "db", "books-storage", "pricing"],
   turbopack: {
     // Monorepo root so the workspace-linked packages resolve.
     root: path.join(__dirname, "../.."),

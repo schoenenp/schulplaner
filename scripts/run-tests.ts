@@ -17,6 +17,7 @@ const workspaces =
     : [
         "packages/storage",
         "packages/db",
+        "packages/pricing",
         "apps/panel_books",
         "apps/genbooks",
         ...(scope === "all" ? ["packages/pdf-pipeline"] : []),

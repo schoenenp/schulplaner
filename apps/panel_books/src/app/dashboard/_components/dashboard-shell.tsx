@@ -1,3 +1,4 @@
+import { auth } from "@/server/auth";
 import Navigation from "./navigation";
 
 type DashboardShellProps = {
@@ -8,18 +9,21 @@ type DashboardShellProps = {
   children: React.ReactNode;
 };
 
-export default function DashboardShell({
+export default async function DashboardShell({
   title,
   eyebrow = "Panel Books",
   description,
   actions,
   children,
 }: DashboardShellProps) {
+  // Cached per request, so pages that already called auth() pay nothing.
+  const session = await auth();
+
   return (
     <main className="relative min-h-screen px-3 py-3 sm:px-4 sm:py-4">
       <div className="dashboard-grid pointer-events-none absolute inset-0 opacity-35" />
       <div className="relative z-10 mx-auto flex max-w-[1920px] flex-col gap-4 lg:flex-row lg:items-start">
-        <Navigation />
+        <Navigation isAdmin={session?.user.role === "ADMIN"} />
         <section className="glass-card relative min-h-[calc(100vh-1.5rem)] w-full min-w-0 flex-1 overflow-clip sm:min-h-[calc(100vh-2rem)]">
           <div className="dashboard-grid pointer-events-none absolute inset-0 opacity-20" />
           <div className="relative flex h-full flex-col">

@@ -12,7 +12,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const config = {
   // Monorepo root so the workspace-linked packages are traced.
   outputFileTracingRoot: path.join(__dirname, "../.."),
-  transpilePackages: ["pdf-pipeline", "db", "books-storage"],
+  transpilePackages: ["pdf-pipeline", "db", "books-storage", "pricing"],
   images: {
     // Session-protected previews must be fetched directly by the browser.
     unoptimized: true,

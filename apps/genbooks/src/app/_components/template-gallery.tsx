@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import TemplateCoverPreview from "./template-cover-preview";
 import LoadingSpinner from "./loading-spinner";
 import { useState, useEffect, useRef, useCallback } from "react";
-import prices from "@/util/prices";
 import { calculatePrintCost } from "@/util/pdf/calculator";
 import {
   generateCoverPreview,
@@ -92,6 +91,9 @@ function TemplateCard({
   template: TemplatePreviewProps["template"];
 }) {
   const router = useRouter();
+  const priceBook = api.config.getPriceBook.useQuery(undefined, {
+    staleTime: 30_000,
+  }).data?.priceBook;
   const { mutate: cloneTemplate, isPending: isCloning } =
     api.book.cloneTemplate.useMutation({
       onSuccess: (newBook) => {
@@ -148,14 +150,14 @@ function TemplateCard({
               {template.format}
             </span>
 
-            {(() => {
+            {priceBook && (() => {
               const estimatedPages = template.modules.length * 4;
               const cost = calculatePrintCost({
                 amount: 1,
                 bPages: estimatedPages,
                 cPages: 0,
                 format: "DIN A5",
-                prices: prices,
+                priceBook,
               });
               return (
                 <span className="bg-pirrot-green-100/50 text-pirrot-green-800 rounded px-2 py-1 text-xs font-bold">

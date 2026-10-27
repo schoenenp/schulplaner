@@ -8,12 +8,17 @@ apps/panel_books    staff dashboard (Next 16)        — was schoenenp/panel_boo
 packages/pdf-pipeline  shared PDF book generation (TS source, transpiled by the apps)
 packages/db         shared Prisma schema, migrations, and db client (TS source)
 packages/storage    private Hetzner uploads, reads and storage audit (S3 API)
+packages/pricing    admin-managed price book in its own SQLite file (panel-owned)
 _archive/           retired code + local git-history backups (not committed)
 ```
 
 Both apps share one PostgreSQL database through `packages/db`: the single
 `schema.prisma`, its migrations, and the exported `db` client live there, and
 each app's `src/server/db.ts` just re-exports it.
+
+Prices are the exception: admins manage them in the panel (Dashboard → Preise),
+which stores them in a separate SQLite file and serves them to the shop. See
+"Admin-managed prices" in [DEPLOY.md](DEPLOY.md).
 
 ## Setup
 

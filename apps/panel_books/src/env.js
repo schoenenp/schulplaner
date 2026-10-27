@@ -29,6 +29,17 @@ export const env = createEnv({
     GHOST_GRAYSCALE_API_KEY: z.string().optional(),
     DATABASE_URL: z.string().url(),
     DATABASE_MAINTENANCE_MODE: z.enum(["true", "false"]).default("false"),
+    // The admin-managed price book is its own SQLite file, apart from
+    // DATABASE_URL. In production it must sit on a persistent volume.
+    PRICING_DB_PATH:
+      process.env.NODE_ENV === "production"
+        ? z.string().min(1)
+        : z.string().optional(),
+    // Shared with genbooks, which reads the price book from /api/pricing.
+    PRICING_API_TOKEN:
+      process.env.NODE_ENV === "production"
+        ? z.string().min(32)
+        : z.string().min(32).optional(),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
@@ -58,6 +69,8 @@ export const env = createEnv({
     EMAIL_FROM: process.env.EMAIL_FROM,
     DATABASE_URL: process.env.DATABASE_URL,
     DATABASE_MAINTENANCE_MODE: process.env.DATABASE_MAINTENANCE_MODE,
+    PRICING_DB_PATH: process.env.PRICING_DB_PATH,
+    PRICING_API_TOKEN: process.env.PRICING_API_TOKEN,
     S3_BUCKET: process.env.S3_BUCKET,
     AWS_REGION: process.env.AWS_REGION,
     S3_ENDPOINT: process.env.S3_ENDPOINT,

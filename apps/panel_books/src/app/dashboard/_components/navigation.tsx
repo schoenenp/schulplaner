@@ -5,6 +5,7 @@ import {
   Bars3BottomLeftIcon,
   BookOpenIcon,
   ChartBarIcon,
+  CurrencyEuroIcon,
   DocumentTextIcon,
   ListBulletIcon,
   QuestionMarkCircleIcon,
@@ -26,6 +27,7 @@ type NavItem = {
   label: string;
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   matches: string[];
+  adminOnly?: boolean;
 };
 
 type NavGroup = {
@@ -65,6 +67,13 @@ const NAV_GROUPS: NavGroup[] = [
         label: "Gutscheine",
         icon: TicketIcon,
         matches: ["/dashboard/gutscheine"],
+      },
+      {
+        href: "/dashboard/preise",
+        label: "Preise",
+        icon: CurrencyEuroIcon,
+        matches: ["/dashboard/preise"],
+        adminOnly: true,
       },
     ],
   },
@@ -128,7 +137,7 @@ const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
-export default function Navigation() {
+export default function Navigation({ isAdmin }: { isAdmin: boolean }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -169,7 +178,9 @@ export default function Navigation() {
               <p className="compact-label px-3 text-[11px] font-semibold uppercase text-pirrot-blue-200/55">
                 {group.label}
               </p>
-              {group.items.map((item) => {
+              {group.items
+                .filter((item) => isAdmin || !item.adminOnly)
+                .map((item) => {
                 const isActive = item.matches.some(
                   (match) => pathname === match,
                 );

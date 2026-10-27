@@ -9,6 +9,7 @@ import { customerRouter } from "./routers/customer";
 import { couponRouter } from "./routers/coupon";
 import { fulfillmentRouter } from "./routers/fulfillment";
 import { plannerRouter } from "./routers/planner";
+import { pricingRouter } from "./routers/pricing";
 
 /**
  * This is the primary router for your server.
@@ -26,6 +27,7 @@ export const appRouter = createTRPCRouter({
   coupon: couponRouter,
   fulfillment: fulfillmentRouter,
   planner: plannerRouter,
+  pricing: pricingRouter,
 });
 
 // export type definition of API

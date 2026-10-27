@@ -1,0 +1,30 @@
+{
+  "name": "pricing",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Admin-managed price book for genbooks and panel_books, kept in its own SQLite file apart from the shop database. Shipped as TypeScript source; consumers list it in transpilePackages.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./store": {
+      "types": "./src/store.ts",
+      "default": "./src/store.ts"
+    }
+  },
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.21",
+    "typescript": "^5.9.3"
+  }
+}

@@ -3,12 +3,12 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { stripeClient, toStripeAddress } from "@/util/stripe";
 import { env } from "@/env";
-import prices from "@/util/prices";
 import type Stripe from "stripe";
 import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
 import { calculatePdfPageCounts } from "@/util/pdf";
 import type { ColorCode, ModuleId } from "@/app/_components/module-changer";
 import { calculatePrintCost } from "@/util/pdf/calculator";
+import { getPriceBook } from "@/server/price-book";
 import { encryptPayload } from "@/util/crypto";
 import createOrderKey, {
   createCancelKey,
@@ -131,6 +131,8 @@ function parseConnectApplicationFeeCents(input: string | undefined): number {
 }
 
 export const configRouter = createTRPCRouter({
+  /** Admin-managed prices for the configurator's live estimate. */
+  getPriceBook: publicProcedure.query(() => getPriceBook()),
   setupOrder: publicProcedure
     .input(
       z.object({
@@ -250,6 +252,9 @@ export const configRouter = createTRPCRouter({
       ) {
         throw new TRPCError({ code: "UNAUTHORIZED" });
       }
+
+      // One price book version for every amount in this checkout.
+      const { priceBook, version: priceBookVersion } = await getPriceBook();
 
       const calculateBookCost = async (bookForCost: {
         bookTitle: string | null;
@@ -377,7 +382,7 @@ export const configRouter = createTRPCRouter({
           cPages: pageCounts.cPages,
           format,
           bindingName: selectedBindingRuleKey,
-          prices,
+          priceBook,
         });
       };
 
@@ -715,6 +720,7 @@ export const configRouter = createTRPCRouter({
 
       const checkoutMetadata: Record<string, string> = {
         orderId: createdOrderId,
+        priceBookVersion: String(priceBookVersion),
       };
 
       if (partnerMetadata) {
@@ -946,7 +952,10 @@ export const configRouter = createTRPCRouter({
                 shipping_rate_data: {
                   type: "fixed_amount",
                   tax_behavior: "inclusive",
-                  fixed_amount: { amount: 1000, currency: "eur" },
+                  fixed_amount: {
+                    amount: priceBook.shipping.standardCents,
+                    currency: "eur",
+                  },
                   display_name: "Standardversand",
                   delivery_estimate: {
                     minimum: { unit: "business_day", value: 14 },
@@ -959,7 +968,10 @@ export const configRouter = createTRPCRouter({
                 shipping_rate_data: {
                   type: "fixed_amount",
                   tax_behavior: "inclusive",
-                  fixed_amount: { amount: 3000, currency: "eur" },
+                  fixed_amount: {
+                    amount: priceBook.shipping.expressCents,
+                    currency: "eur",
+                  },
                   display_name: "Expressversand",
                   delivery_estimate: {
                     minimum: { unit: "business_day", value: 7 },

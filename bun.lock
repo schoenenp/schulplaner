@@ -44,6 +44,7 @@
         "pdf-pipeline": "workspace:*",
         "pdfjs-dist": "^6.1.200",
         "posthog-js": "^1.360.0",
+        "pricing": "workspace:*",
         "react": "^19.2.4",
         "react-datepicker": "^9.1.0",
         "react-dom": "^19.2.4",
@@ -101,6 +102,7 @@
         "pdf-pipeline": "workspace:*",
         "pdfjs-dist": "^6.1.200",
         "postcss": "^8.5.15",
+        "pricing": "workspace:*",
         "react": "^19.2.4",
         "react-dom": "^19.2.4",
         "server-only": "^0.0.1",
@@ -152,6 +154,17 @@
       "peerDependencies": {
         "pdf-lib": "^1.17.1",
         "pdfjs-dist": ">=5.0.0",
+      },
+    },
+    "packages/pricing": {
+      "name": "pricing",
+      "version": "0.1.0",
+      "dependencies": {
+        "zod": "^3.25.76",
+      },
+      "devDependencies": {
+        "@types/bun": "^1.2.21",
+        "typescript": "^5.9.3",
       },
     },
     "packages/storage": {
@@ -1168,6 +1181,8 @@
     "prettier-plugin-tailwindcss": ["prettier-plugin-tailwindcss@0.6.14", "", { "peerDependencies": { "@ianvs/prettier-plugin-sort-imports": "*", "@prettier/plugin-hermes": "*", "@prettier/plugin-oxc": "*", "@prettier/plugin-pug": "*", "@shopify/prettier-plugin-liquid": "*", "@trivago/prettier-plugin-sort-imports": "*", "@zackad/prettier-plugin-twig": "*", "prettier": "^3.0", "prettier-plugin-astro": "*", "prettier-plugin-css-order": "*", "prettier-plugin-import-sort": "*", "prettier-plugin-jsdoc": "*", "prettier-plugin-marko": "*", "prettier-plugin-multiline-arrays": "*", "prettier-plugin-organize-attributes": "*", "prettier-plugin-organize-imports": "*", "prettier-plugin-sort-imports": "*", "prettier-plugin-style-order": "*", "prettier-plugin-svelte": "*" }, "optionalPeers": ["@ianvs/prettier-plugin-sort-imports", "@prettier/plugin-hermes", "@prettier/plugin-oxc", "@prettier/plugin-pug", "@shopify/prettier-plugin-liquid", "@trivago/prettier-plugin-sort-imports", "@zackad/prettier-plugin-twig", "prettier-plugin-astro", "prettier-plugin-css-order", "prettier-plugin-import-sort", "prettier-plugin-jsdoc", "prettier-plugin-marko", "prettier-plugin-multiline-arrays", "prettier-plugin-organize-attributes", "prettier-plugin-organize-imports", "prettier-plugin-sort-imports", "prettier-plugin-style-order", "prettier-plugin-svelte"] }, "sha512-pi2e/+ZygeIqntN+vC573BcW5Cve8zUB0SSAGxqpB4f96boZF4M3phPVoOFCeypwkpRYdi7+jQ5YJJUwrkGUAg=="],
 
     "pretty-format": ["pretty-format@3.8.0", "", {}, "sha512-WuxUnVtlWL1OfZFQFuqvnvs6MiAGk9UNsBostyBOB0Is9wb5uRESevA6rnl/rkksXaGX3GzZhPup5d6Vp1nFew=="],
+
+    "pricing": ["pricing@workspace:packages/pricing"],
 
     "prisma": ["prisma@6.19.3", "", { "dependencies": { "@prisma/config": "6.19.3", "@prisma/engines": "6.19.3" }, "peerDependencies": { "typescript": ">=5.1.0" }, "optionalPeers": ["typescript"], "bin": { "prisma": "build/index.js" } }, "sha512-++ZJ0ijLrDJF6hNB4t4uxg2br3fC4H9Yc9tcbjr2fcNFP3rh/SBNrAgjhsqBU4Ght8JPrVofG/ZkXfnSfnYsFg=="],
 

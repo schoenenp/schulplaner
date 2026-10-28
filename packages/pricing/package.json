@@ -24,7 +24,8 @@
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "import:sqlite": "bun --no-env-file scripts/import-sqlite.ts",
-    "test:postgres": "bun --no-env-file scripts/test-postgres.ts"
+    "test:postgres": "bun --no-env-file scripts/test-postgres.ts",
+    "setup:postgres": "node scripts/setup-postgres.mjs"
   },
   "dependencies": {
     "pg": "^8.23.1",

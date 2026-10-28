@@ -108,23 +108,25 @@ The panel stores prices in a dedicated PostgreSQL database using its own
 connection and credentials. It never falls back to the shop's `DATABASE_URL`.
 The shop reads prices through the token-protected `GET /api/pricing`.
 
-Create a separate PostgreSQL resource in Coolify for each platform's pricing.
-Use its internal connection URL when it shares the panel's network. Keep the
-database resource's default persistent storage and configure its backups.
-The panel application itself no longer needs a pricing volume.
+Use a second database on the existing PostgreSQL server for each platform,
+with its own restricted pricing login. A second PostgreSQL server/container
+is not required. The pricing URL uses the existing server hostname and port,
+but its own database name, username and password. Keep the existing database
+resource's persistent storage and include both databases in its backup schedule.
+The panel application itself does not need a pricing volume.
 
 Set these variables at **build time and runtime** before deploying:
 
 | Service | Variable | Value |
 | --- | --- | --- |
-| panel_books | `PRICING_DATABASE_URL` | Internal URL of the separate pricing PostgreSQL database |
+| panel_books | `PRICING_DATABASE_URL` | URL of the pricing database on the existing PostgreSQL server |
 | panel_books | `PRICING_API_TOKEN` | Token generated locally with `openssl rand -hex 32` |
 | genbooks | `PRICING_SOURCE_URL` | `https://<panel domain>/api/pricing` |
 | genbooks | `PRICING_API_TOKEN` | The same token as the panel |
 
 The panel rejects a pricing URL targeting the shop database, even with other
 credentials, and refuses databases containing known shop tables. Use a
-separate resource and credentials: URL checks cannot identify every DNS alias.
+separate database and credentials: URL checks cannot identify every DNS alias.
 Keep the shop's existing `DATABASE_URL` unchanged.
 
 On its first pricing request the panel creates the `pricing` schema, schema
@@ -145,6 +147,34 @@ prices during a panel/database outage. A new shop process that has never loaded
 prices refuses to quote until the API is available. Submitted amounts stay
 unchanged, and new submissions record their price book version.
 
+### Provision a second database on the existing server
+
+The setup command accepts private files rather than credentials on the command
+line. The admin file contains a PostgreSQL administrator URL pointing to the
+existing shop database. The password file contains a new pricing-login password
+(at least 24 printable ASCII characters). Use separate names and credentials
+for each platform, for example `pirrot_pricing` and `foto_raabe_pricing`.
+
+Run this from the source checkout or a container that can reach the database:
+
+```sh
+bun run --cwd packages/pricing setup:postgres \
+  --admin-file /private/admin-url \
+  --password-file /private/pricing-password \
+  --output-file /private/pricing.env \
+  --database foto_raabe_pricing --role foto_raabe_pricing
+```
+
+Without `--apply`, the command only checks the target and administrator access.
+Append `--apply` to create the database, restricted login and `pricing` schema.
+It refuses existing database/role names and refuses to proceed if existing
+PUBLIC grants would allow the new login to read or modify shop data. It never
+changes the shop's tables or grants. Password authentication and pricing-schema
+writes are verified, and the resulting `PRICING_DATABASE_URL` is written only
+to the new output file with owner-only permissions. No defaults are seeded by
+this command, so the database is ready for an existing price-history import.
+Set the private output value on the panel at build time and runtime.
+
 ### Moving existing SQLite prices
 
 If prices were already edited in SQLite, preserve the old file and import it
@@ -164,7 +194,7 @@ edited, the seeded defaults match the previous values.
 
 Remove the obsolete `PRICING_DB_PATH` variable. Remove an old SQLite mount only
 after verifying the import or confirming it contains no edits. Back up prices
-through the separate PostgreSQL resource's database backups.
+by including the pricing database in the existing PostgreSQL resource's backups.
 
 ### Testing the PostgreSQL store
 

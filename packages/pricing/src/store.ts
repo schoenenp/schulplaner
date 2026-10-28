@@ -1,52 +1,17 @@
-// Server-only: the price book lives in its own SQLite file, separate from the
-// shop's PostgreSQL database. The panel owns the file; the shop reads prices
-// through the panel's /api/pricing endpoint.
-import { mkdirSync } from "node:fs";
-import { dirname } from "node:path";
-
+// Server-only. This pool connects exclusively to PRICING_DATABASE_URL;
+// the shop's database and Prisma migrations are never used here.
+import { Pool, type PoolClient } from "pg";
+import { z } from "zod";
+import { assertPricingDatabaseUrl } from "./connection";
 import {
   DEFAULT_PRICE_BOOK,
   diffPriceBooks,
   parsePriceBook,
+  priceBookSchema,
   type PriceBook,
 } from "./price-book";
 
-type SqliteValue = string | number | null;
-
-type SqliteStatement = {
-  get(...params: SqliteValue[]): unknown;
-  all(...params: SqliteValue[]): unknown[];
-  run(...params: SqliteValue[]): unknown;
-};
-
-/** The common subset of node:sqlite's DatabaseSync and bun:sqlite's Database. */
-export type SqliteDatabase = {
-  exec(sql: string): void;
-  prepare(sql: string): SqliteStatement;
-  close(): void;
-};
-
-export function openSqliteDatabase(path: string): SqliteDatabase {
-  if (path !== ":memory:") mkdirSync(dirname(path), { recursive: true });
-  // Resolved at runtime so bundlers never try to package a driver. The apps
-  // run on Node (node:sqlite); the test suites run on Bun (bun:sqlite).
-  const { getBuiltinModule } = process as unknown as {
-    getBuiltinModule: (id: string) => unknown;
-  };
-  if (process.versions.bun) {
-    const { Database } = getBuiltinModule("bun:sqlite") as {
-      Database: new (path: string, options: { create: boolean }) => SqliteDatabase;
-    };
-    return new Database(path, { create: true });
-  }
-  const { DatabaseSync } = getBuiltinModule("node:sqlite") as {
-    DatabaseSync: new (path: string) => SqliteDatabase;
-  };
-  return new DatabaseSync(path);
-}
-
 export type PriceBookActor = { id: string; name: string | null };
-
 export type PriceBookVersion = {
   id: number;
   priceBook: PriceBook;
@@ -72,212 +37,341 @@ export class PriceBookUnchangedError extends Error {
 }
 
 export const SEED_NOTE = "Startwerte (bisher fest im Code hinterlegt)";
+const archiveSchema = z.object({
+  createdAt: z.string().datetime(),
+  versions: z
+    .array(
+      z.object({
+        id: z.number().int().positive(),
+        priceBook: priceBookSchema,
+        note: z.string().nullable(),
+        createdAt: z.string().datetime(),
+        createdById: z.string().nullable(),
+        createdByName: z.string().nullable(),
+        restoredFromId: z.number().int().positive().nullable(),
+      }),
+    )
+    .min(1),
+});
+export type PriceBookArchive = z.infer<typeof archiveSchema>;
 
-const MIGRATIONS = [
-  `CREATE TABLE price_book_versions (
-     id INTEGER PRIMARY KEY AUTOINCREMENT,
-     price_book TEXT NOT NULL,
-     note TEXT,
-     created_at TEXT NOT NULL,
-     created_by_id TEXT,
-     created_by_name TEXT,
-     restored_from_id INTEGER REFERENCES price_book_versions (id)
-   );
-   CREATE TABLE store_meta (
-     key TEXT PRIMARY KEY,
-     value TEXT NOT NULL
-   );`,
-];
+export function parsePriceBookArchive(input: unknown): PriceBookArchive {
+  const archive = archiveSchema.parse(input);
+  const seen = new Set<number>();
+  let previous = 0;
+  for (const version of archive.versions) {
+    if (
+      version.id <= previous ||
+      (version.restoredFromId !== null && !seen.has(version.restoredFromId))
+    ) {
+      throw new Error("Die importierte Preishistorie ist ungültig.");
+    }
+    seen.add(version.id);
+    previous = version.id;
+  }
+  return archive;
+}
 
 type VersionRow = {
   id: number;
-  price_book: string;
+  price_book: unknown;
   note: string | null;
-  created_at: string;
+  created_at: Date;
   created_by_id: string | null;
   created_by_name: string | null;
   restored_from_id: number | null;
 };
-
 const VERSION_COLUMNS =
   "id, price_book, note, created_at, created_by_id, created_by_name, restored_from_id";
-
-function transaction<T>(db: SqliteDatabase, run: () => T): T {
-  db.exec("BEGIN IMMEDIATE");
-  try {
-    const result = run();
-    db.exec("COMMIT");
-    return result;
-  } catch (error) {
-    db.exec("ROLLBACK");
-    throw error;
-  }
-}
-
-function migrate(db: SqliteDatabase) {
-  const { user_version: schemaVersion } = db
-    .prepare("PRAGMA user_version")
-    .get() as { user_version: number };
-  if (schemaVersion > MIGRATIONS.length) {
-    throw new Error(
-      "Die Preisdatenbank stammt aus einer neueren Version des Panels.",
-    );
-  }
-  for (let version = schemaVersion; version < MIGRATIONS.length; version++) {
-    transaction(db, () => {
-      db.exec(MIGRATIONS[version]!);
-      db.exec(`PRAGMA user_version = ${version + 1}`);
-    });
-  }
-}
+// Transaction-scoped, database-local lock: coordinates initialization and
+// writers across panel processes, including simultaneous rolling deployments.
+const LOCK_SQL = "SELECT pg_advisory_xact_lock(1347569987, 1)";
+const MIGRATIONS = [
+  `CREATE TABLE pricing.price_book_versions (
+     id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+     price_book JSONB NOT NULL, note TEXT, created_at TIMESTAMPTZ NOT NULL,
+     created_by_id TEXT, created_by_name TEXT,
+     restored_from_id INTEGER REFERENCES pricing.price_book_versions (id)
+   )`,
+];
 
 function toVersion(row: VersionRow): PriceBookVersion {
   return {
-    id: Number(row.id),
-    priceBook: parsePriceBook(JSON.parse(row.price_book)),
+    id: row.id,
+    priceBook: parsePriceBook(row.price_book),
     note: row.note,
-    createdAt: row.created_at,
+    createdAt: row.created_at.toISOString(),
     createdById: row.created_by_id,
     createdByName: row.created_by_name,
-    restoredFromId:
-      row.restored_from_id === null ? null : Number(row.restored_from_id),
+    restoredFromId: row.restored_from_id,
   };
 }
 
-export type PriceStore = ReturnType<typeof createPriceStore>;
-
-export function createPriceStore(
-  db: SqliteDatabase,
-  { now = () => new Date() }: { now?: () => Date } = {},
-) {
-  db.exec("PRAGMA foreign_keys = ON");
-  db.exec("PRAGMA busy_timeout = 5000");
-  migrate(db);
-
-  const insertVersion = (
-    priceBook: PriceBook,
-    note: string | null,
-    actor: PriceBookActor | null,
-    restoredFromId: number | null,
-  ) =>
-    db
-      .prepare(
-        `INSERT INTO price_book_versions
-           (price_book, note, created_at, created_by_id, created_by_name, restored_from_id)
-         VALUES (?, ?, ?, ?, ?, ?)
-         RETURNING ${VERSION_COLUMNS}`,
-      )
-      .get(
-        JSON.stringify(priceBook),
-        note,
-        now().toISOString(),
-        actor?.id ?? null,
-        actor?.name ?? null,
-        restoredFromId,
-      ) as VersionRow;
-
-  const latestRow = () =>
-    db
-      .prepare(
-        `SELECT ${VERSION_COLUMNS} FROM price_book_versions ORDER BY id DESC LIMIT 1`,
-      )
-      .get() as VersionRow | undefined;
-
-  const initialized = transaction(db, () => {
-    if (latestRow()) return false;
-    insertVersion(DEFAULT_PRICE_BOOK, SEED_NOTE, null, null);
-    db.prepare("INSERT INTO store_meta (key, value) VALUES ('created_at', ?)").run(
-      now().toISOString(),
+async function transaction<T>(
+  pool: Pool,
+  run: (client: PoolClient) => Promise<T>,
+  readOnly = false,
+): Promise<T> {
+  const client = await pool.connect();
+  let discard = false;
+  try {
+    await client.query(
+      readOnly ? "BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY" : "BEGIN",
     );
-    return true;
+    if (!readOnly) await client.query(LOCK_SQL);
+    const result = await run(client);
+    await client.query("COMMIT");
+    return result;
+  } catch (error) {
+    try {
+      await client.query("ROLLBACK");
+    } catch {
+      discard = true;
+    }
+    throw error;
+  } finally {
+    client.release(discard);
+  }
+}
+
+async function latest(client: Pool | PoolClient): Promise<PriceBookVersion> {
+  const { rows } = await client.query<VersionRow>(
+    `SELECT ${VERSION_COLUMNS} FROM pricing.price_book_versions ORDER BY id DESC LIMIT 1`,
+  );
+  if (!rows[0])
+    throw new Error("Die Preisdatenbank enthält keine Preisversion.");
+  return toVersion(rows[0]);
+}
+async function history(
+  client: Pool | PoolClient,
+  limit: number,
+): Promise<PriceBookVersion[]> {
+  if (!Number.isInteger(limit) || limit < 1 || limit > 1000)
+    throw new Error("Ungültige Anzahl von Preisversionen.");
+  const { rows } = await client.query<VersionRow>(
+    `SELECT ${VERSION_COLUMNS} FROM pricing.price_book_versions ORDER BY id DESC LIMIT $1`,
+    [limit],
+  );
+  return rows.map(toVersion);
+}
+async function createdAt(client: Pool | PoolClient): Promise<string> {
+  const { rows } = await client.query<{ value: string }>(
+    "SELECT value FROM pricing.store_meta WHERE key = 'created_at'",
+  );
+  return rows[0]?.value ?? (await latest(client)).createdAt;
+}
+
+type StoreOptions = {
+  applicationDatabaseUrl?: string;
+  now?: () => Date;
+  onError?: (error: Error) => void;
+  /** One-time SQLite import, before the panel first connects. */
+  importArchive?: PriceBookArchive;
+};
+export type PriceStore = {
+  initialized: boolean;
+  current(): Promise<PriceBookVersion>;
+  history(limit?: number): Promise<PriceBookVersion[]>;
+  createdAt(): Promise<string>;
+  overview(
+    limit?: number,
+  ): Promise<{
+    current: PriceBookVersion;
+    history: PriceBookVersion[];
+    createdAt: string;
+  }>;
+  save(input: {
+    priceBook: unknown;
+    baseVersionId: number;
+    note?: string | null;
+    actor: PriceBookActor;
+  }): Promise<PriceBookVersion>;
+  restore(input: {
+    versionId: number;
+    baseVersionId: number;
+    actor: PriceBookActor;
+  }): Promise<PriceBookVersion>;
+  close(): Promise<void>;
+};
+
+export async function openPriceStore(
+  databaseUrl: string,
+  options: StoreOptions = {},
+): Promise<PriceStore> {
+  assertPricingDatabaseUrl(databaseUrl, options.applicationDatabaseUrl);
+  const archive = options.importArchive
+    ? parsePriceBookArchive(options.importArchive)
+    : undefined;
+  const now = options.now ?? (() => new Date());
+  const pool = new Pool({
+    connectionString: databaseUrl,
+    max: 4,
+    connectionTimeoutMillis: 5000,
+    idleTimeoutMillis: 30000,
+    statement_timeout: 15000,
+    application_name: "planner-pricing",
+    allowExitOnIdle: true,
   });
+  // Idle failures must not crash the panel. A later request can reconnect.
+  pool.on("error", (error) => options.onError?.(error));
+  let initialized: boolean;
+  try {
+    initialized = await transaction(pool, async (client) => {
+      // Also catches a shop DB reached through another hostname/credential.
+      // Check before creating any pricing schema or tables.
+      const check = await client.query<{ shop: boolean }>(
+        `SELECT EXISTS (SELECT 1 FROM information_schema.tables
+         WHERE table_schema = 'public' AND table_name IN ('Book', 'User', '_prisma_migrations')) AS shop`,
+      );
+      if (check.rows[0]?.shop)
+        throw new Error(
+          "Die Preisdatenbank muss eine eigene Datenbank sein und darf keine Shop-Tabellen enthalten.",
+        );
+      await client.query("CREATE SCHEMA IF NOT EXISTS pricing");
+      await client.query(
+        "CREATE TABLE IF NOT EXISTS pricing.store_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)",
+      );
+      const meta = await client.query<{ value: string }>(
+        "SELECT value FROM pricing.store_meta WHERE key = 'schema_version'",
+      );
+      const schemaVersion = Number(meta.rows[0]?.value ?? 0);
+      if (
+        !Number.isInteger(schemaVersion) ||
+        schemaVersion < 0 ||
+        schemaVersion > MIGRATIONS.length
+      ) {
+        throw new Error(
+          "Die Preisdatenbank stammt aus einer neueren oder unbekannten Version des Panels.",
+        );
+      }
+      for (
+        let version = schemaVersion;
+        version < MIGRATIONS.length;
+        version++
+      ) {
+        await client.query(MIGRATIONS[version]!);
+        await client.query(
+          "INSERT INTO pricing.store_meta (key, value) VALUES ('schema_version', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value",
+          [String(version + 1)],
+        );
+      }
+      const existing = await client.query(
+        "SELECT id FROM pricing.price_book_versions LIMIT 1",
+      );
+      if (existing.rowCount) {
+        if (archive)
+          throw new Error(
+            "Der Import benötigt eine leere Preisdatenbank. Bestehende Preise werden nicht überschrieben.",
+          );
+        return false;
+      }
+      if (archive) {
+        for (const version of archive.versions) {
+          await client.query(
+            `INSERT INTO pricing.price_book_versions (${VERSION_COLUMNS}) VALUES ($1, $2::jsonb, $3, $4, $5, $6, $7)`,
+            [
+              version.id,
+              JSON.stringify(version.priceBook),
+              version.note,
+              version.createdAt,
+              version.createdById,
+              version.createdByName,
+              version.restoredFromId,
+            ],
+          );
+        }
+        await client.query(
+          "SELECT setval(pg_get_serial_sequence('pricing.price_book_versions', 'id'), $1)",
+          [archive.versions.at(-1)!.id],
+        );
+      } else {
+        await client.query(
+          "INSERT INTO pricing.price_book_versions (price_book, note, created_at) VALUES ($1::jsonb, $2, $3)",
+          [JSON.stringify(DEFAULT_PRICE_BOOK), SEED_NOTE, now().toISOString()],
+        );
+      }
+      await client.query(
+        "INSERT INTO pricing.store_meta (key, value) VALUES ('created_at', $1)",
+        [archive?.createdAt ?? now().toISOString()],
+      );
+      return true;
+    });
+  } catch (error) {
+    await pool.end();
+    throw error;
+  }
 
-  const current = (): PriceBookVersion => toVersion(latestRow()!);
-
-  const commit = (
+  async function commit(
+    client: PoolClient,
     priceBook: PriceBook,
     baseVersionId: number,
     note: string | null,
     actor: PriceBookActor,
     restoredFromId: number | null,
-  ) =>
-    transaction(db, () => {
-      const latest = current();
-      if (latest.id !== baseVersionId) {
-        throw new PriceBookConflictError(latest.id);
-      }
-      if (diffPriceBooks(latest.priceBook, priceBook).length === 0) {
-        throw new PriceBookUnchangedError();
-      }
-      return toVersion(insertVersion(priceBook, note, actor, restoredFromId));
-    });
-
+  ) {
+    const current = await latest(client);
+    if (current.id !== baseVersionId)
+      throw new PriceBookConflictError(current.id);
+    if (diffPriceBooks(current.priceBook, priceBook).length === 0)
+      throw new PriceBookUnchangedError();
+    const { rows } = await client.query<VersionRow>(
+      `INSERT INTO pricing.price_book_versions (price_book, note, created_at, created_by_id, created_by_name, restored_from_id)
+       VALUES ($1::jsonb, $2, $3, $4, $5, $6) RETURNING ${VERSION_COLUMNS}`,
+      [
+        JSON.stringify(priceBook),
+        note,
+        now().toISOString(),
+        actor.id,
+        actor.name,
+        restoredFromId,
+      ],
+    );
+    return toVersion(rows[0]!);
+  }
   return {
-    /** True when this call created the database and seeded the defaults. */
     initialized,
-
-    current,
-
-    history(limit = 50): PriceBookVersion[] {
-      return (
-        db
-          .prepare(
-            `SELECT ${VERSION_COLUMNS} FROM price_book_versions ORDER BY id DESC LIMIT ?`,
-          )
-          .all(limit) as VersionRow[]
-      ).map(toVersion);
-    },
-
-    createdAt(): string {
-      const row = db
-        .prepare("SELECT value FROM store_meta WHERE key = 'created_at'")
-        .get() as { value: string } | undefined;
-      return row?.value ?? current().createdAt;
-    },
-
-    save(input: {
-      priceBook: unknown;
-      baseVersionId: number;
-      note?: string | null;
-      actor: PriceBookActor;
-    }): PriceBookVersion {
-      return commit(
-        parsePriceBook(input.priceBook),
-        input.baseVersionId,
-        input.note?.trim() || null,
-        input.actor,
-        null,
+    current: () => latest(pool),
+    history: (limit = 50) => history(pool, limit),
+    createdAt: () => createdAt(pool),
+    overview: (limit = 30) =>
+      transaction(
+        pool,
+        async (client) => ({
+          current: await latest(client),
+          history: await history(client, limit),
+          createdAt: await createdAt(client),
+        }),
+        true,
+      ),
+    save: async (input) => {
+      const priceBook = parsePriceBook(input.priceBook);
+      return transaction(pool, (client) =>
+        commit(
+          client,
+          priceBook,
+          input.baseVersionId,
+          input.note?.trim() || null,
+          input.actor,
+          null,
+        ),
       );
     },
-
-    restore(input: {
-      versionId: number;
-      baseVersionId: number;
-      actor: PriceBookActor;
-    }): PriceBookVersion {
-      const row = db
-        .prepare(`SELECT ${VERSION_COLUMNS} FROM price_book_versions WHERE id = ?`)
-        .get(input.versionId) as VersionRow | undefined;
-      if (!row) throw new Error("Diese Preisversion gibt es nicht.");
-      return commit(
-        toVersion(row).priceBook,
-        input.baseVersionId,
-        `Version ${input.versionId} wiederhergestellt`,
-        input.actor,
-        input.versionId,
-      );
-    },
-
-    close() {
-      db.close();
-    },
+    restore: (input) =>
+      transaction(pool, async (client) => {
+        const { rows } = await client.query<VersionRow>(
+          `SELECT ${VERSION_COLUMNS} FROM pricing.price_book_versions WHERE id = $1`,
+          [input.versionId],
+        );
+        if (!rows[0]) throw new Error("Diese Preisversion gibt es nicht.");
+        return commit(
+          client,
+          toVersion(rows[0]).priceBook,
+          input.baseVersionId,
+          `Version ${input.versionId} wiederhergestellt`,
+          input.actor,
+          input.versionId,
+        );
+      }),
+    close: () => pool.end(),
   };
-}
-
-export function openPriceStore(path: string) {
-  const db = openSqliteDatabase(path);
-  // Durable writes; price changes are rare and must survive a container stop.
-  db.exec("PRAGMA journal_mode = WAL");
-  db.exec("PRAGMA synchronous = FULL");
-  return createPriceStore(db);
 }

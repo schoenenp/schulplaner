@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-// The price book is a separate SQLite file, so the shop can keep reading
+// The price book is in a separate PostgreSQL database, so the shop can keep reading
 // prices while the PostgreSQL database is in maintenance.
 const MAINTENANCE_EXEMPT_PATHS = new Set(["/api/health", "/api/pricing"]);
 

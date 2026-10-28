@@ -1,3 +1,4 @@
+import { pricingDatabaseUrlSchema } from "pricing/connection";
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
@@ -29,12 +30,11 @@ export const env = createEnv({
     GHOST_GRAYSCALE_API_KEY: z.string().optional(),
     DATABASE_URL: z.string().url(),
     DATABASE_MAINTENANCE_MODE: z.enum(["true", "false"]).default("false"),
-    // The admin-managed price book is its own SQLite file, apart from
-    // DATABASE_URL. In production it must sit on a persistent volume.
-    PRICING_DB_PATH:
+    // Dedicated PostgreSQL database, with its own connection and credentials.
+    PRICING_DATABASE_URL:
       process.env.NODE_ENV === "production"
-        ? z.string().min(1)
-        : z.string().optional(),
+        ? pricingDatabaseUrlSchema(process.env.DATABASE_URL)
+        : pricingDatabaseUrlSchema(process.env.DATABASE_URL).optional(),
     // Shared with genbooks, which reads the price book from /api/pricing.
     PRICING_API_TOKEN:
       process.env.NODE_ENV === "production"
@@ -69,7 +69,7 @@ export const env = createEnv({
     EMAIL_FROM: process.env.EMAIL_FROM,
     DATABASE_URL: process.env.DATABASE_URL,
     DATABASE_MAINTENANCE_MODE: process.env.DATABASE_MAINTENANCE_MODE,
-    PRICING_DB_PATH: process.env.PRICING_DB_PATH,
+    PRICING_DATABASE_URL: process.env.PRICING_DATABASE_URL,
     PRICING_API_TOKEN: process.env.PRICING_API_TOKEN,
     S3_BUCKET: process.env.S3_BUCKET,
     AWS_REGION: process.env.AWS_REGION,

@@ -27,6 +27,7 @@ const workspaces =
 const env = {
   PATH: process.env.PATH,
   NODE_ENV: "test",
+  PRICING_TEST_DATABASE_URL: process.env.PRICING_TEST_DATABASE_URL,
   SKIP_ENV_VALIDATION: "1",
   STRIPE_SECRET_KEY: "sk_test_placeholder",
   AUTH_SECRET: "platform-test-auth",

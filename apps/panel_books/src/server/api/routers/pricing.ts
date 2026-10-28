@@ -30,13 +30,9 @@ function rethrowStoreError(error: unknown): never {
 }
 
 export const pricingRouter = createTRPCRouter({
-  get: adminProcedure.query(() => {
-    const store = getPriceStore();
-    return {
-      current: store.current(),
-      history: store.history(30),
-      createdAt: store.createdAt(),
-    };
+  get: adminProcedure.query(async () => {
+    const store = await getPriceStore();
+    return store.overview(30);
   }),
 
   save: adminProcedure
@@ -47,9 +43,10 @@ export const pricingRouter = createTRPCRouter({
         priceBook: priceBookSchema,
       }),
     )
-    .mutation(({ ctx, input }) => {
+    .mutation(async ({ ctx, input }) => {
       try {
-        const version = getPriceStore().save({
+        const store = await getPriceStore();
+        const version = await store.save({
           ...input,
           actor: actorOf(ctx.session.user),
         });
@@ -70,9 +67,10 @@ export const pricingRouter = createTRPCRouter({
         baseVersionId: z.number().int().positive(),
       }),
     )
-    .mutation(({ ctx, input }) => {
+    .mutation(async ({ ctx, input }) => {
       try {
-        const version = getPriceStore().restore({
+        const store = await getPriceStore();
+        const version = await store.restore({
           ...input,
           actor: actorOf(ctx.session.user),
         });

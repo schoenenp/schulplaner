@@ -1,32 +1,33 @@
-import path from "node:path";
 import { openPriceStore, type PriceStore } from "pricing/store";
-
 import { env } from "@/env";
 import { logger } from "@/server/util/logger";
 
-const globalForPricing = globalThis as unknown as { priceStore?: PriceStore };
+const globalForPricing = globalThis as unknown as {
+  priceStore?: Promise<PriceStore>;
+};
 
-function resolvePriceDbPath(): string {
-  if (env.PRICING_DB_PATH) return env.PRICING_DB_PATH;
-  if (env.NODE_ENV === "production") {
-    throw new Error(
-      "PRICING_DB_PATH fehlt. Die Preisdatenbank braucht einen dauerhaften Speicherort.",
+/** Independent PostgreSQL connection; never falls back to the shop database. */
+export function getPriceStore(): Promise<PriceStore> {
+  if (globalForPricing.priceStore) return globalForPricing.priceStore;
+  if (!env.PRICING_DATABASE_URL) {
+    return Promise.reject(
+      new Error(
+        "PRICING_DATABASE_URL fehlt. Bitte eine eigene PostgreSQL-Preisdatenbank konfigurieren.",
+      ),
     );
   }
-  return path.join(process.cwd(), ".data", "pricing.sqlite");
-}
-
-/** The panel-owned price book store (SQLite, separate from DATABASE_URL). */
-export function getPriceStore(): PriceStore {
-  if (globalForPricing.priceStore) return globalForPricing.priceStore;
-
-  const dbPath = resolvePriceDbPath();
-  const store = openPriceStore(dbPath);
-  if (store.initialized) {
-    // Expected once. After a redeploy it means the volume is not mounted and
-    // the shop now charges the seeded defaults.
-    logger.warn("pricing_db_initialized_with_defaults", { path: dbPath });
-  }
-  globalForPricing.priceStore = store;
-  return store;
+  globalForPricing.priceStore = openPriceStore(env.PRICING_DATABASE_URL, {
+    applicationDatabaseUrl: env.DATABASE_URL,
+    onError: () => logger.error("pricing_database_connection_error"),
+  })
+    .then((store) => {
+      if (store.initialized) logger.info("pricing_database_initialized");
+      return store;
+    })
+    .catch((error: unknown) => {
+      // A temporary outage must not leave a rejected promise cached forever.
+      globalForPricing.priceStore = undefined;
+      throw error;
+    });
+  return globalForPricing.priceStore;
 }

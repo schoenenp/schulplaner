@@ -16,8 +16,8 @@ function hasValidToken(authorization: string | null, expected: string) {
 }
 
 // The shop (genbooks) reads the current price book here with the shared
-// PRICING_API_TOKEN. Uses only the SQLite price store, never DATABASE_URL.
-export function GET(request: Request) {
+// PRICING_API_TOKEN. Uses only PRICING_DATABASE_URL, never DATABASE_URL.
+export async function GET(request: Request) {
   const expected = env.PRICING_API_TOKEN;
   if (!expected) {
     return Response.json(
@@ -33,7 +33,8 @@ export function GET(request: Request) {
   }
 
   try {
-    const current = getPriceStore().current();
+    const store = await getPriceStore();
+    const current = await store.current();
     const payload: PriceBookPayload = {
       version: current.id,
       updatedAt: current.createdAt,

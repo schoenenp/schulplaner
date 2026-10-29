@@ -1,3 +1,4 @@
+import { plannerDisplayName } from "db/planner-name";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
@@ -206,7 +207,7 @@ export const templateShareRouter = createTRPCRouter({
         expiresAt,
       });
       const claimUrl = buildAppUrl(origin, templateSharePath(token));
-      const templateName = template.name ?? template.bookTitle ?? "Vorlage";
+      const templateName = plannerDisplayName(template);
       const html = createTemplateInviteEmail({
         claimUrl,
         templateName,
@@ -303,7 +304,7 @@ export const templateShareRouter = createTRPCRouter({
           ? maskEmail(share.recipientEmail)
           : null,
         template: {
-          name: share.template.name ?? share.template.bookTitle ?? "Vorlage",
+          name: plannerDisplayName(share.template),
           moduleCount: share.template.modules.length,
         },
       };

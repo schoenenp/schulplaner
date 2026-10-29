@@ -1,5 +1,6 @@
 "use client";
 
+import { plannerDisplayName } from "db/planner-name";
 import { api } from "@/trpc/react";
 import { BookTemplate, ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -131,14 +132,14 @@ function TemplateCard({
           <TemplateCoverPreview
             key={previewUrl ?? fallbackUrl ?? "empty"}
             src={isLoading ? null : (previewUrl ?? fallbackUrl)}
-            name={template.bookTitle ?? template.name ?? "Vorlage"}
+            name={plannerDisplayName(template)}
             isLoading={isLoading}
           />
         </div>
 
         <div className="flex flex-col gap-2">
           <h3 className="font-cairo text-pirrot-blue-950 text-xl font-bold">
-            {template.name ?? "Unbenannte Vorlage"}
+            {plannerDisplayName(template)}
           </h3>
           <div className="flex gap-2">
             {template.modules.length > 0 && (

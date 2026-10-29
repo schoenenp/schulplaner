@@ -1,3 +1,4 @@
+import { plannerDisplayName } from "db/planner-name";
 import crypto from "node:crypto";
 import { TRPCError } from "@trpc/server";
 import type { PrismaClient } from "db";
@@ -110,6 +111,7 @@ async function getExistingClaimResult(
       template: {
         select: {
           name: true,
+          bookTitle: true,
         },
       },
       claims: {
@@ -140,7 +142,7 @@ async function getExistingClaimResult(
   return {
     bookId: existingBook.id,
     alreadyClaimed: true,
-    templateName: share.template.name ?? "Vorlage",
+    templateName: plannerDisplayName(share.template),
   };
 }
 
@@ -215,7 +217,7 @@ export async function claimTemplateShareForUser(
         return {
           bookId: existingClaim.book.id,
           alreadyClaimed: true,
-          templateName: share.template.name ?? "Vorlage",
+          templateName: plannerDisplayName(share.template),
         };
       }
 
@@ -304,7 +306,7 @@ export async function claimTemplateShareForUser(
       return {
         bookId: book.id,
         alreadyClaimed: false,
-        templateName: share.template.name ?? "Vorlage",
+        templateName: plannerDisplayName(share.template),
       };
     });
   } catch (error) {

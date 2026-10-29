@@ -2,6 +2,7 @@ import { cdnAssetUrl } from "@/util/cdn-asset-url";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import type { Prisma } from "db";
+import { plannerDisplayName } from "db/planner-name";
 import { catalogModuleWhere } from "@/server/util/module/catalog";
 
 import { protectedProcedure, createTRPCRouter } from "@/server/api/trpc";
@@ -282,7 +283,7 @@ export const plannerRouter = createTRPCRouter({
       });
 
       return {
-        fileName: book.name ?? book.bookTitle ?? book.id,
+        fileName: plannerDisplayName(book),
         format: book.format.includes("A4")
           ? ("DIN A4" as const)
           : ("DIN A5" as const),
@@ -303,6 +304,42 @@ export const plannerRouter = createTRPCRouter({
           })),
         },
       };
+    }),
+
+  renameTemplate: protectedProcedure
+    .input(
+      z.object({
+        bookId: z.string().min(1),
+        name: z
+          .string()
+          .trim()
+          .min(1, "Bitte geben Sie einen Namen ein.")
+          .max(140, "Der Vorlagenname darf höchstens 140 Zeichen lang sein."),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!["ADMIN", "STAFF", "MODERATOR"].includes(ctx.session.user.role)) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+      enforceProcedureRateLimit(ctx, {
+        scope: "planner.renameTemplate",
+        maxRequests: 60,
+        windowMs: 10 * 60 * 1000,
+      });
+      const book = await ctx.db.book.findFirst({
+        where: { id: input.bookId, isTemplate: true, deletedAt: null },
+        select: { id: true },
+      });
+      if (!book) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Vorlage nicht gefunden.",
+        });
+      }
+      return ctx.db.book.update({
+        where: { id: book.id },
+        data: { name: input.name },
+      });
     }),
 
   setFlags: protectedProcedure

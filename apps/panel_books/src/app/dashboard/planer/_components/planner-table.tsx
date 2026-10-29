@@ -12,6 +12,7 @@ import {
   TrashIcon,
 } from "@heroicons/react/16/solid";
 
+import { plannerDisplayName } from "db/planner-name";
 import { api } from "@/trpc/react";
 import ConfirmDeleteDialog from "@/app/_components/confirm-delete-dialog";
 import LoadingSpinner from "@/app/_components/loading-spinner";
@@ -58,6 +59,10 @@ export default function PlannerTable() {
   const [deleteTarget, setDeleteTarget] = useState<
     { bookId: string; name: string } | undefined
   >();
+  const [renameTarget, setRenameTarget] = useState<{
+    bookId: string;
+    name: string;
+  } | null>(null);
   const previewUrlRef = useRef<string | undefined>(undefined);
 
   const overview = api.planner.getOverview.useQuery();
@@ -69,6 +74,14 @@ export default function PlannerTable() {
   async function refresh() {
     await utils.planner.invalidate();
   }
+
+  const renameTemplate = api.planner.renameTemplate.useMutation({
+    onSuccess: async () => {
+      setRenameTarget(null);
+      await refresh();
+    },
+    onError: (error) => toast.show(error.message, "error"),
+  });
 
   const setFlags = api.planner.setFlags.useMutation({
     onSuccess: refresh,
@@ -316,9 +329,81 @@ export default function PlannerTable() {
                     }`}
                   >
                     <td className="max-w-56 px-3 py-3">
-                      <p className="truncate font-semibold text-white">
-                        {book.name ?? book.bookTitle ?? "Ohne Namen"}
-                      </p>
+                      {renameTarget?.bookId === book.id ? (
+                        <form
+                          className="flex min-w-48 flex-col gap-2"
+                          onSubmit={(event) => {
+                            event.preventDefault();
+                            renameTemplate.mutate(renameTarget);
+                          }}
+                        >
+                          <label
+                            htmlFor={`template-name-${book.id}`}
+                            className="sr-only"
+                          >
+                            Vorlagenname
+                          </label>
+                          <input
+                            id={`template-name-${book.id}`}
+                            type="text"
+                            value={renameTarget.name}
+                            onChange={(event) =>
+                              setRenameTarget({
+                                bookId: book.id,
+                                name: event.target.value,
+                              })
+                            }
+                            required
+                            maxLength={140}
+                            disabled={renameTemplate.isPending}
+                            className="border-pirrot-blue-200/30 w-full rounded border bg-slate-950/40 px-2 py-1 text-white"
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              type="submit"
+                              className="btn-secondary min-h-11 px-2 text-xs"
+                              disabled={
+                                renameTemplate.isPending ||
+                                !renameTarget.name.trim()
+                              }
+                            >
+                              {renameTemplate.isPending
+                                ? "Speichert …"
+                                : "Speichern"}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-secondary min-h-11 px-2 text-xs"
+                              disabled={renameTemplate.isPending}
+                              onClick={() => setRenameTarget(null)}
+                            >
+                              Abbrechen
+                            </button>
+                          </div>
+                        </form>
+                      ) : (
+                        <>
+                          <p className="truncate font-semibold text-white">
+                            {plannerDisplayName(book)}
+                          </p>
+                          {book.isTemplate && !book.deletedAt && (
+                            <button
+                              type="button"
+                              className="min-h-11 text-xs underline"
+                              disabled={renameTemplate.isPending}
+                              onClick={() =>
+                                setRenameTarget({
+                                  bookId: book.id,
+                                  name: plannerDisplayName(book),
+                                })
+                              }
+                              aria-label={`Vorlage „${plannerDisplayName(book)}“ umbenennen`}
+                            >
+                              Umbenennen
+                            </button>
+                          )}
+                        </>
+                      )}
                       <p className="truncate text-xs text-pirrot-blue-100/60">
                         {book.sourceType}
                         {book.deletedAt ? " · gelöscht" : ""}
@@ -420,8 +505,7 @@ export default function PlannerTable() {
                             onClick={() =>
                               setDeleteTarget({
                                 bookId: book.id,
-                                name:
-                                  book.name ?? book.bookTitle ?? "Ohne Namen",
+                                name: plannerDisplayName(book),
                               })
                             }
                             aria-label="Planer löschen"

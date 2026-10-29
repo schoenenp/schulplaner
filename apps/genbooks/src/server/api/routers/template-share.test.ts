@@ -56,6 +56,19 @@ beforeEach(() => {
 });
 
 describe("template sharing", () => {
+  it("keeps the saved template name on links and claims", async () => {
+    const f = fixture();
+    f.share.template.name = "Planer - Pro";
+    const link = await f.sender.createLink({ templateId: f.share.template.id });
+    const preview = await f.recipient.getShare({ token: link.token });
+    expect(preview.template.name).toBe("Planer - Pro");
+    const claimed = await f.recipient.claim({ token: link.token });
+    expect(claimed.templateName).toBe("Planer - Pro");
+    expect((await f.recipient.claim({ token: link.token })).templateName).toBe(
+      "Planer - Pro",
+    );
+  });
+
   it("shares an owned template by link and preserves its planner content", async () => {
     const f = fixture();
     const link = await f.sender.createLink({ templateId: f.share.template.id });

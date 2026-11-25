@@ -1,0 +1,339 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [citext]
+}
+
+// -----------------------------------------------------------------------------
+// Planner core — same shape as genbooks, so pdf-pipeline builds the planner
+// exactly as before: a Book with an ordered list of BookModules.
+// -----------------------------------------------------------------------------
+
+model Book {
+  id String @id @default(cuid())
+
+  name      String?
+  bookTitle String?
+  subTitle  String?
+
+  format    String    @default("A5")
+  country   String    @default("DE")
+  region    String?
+  planStart DateTime  @default(now())
+  planEnd   DateTime?
+
+  modules     BookModule[]
+  customDates CustomDate[]
+
+  /// The one standard planner schools start from (see ShopSettings).
+  isTemplate Boolean @default(false)
+  /// Set on the frozen copy an order prints from; never edited afterwards.
+  frozenAt   DateTime?
+
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id])
+
+  copyFromId   String?
+  copyFromBook Book?   @relation("BookCopy", fields: [copyFromId], references: [id], onDelete: SetNull)
+  copiedBooks  Book[]  @relation("BookCopy")
+
+  orders        Order[] @relation("OrderSource")
+  orderSnapshot Order?  @relation("OrderSnapshot")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([createdById])
+  @@index([copyFromId])
+}
+
+model BookModule {
+  id String @id @default(cuid())
+
+  idx       Int           @default(0)
+  colorCode ModuleColors? @default(COLOR)
+
+  bookId String
+  book   Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  moduleId String
+  module   Module @relation(fields: [moduleId], references: [id])
+
+  @@unique([bookId, moduleId])
+  @@index([moduleId])
+}
+
+model ModuleType {
+  id   String @id @default(cuid())
+  /// Handler key in pdf-pipeline: "umschlag", "wochenplaner" or any default type.
+  name String @unique
+
+  minPages Int @default(0)
+  maxPages Int @default(-1)
+
+  modules Module[]
+}
+
+/// Uploaded files are immutable: a new PDF version is a new module, so frozen
+/// order snapshots can keep referencing the module they were printed with.
+model Module {
+  id String @id @default(cuid())
+
+  name        String
+  description String?
+
+  typeId String
+  type   ModuleType @relation(fields: [typeId], references: [id])
+
+  part BookPart @default(DEFAULT)
+
+  /// Low-resolution JPEG of the first page, rendered at upload.
+  thumbnailSrc String?
+
+  books BookModule[]
+  files File[]
+
+  /// PUBLIC covers are offered to schools; content modules stay PRIVATE.
+  visible Visibility @default(PRIVATE)
+  sortIdx Int        @default(0)
+
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id])
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([typeId])
+  @@index([part, visible, deletedAt])
+}
+
+model File {
+  id        String   @id @default(cuid())
+  name      String?
+  size      Int      @default(15)
+  src       String
+  type      FileType @default(PDF)
+  /// PDF page count captured at upload; null for images.
+  pageCount Int?
+  modules   Module[]
+}
+
+model CustomDate {
+  id     String   @id @default(cuid())
+  date   DateTime
+  name   String
+  bookId String
+  book   Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@index([bookId])
+}
+
+// -----------------------------------------------------------------------------
+// Customers and authentication (NextAuth)
+// -----------------------------------------------------------------------------
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  role          UserRole  @default(USER)
+  email         String?   @unique @db.Citext
+  emailVerified DateTime?
+  image         String?
+
+  /// Last order's contact and addresses, used to prefill the next order.
+  schoolName     String?
+  phone          String?
+  billingAddress Json?
+  shipAddress    Json?
+
+  accounts Account[]
+  sessions Session[]
+  books    Book[]
+  modules  Module[]
+  orders   Order[]
+  events   OrderEvent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  id                       String  @id @default(cuid())
+  userId                   String
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String? @db.Text
+  access_token             String? @db.Text
+  expires_at               Int?
+  token_type               String?
+  scope                    String?
+  id_token                 String? @db.Text
+  session_state            String?
+  refresh_token_expires_in Int?
+  user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String   @db.Citext
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// -----------------------------------------------------------------------------
+// Orders: placed by the school, processed by staff. No review round trip —
+// an order goes straight from NEW to production. Billing is by invoice.
+// -----------------------------------------------------------------------------
+
+model Order {
+  id Int @id @default(autoincrement())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  /// The school's editable planner the order was placed from.
+  sourceBookId String?
+  sourceBook   Book?   @relation("OrderSource", fields: [sourceBookId], references: [id], onDelete: SetNull)
+  /// Frozen copy that is printed; keeps the exact modules, info and dates.
+  bookId       String  @unique
+  book         Book    @relation("OrderSnapshot", fields: [bookId], references: [id], onDelete: Restrict)
+
+  status        OrderStatus   @default(NEW)
+  paymentStatus PaymentStatus @default(OPEN)
+
+  quantity       Int
+  /// Gross amounts in cents.
+  unitAmount     Int
+  shippingAmount Int
+  totalAmount    Int
+  vatBasisPoints Int
+  currency       String @default("EUR")
+
+  email          String @db.Citext
+  phone          String?
+  schoolName     String
+  billingAddress Json
+  shipAddress    Json
+  customerNote   String? @db.Text
+
+  invoiceNumber  String?
+  trackingNumber String?
+  internalNote   String? @db.Text
+
+  /// Print-ready PDF generated by staff; kept so reprints use the same file.
+  printFileSrc     String?
+  printPageCount   Int?
+  printGeneratedAt DateTime?
+
+  events OrderEvent[]
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  productionAt DateTime?
+  shippedAt    DateTime?
+  completedAt  DateTime?
+  canceledAt   DateTime?
+  paidAt       DateTime?
+
+  @@index([userId])
+  @@index([status, createdAt])
+}
+
+model OrderEvent {
+  id String @id @default(cuid())
+
+  orderId Int
+  order   Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  actorId String?
+  actor   User?   @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  message   String
+  createdAt DateTime @default(now())
+
+  @@index([orderId, createdAt])
+}
+
+/// Singleton row "default": the standard planner and the price list.
+model ShopSettings {
+  id String @id @default("default")
+
+  templateBookId String?
+
+  /// [{ "minQuantity": 1, "unitAmount": 890 }, …], gross cents per planner.
+  priceTiers     Json
+  shippingAmount Int  @default(0)
+  /// Quantity from which shipping is free; null = never.
+  freeShippingAt Int?
+  minQuantity    Int  @default(1)
+  vatBasisPoints Int  @default(1900)
+
+  /// Default school year shown for new planners (month/day of these dates).
+  defaultPlanStart DateTime?
+  defaultPlanEnd   DateTime?
+
+  updatedAt DateTime @updatedAt
+}
+
+enum UserRole {
+  ADMIN
+  STAFF
+  USER
+}
+
+enum BookPart {
+  COVER
+  DEFAULT
+  PLANNER
+}
+
+enum ModuleColors {
+  GRAYSCALE
+  COLOR
+}
+
+enum Visibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum FileType {
+  PDF
+  IMAGE_PNG
+  IMAGE_JPEG
+}
+
+enum OrderStatus {
+  NEW
+  IN_PRODUCTION
+  SHIPPED
+  COMPLETED
+  CANCELED
+}
+
+enum PaymentStatus {
+  OPEN
+  PAID
+}

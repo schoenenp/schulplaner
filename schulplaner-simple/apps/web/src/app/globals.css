@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+/* Brand colors: change these three for a new client. */
+@theme {
+  --color-brand: #1f5f8b;
+  --color-brand-dark: #154566;
+  --color-brand-soft: #e8f1f8;
+  --color-accent: #f2a541;
+  --color-ink: #1d2733;
+  --color-muted: #5b6878;
+  --color-line: #dfe5ec;
+  --color-paper: #f6f8fa;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-paper text-ink antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-semibold tracking-tight;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl border border-line bg-white p-5 shadow-sm;
+  }
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply bg-brand text-white hover:bg-brand-dark;
+  }
+  .btn-secondary {
+    @apply border border-line bg-white text-ink hover:bg-paper;
+  }
+  .btn-danger {
+    @apply border border-red-200 bg-white text-red-700 hover:bg-red-50;
+  }
+  .input {
+    @apply w-full rounded-lg border border-line bg-white px-3 py-2 text-sm shadow-xs focus:border-brand focus:outline-none;
+  }
+  .label {
+    @apply flex flex-col gap-1 text-sm font-medium text-ink;
+  }
+  .hint {
+    @apply text-xs font-normal text-muted;
+  }
+  .table {
+    @apply w-full text-left text-sm;
+  }
+  .table th {
+    @apply border-b border-line px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted;
+  }
+  .table td {
+    @apply border-b border-line px-3 py-2 align-top;
+  }
+}
+
+/* School experience: full-width, colourful screens; panel styles remain scoped out. */
+.school-site { --color-brand:#5034df; --color-brand-dark:#3923ac; --color-brand-soft:#eee9ff; --color-ink:#27213b; --color-paper:#faf8f2; background:#faf8f2; }
+.school-site > main { max-width:none; padding:0; }
+.school-site > main > div:not(.planner-app):not(.home-app) { padding:clamp(24px,5vw,72px); }
+.school-site .btn-primary,.school-site .btn-secondary { border-radius:999px; min-height:48px; padding:12px 25px; font-size:15px; font-weight:700; }
+.school-site .input { border-radius:14px; padding:13px 16px; border-color:#ddd7e6; font-size:16px; }
+.school-site .label { gap:7px; }
+.school-site .card { border-radius:24px; box-shadow:none; }
+.planner-app { min-height:calc(100dvh - 61px); background:#faf8f2; }
+.wizard-top { display:flex; align-items:center; justify-content:space-between; padding:20px 4vw; font-size:12px; font-weight:700; letter-spacing:.06em; }
+.wizard-top a { display:flex; align-items:center; gap:8px; }
+.wizard-progress { display:flex; gap:8px; padding:0 4vw 20px; }
+.wizard-progress > span { flex:1; border-top:4px solid #e4dfee; padding-top:12px; color:#716b7d; font-size:13px; }
+.wizard-progress > .active { border-color:#5034df; color:#5034df; }
+.wizard-progress b { margin-right:8px; }
+.wizard-stage { display:grid; grid-template-columns: minmax(280px,.8fr) minmax(0,1.2fr); min-height:calc(100dvh - 190px); }
+.wizard-art { background:#d7c7ff; padding:clamp(28px,4vw,64px); position:relative; overflow:hidden; display:flex; flex-direction:column; align-items:flex-start; }
+.wizard-art h2 { font-size:clamp(36px,4.7vw,70px); line-height:1.02; max-width:500px; margin:24px 0 36px; letter-spacing:-.055em; }
+.art-tag { display:flex; gap:8px; align-items:center; font-size:11px; font-weight:800; letter-spacing:.15em; }
+.book-art { width:clamp(180px,19vw,290px); aspect-ratio:.71; background:#5034df; color:#efff8d; box-shadow:12px 15px 0 #21164c22; border-left:10px solid #3923ac; border-radius:4px 15px 15px 4px; transform:rotate(-9deg); padding:25px; margin:0 auto 45px; display:flex; flex-direction:column; justify-content:space-between; }
+.book-art > span { font-size:clamp(30px,3.5vw,50px); font-weight:900; line-height:.95; letter-spacing:-.05em; }
+.book-art i { font-size:11px; font-style:normal; }
+.book-art b { font-size:110px; line-height:.8; align-self:flex-end; }
+.art-sticker { position:absolute; top:52%; right:8%; background:#eeff88; color:#27213b; width:105px; height:105px; border-radius:50%; display:grid; place-content:center; text-align:center; font-weight:800; transform:rotate(12deg); }
+.wizard-art > p { font-size:13px; line-height:1.7; }
+.tone-1 .wizard-art { background:#ffbfa7; }.tone-2 .wizard-art { background:#dbef9a; }.tone-3 .wizard-art { background:#bde8f3; }
+.wizard-content { padding:clamp(24px,4vw,64px); min-width:0; }
+.wizard-card > div:first-child > span { display:none; }
+.wizard-card > div:first-child h2 { font-size:clamp(30px,3vw,44px); line-height:1.08; margin-bottom:15px; }
+.wizard-bottom { display:flex; justify-content:space-between; align-items:center; gap:15px; margin-top:32px; padding-top:24px; border-top:1px solid #ddd7e6; }
+.cover-upload { border-radius:24px; padding:20px; background:#fff; }
+.cover-current { display:flex; gap:15px; align-items:center; margin-bottom:20px; }.cover-current img { width:55px; height:78px; object-fit:contain; border-radius:5px; }.cover-current strong { display:block; font-size:14px; margin-top:5px; word-break:break-word; }
+.upload-zone { position:relative; display:flex; flex-direction:column; align-items:center; gap:10px; padding:28px 15px; background:#eeebff; border:2px dashed #a390ee; border-radius:18px; text-align:center; cursor:pointer; }.upload-zone span { font-size:12px; }.upload-zone input { max-width:100%; font-size:12px; }.upload-zone:focus-within { outline:2px solid #5034df; outline-offset:3px; }
+.checkout-stage { max-width:1000px; margin:auto; padding:35px clamp(24px,4vw,64px) 60px; }
+.checkout-stage h1 { font-size:clamp(42px,6vw,80px); line-height:1.02; letter-spacing:-.055em; margin:14px 0 20px; }
+.eyebrow { font-size:12px; letter-spacing:.15em; font-weight:800; }
+.checkout-intro { font-size:19px; margin-bottom:32px; color:#625973; }
+.quantity-picks { display:flex; gap:15px; margin:30px 0; flex-wrap:wrap; }.quantity-picks button { background:#e6dcff; border:2px solid transparent; border-radius:22px; padding:24px; min-width:120px; font-size:32px; font-weight:800; }.quantity-picks button span { display:block; font-size:13px; font-weight:500; }.quantity-picks button[aria-pressed=true] { border-color:#5034df; background:#5034df; color:white; }
+.checkout-total { display:flex; justify-content:space-between; gap:20px; padding:24px; border-radius:24px; background:#e5f4b0; margin-top:30px; }.checkout-total strong { font-size:30px; text-align:right; }.checkout-total small { display:block; font-size:12px; font-weight:400; margin-top:5px; }
+.home-hero { display:grid; grid-template-columns:1.1fr 1fr; min-height:75dvh; background:#d7c7ff; }.home-copy { padding:clamp(32px,6vw,90px); align-self:center; }.home-copy h1 { font-size:clamp(48px,7vw,100px); line-height:.95; letter-spacing:-.065em; margin:24px 0; }.home-copy p { font-size:18px; line-height:1.6; max-width:440px; margin-bottom:30px; }.home-banner { padding:22px 5vw; background:#e6f69a; font-weight:800; font-size:clamp(16px,2vw,24px); display:flex; gap:30px; justify-content:space-around; flex-wrap:wrap; }.home-hero .wizard-art { background:#b5dcd5; justify-content:center; }.home-hero .book-art { width:270px; }.home-hero .art-sticker { top:25%; }
+@media(max-width:760px) { .wizard-stage { grid-template-columns:1fr; }.wizard-art { display:none; }.home-hero { grid-template-columns:1fr; }.home-hero .wizard-art { display:flex; min-height:400px; }.wizard-save { display:none; }.wizard-progress { gap:6px; }.wizard-progress > span { font-size:11px; }.wizard-progress b { display:none; }.wizard-content { padding:24px 20px 35px; }.wizard-top { font-size:10px; }.quantity-picks { gap:8px; }.quantity-picks button { min-width:calc(50% - 4px); padding:18px; }.checkout-total strong { font-size:24px; } }
+@media(prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto!important; transition:none!important; } }
+.review-banner { background:#eee9ff; border-radius:24px; padding:24px; margin-bottom:24px; display:flex; flex-direction:column; gap:12px; font-size:14px; overflow-wrap:anywhere; }

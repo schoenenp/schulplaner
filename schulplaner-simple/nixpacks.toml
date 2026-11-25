@@ -1,0 +1,15 @@
+[phases.setup]
+# Prisma's native Linux engine needs libssl.so.3 in the system library path,
+# including when it is loaded by Bun for migrations and database seeds.
+# Poppler rasterizes the low-resolution, watermarked module preview PDFs.
+aptPkgs = ["...", "openssl", "poppler-utils", "curl", "ca-certificates"]
+# Put the verified official release ahead of the Node package from nixpkgs.
+cmds = ["...", "sh deploy/install-node.sh"]
+paths = ["/opt/node/bin", "..."]
+
+[phases.build]
+# Fail the deployment if another PATH setting selects an outdated runtime.
+cmds = ["node -e \"if (process.version !== 'v22.23.4') throw new Error('Expected Node v22.23.4, got ' + process.version)\"", "..."]
+
+[start]
+cmd = "bun run start"

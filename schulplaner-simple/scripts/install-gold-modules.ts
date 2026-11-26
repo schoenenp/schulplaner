@@ -18,7 +18,9 @@ if (!bootstrap && (!["127.0.0.1", "localhost", "[::1]"].includes(host) || proces
   throw new Error("This setup command only installs into the local development environment.");
 }
 // .env.local is normally resolved from apps/web by Next, not the project root.
-process.env.STORAGE_LOCAL_DIR = resolve(project, "apps/web", process.env.STORAGE_LOCAL_DIR || "../../.local-storage");
+if (process.env.STORAGE_DRIVER === "local") {
+  process.env.STORAGE_LOCAL_DIR = resolve(project, "apps/web", process.env.STORAGE_LOCAL_DIR || "../../.local-storage");
+}
 const definitions = [
   { file: "umschlag.pdf", name: "Standardumschlag Beige/Gold", type: "umschlag", part: "COVER" as const, description: "Beige/goldene Gestaltung mit abgesetztem Titelfeld für Planertitel und Schuljahr." },
   { file: "stundenplan.pdf", name: "Stundenplan · Beige/Gold", type: "inhalt", part: "DEFAULT" as const, description: "Zweiseitiger Stundenplan aus dem freigegebenen goldenen Entwurf." },

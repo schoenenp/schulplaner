@@ -1,5 +1,6 @@
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { statSync } from "node:fs";
+import { dirname, isAbsolute, join, resolve } from "node:path";
 import { storageKey } from "./references";
 
 // The ignore comments keep Next's output tracing from bundling the whole
@@ -10,10 +11,18 @@ import { storageKey } from "./references";
  * app runs without object storage credentials. Production always uses S3.
  */
 export function isLocalStorage(): boolean {
-  return process.env.STORAGE_DRIVER?.trim() === "local";
+  const driver = process.env.STORAGE_DRIVER?.trim();
+  return driver === "local" || driver === "volume";
 }
 
 function localRoot(): string {
+  if (process.env.STORAGE_DRIVER?.trim() === "volume") {
+    const root = process.env.STORAGE_LOCAL_DIR?.trim();
+    if (!root || !isAbsolute(root) || !statSync(root, { throwIfNoEntry: false })?.isDirectory()) {
+      throw new Error("STORAGE_DRIVER=volume requires an existing absolute mount directory");
+    }
+    return root;
+  }
   if (process.env.NODE_ENV === "production") {
     throw new Error("STORAGE_DRIVER=local is not allowed in production");
   }

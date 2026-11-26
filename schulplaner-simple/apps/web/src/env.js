@@ -29,7 +29,7 @@ export const env = createEnv({
     /** Verified owner email that is promoted to ADMIN on sign-in. */
     PANEL_ADMIN_EMAIL: optional.pipe(z.string().email().optional()),
 
-    STORAGE_DRIVER: z.enum(["s3", "local"]).default("s3"),
+    STORAGE_DRIVER: z.enum(["s3", "local", "volume"]).default("s3"),
 
     NODE_ENV: z
       .enum(["development", "test", "production"])

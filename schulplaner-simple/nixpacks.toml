@@ -1,6 +1,7 @@
 [phases.setup]
-# Prisma's native Linux engine needs libssl.so.3 in the system library path,
-# including when it is loaded by Bun for migrations and database seeds.
+# Bun from nixpkgs needs OpenSSL in the Nix library path to load Prisma's engine.
+nixLibs = ["...", "openssl"]
+# Install the system CLI tools for Node, Prisma's platform detection and Poppler.
 # Poppler rasterizes the low-resolution, watermarked module preview PDFs.
 aptPkgs = ["...", "openssl", "poppler-utils", "curl", "ca-certificates"]
 # Put the verified official release ahead of the Node package from nixpkgs.

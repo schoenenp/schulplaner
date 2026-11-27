@@ -60,7 +60,14 @@ const appConfigs: AppConfig[] = [
 ];
 
 /** Paths only main needs; stripped from every deploy branch. */
-const mainOnlyPaths = ["promo", "DEPLOY.md", "scripts", ".github", "tsconfig.json"];
+const mainOnlyPaths = [
+  "promo",
+  "DEPLOY.md",
+  "scripts",
+  ".github",
+  "tsconfig.json",
+  "apps/genbooks/scripts/migration-payment-sessions.ts",
+];
 
 const repoRoot = process.cwd();
 const push = process.argv.includes("--push");

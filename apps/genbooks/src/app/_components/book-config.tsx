@@ -223,7 +223,16 @@ const STEP_LABELS: Record<ConfigStepId, string> = {
   PLANNER: "Wochenplaner",
   POST: "Hinterer Teil",
   BINDING: "Bindung",
-  CHECKOUT: "Checkout",
+  CHECKOUT: "Vorschau & Bestellung",
+};
+
+const MOBILE_STEP_LABELS: Record<ConfigStepId, string> = {
+  COVER: "Umschlag",
+  PRE: "Vorne",
+  PLANNER: "Wochen",
+  POST: "Hinten",
+  BINDING: "Bindung",
+  CHECKOUT: "Vorschau",
 };
 
 const STEP_ACCENTS: Record<ConfigStepId, string> = {
@@ -2149,16 +2158,9 @@ export default function BookConfig(props: {
                         index + 1
                       )}
                     </span>
-                    <span
-                      aria-hidden="true"
-                      className={`h-1 w-6 rounded-full ${
-                        isCurrentStep
-                          ? "bg-current"
-                          : isDone
-                            ? "bg-pirrot-green-500"
-                            : "bg-info-950/10"
-                      }`}
-                    />
+                    <span aria-hidden="true" className="text-[10px] leading-tight">
+                      {MOBILE_STEP_LABELS[step.id]}
+                    </span>
                   </button>
                 </li>
               );
@@ -2194,7 +2196,7 @@ export default function BookConfig(props: {
       currentStep === "CHECKOUT"
         ? "Aktualisieren"
         : currentStep === "BINDING"
-          ? "Checkout"
+          ? "Zur Vorschau"
           : "Weiter";
     const canContinue = canContinueCurrentStep() && !isMakingPreview;
 
@@ -2333,26 +2335,6 @@ export default function BookConfig(props: {
 
           {isFilterOpen ? (
             <>
-              <div className="mx-2 grid gap-2">
-                <button
-                  type="button"
-                  onClick={() => setModalId("info")}
-                  className="btn-soft flex items-center gap-2 px-3 py-2.5"
-                >
-                  <InfoIcon className="size-5" />
-                  <span className="text-sm font-semibold">Planerinfo</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setModalId(isLoggedIn ? "dates" : "login-prompt")
-                  }
-                  className="btn-soft flex items-center gap-2 px-3 py-2.5"
-                >
-                  <CalendarDays className="size-5" />
-                  <span className="text-sm font-semibold">Termine</span>
-                </button>
-              </div>
               <div className="content-card mx-2 flex flex-col gap-2 p-3">
                 <h3 className="font-bold">Live-Hinweis</h3>
                 <p className="text-info-800 text-sm">
@@ -2497,18 +2479,37 @@ export default function BookConfig(props: {
           className="flex min-w-0 flex-1 flex-col gap-8 overflow-y-auto"
         >
           <div className="flex w-full flex-col gap-8 p-2 max-md:gap-2 lg:p-4">
+            <div className="content-card flex flex-wrap items-center justify-between gap-3 p-3">
+              <Link
+                href="/dashboard?view=planer"
+                className="text-pirrot-blue-800 text-sm font-semibold hover:underline"
+              >
+                ← Meine Planer
+              </Link>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setModalId("info")}
+                  className="btn-soft flex items-center gap-2 px-3 py-2.5"
+                >
+                  <InfoIcon className="size-5" />
+                  <span className="text-sm font-semibold">Planerinfo</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setModalId(isLoggedIn ? "dates" : "login-prompt")
+                  }
+                  className="btn-soft flex items-center gap-2 px-3 py-2.5"
+                >
+                  <CalendarDays className="size-5" />
+                  <span className="text-sm font-semibold">Eigene Termine</span>
+                </button>
+              </div>
+            </div>
             {renderMobileStepBar()}
 
             <div className="content-card flex w-full flex-col gap-4 p-3 max-md:hidden">
-              <div className="pb-1">
-                <Link
-                  href="/"
-                  className="underline underline-offset-4 transition-all duration-300 hover:underline-offset-8"
-                >
-                  ← Zurück zum Anfang
-                </Link>
-              </div>
-
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <button
                   type="button"
@@ -2526,7 +2527,7 @@ export default function BookConfig(props: {
               ref={stickyStepHeaderRef}
               className="content-card sticky top-2 z-[59] flex w-full flex-col gap-2 p-2 max-md:hidden"
             >
-              <div className="flex gap-2 overflow-x-auto px-1 pt-2 pb-2">
+              <nav aria-label="Konfiguration" className="grid grid-cols-3 gap-2 px-1 py-2 xl:grid-cols-6">
                 {configSteps.map((step, index) => {
                   const isCurrentStep = step.id === currentStep;
                   const isComplete = isStepComplete(step.id);
@@ -2539,7 +2540,8 @@ export default function BookConfig(props: {
                       disabled={!isAccessible || isMakingPreview}
                       onClick={() => void handleStepChange(step.id)}
                       title={step.desc}
-                      className={`min-w-36 rounded-xl border px-3 py-2 text-left transition ${
+                      aria-current={isCurrentStep ? "step" : undefined}
+                      className={`min-w-0 rounded-xl border px-3 py-2 text-left transition ${
                         isCurrentStep
                           ? `${getStepThemeClasses(step.id)} bg-white shadow-md`
                           : isComplete
@@ -2566,7 +2568,7 @@ export default function BookConfig(props: {
                     </button>
                   );
                 })}
-              </div>
+              </nav>
 
               <div
                 className={`field-shell flex items-center gap-2 px-3 py-2 ${getStepThemeClasses(currentStep)}`}
@@ -2791,7 +2793,7 @@ export default function BookConfig(props: {
                       {isCheckoutPreviewStale ? (
                         <div className="border-warning-300 bg-warning-100/60 rounded-xl border px-3 py-2 text-sm">
                           Die Vorschau ist nach Ihren letzten Änderungen
-                          veraltet. Bitte berechnen Sie den Checkout erneut.
+                          veraltet. Bitte aktualisieren Sie die Vorschau.
                         </div>
                       ) : null}
                     </div>
@@ -2936,7 +2938,7 @@ export default function BookConfig(props: {
                     ) : (
                       <div className="flex size-full flex-col items-center justify-center gap-4 text-center">
                         <p className="max-w-md">
-                          Für den Checkout wird zuerst eine aktuelle Vorschau
+                          Vor der Bestellung wird eine aktuelle Vorschau
                           erzeugt.
                         </p>
                         <button
@@ -3118,7 +3120,7 @@ export default function BookConfig(props: {
                     {currentStep === "CHECKOUT"
                       ? "Aktualisieren"
                       : currentStep === "BINDING"
-                        ? "Checkout"
+                        ? "Zur Vorschau"
                         : "Weiter"}
                     <ArrowRight className="size-5" />
                   </button>

@@ -17,8 +17,21 @@ import "react-datepicker/dist/react-datepicker.css";
 registerLocale("de", de);
 
 const currentDate = new Date();
-const nextYearDate = new Date(currentDate);
-nextYearDate.setFullYear(currentDate.getFullYear() + 1);
+const year = currentDate.getFullYear();
+const defaultSchoolYear = currentDate >= new Date(year, 8, 1) ? year + 1 : year;
+const schoolYears = [
+  defaultSchoolYear - 1,
+  defaultSchoolYear,
+  defaultSchoolYear + 1,
+  defaultSchoolYear + 2,
+];
+
+function schoolYearPeriod(startYear: number) {
+  return {
+    start: new Date(startYear, 7, 1, 12),
+    end: new Date(startYear + 1, 6, 31, 12),
+  };
+}
 
 interface PlannerFormProps {
   initialCountry?: string;
@@ -53,10 +66,17 @@ export default function PlannerForm({
     },
   });
 
-  const [period, setPeriod] = useState({
-    start: currentDate,
-    end: nextYearDate,
+  const [period, setPeriod] = useState(() =>
+    schoolYearPeriod(defaultSchoolYear),
+  );
+  const selectedYear = schoolYears.find((startYear) => {
+    const dates = schoolYearPeriod(startYear);
+    return (
+      dates.start.toDateString() === period.start.toDateString() &&
+      dates.end.toDateString() === period.end.toDateString()
+    );
   });
+  const isValid = Boolean(name.trim() && region && period.start < period.end);
 
   // Notify parent component of form changes for preview
   useEffect(() => {
@@ -70,24 +90,16 @@ export default function PlannerForm({
     });
   }, [name, sub, period, onFormChange]);
 
-  // Add validation logic
   useEffect(() => {
-    const isFutureEnd = period.start < period.end;
-    const isValid =
-      name.trim() !== "" &&
-      sub.trim() !== "" &&
-      period.start &&
-      period.end &&
-      isFutureEnd;
     onValidationChange?.(isValid);
-  }, [name, sub, period, onValidationChange]);
+  }, [isValid, onValidationChange]);
 
-  async function handleNewConfig(event: React.MouseEvent) {
+  function handleNewConfig(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    event.stopPropagation();
-    await makeConfig.mutateAsync({
-      name,
-      sub,
+    if (!isValid || makeConfig.isPending) return;
+    makeConfig.mutate({
+      name: name.trim(),
+      sub: sub.trim() ? sub.trim() : undefined,
       country,
       region,
       planStart: period.start.toISOString(),
@@ -96,15 +108,16 @@ export default function PlannerForm({
   }
 
   return (
-    <form className="z-[1] flex flex-col items-center justify-center gap-6 rounded-2xl p-4 pb-6 pt-5 text-xl lg:p-7">
+    <form
+      onSubmit={handleNewConfig}
+      className="z-[1] flex flex-col items-center justify-center gap-6 rounded-2xl p-4 pb-6 pt-5 text-xl lg:p-7"
+    >
       <h2 className="text-pirrot-red-500 w-full text-start text-4xl font-black lg:text-5xl">
         Infos zum Planer
       </h2>
       <p className="w-full max-w-4xl pl-1 text-start text-lg text-info-800 lg:text-xl">
-        Füllen Sie mindestens die erforderlichen Felder aus. Die angegeben Daten
-        können immer noch im Nachgang geändert werden. Durch einen einfachen
-        Klick auf den Weiter Button leiten wir Sie Schritt-für-Schritt und
-        problemlos durch den gesamten Prozess.
+        Wählen Sie das Schuljahr und das Bundesland für Ferien und Feiertage.
+        Anschließend stellen Sie Ihre Module zusammen.
       </p>
 
       <div className="text-info-950 flex w-full flex-col gap-2">
@@ -195,12 +208,33 @@ export default function PlannerForm({
         </div>
       </div>
 
+      <label className="text-info-950 flex w-full flex-col gap-2 font-bold">
+        Schuljahr
+        <select
+          className="field-shell w-full px-3 py-2.5 font-normal"
+          value={selectedYear ?? ""}
+          onChange={(event) =>
+            setPeriod(schoolYearPeriod(Number(event.target.value)))
+          }
+        >
+          <option value="" disabled>
+            Individueller Zeitraum
+          </option>
+          {schoolYears.map((startYear) => (
+            <option key={startYear} value={startYear}>
+              {startYear}/{startYear + 1}
+            </option>
+          ))}
+        </select>
+      </label>
+
       <div className="text-info-950 flex w-full flex-col justify-between gap-6 lg:flex-row">
         <div className="flex flex-1 flex-col gap-2">
           <label className="font-bold" htmlFor="start">
-            Planer Start
+            Erster Tag
           </label>
           <DatePicker
+            id="start"
             selected={period.start}
             onChange={(date: Date | null) => {
               if (date) setPeriod({ ...period, start: date });
@@ -214,9 +248,10 @@ export default function PlannerForm({
 
         <div className="flex flex-1 flex-col gap-2">
           <label className="font-bold" htmlFor="end">
-            Planer Ende
+            Letzter Tag
           </label>
           <DatePicker
+            id="end"
             selected={period.end}
             onChange={(date: Date | null) => {
               if (date) setPeriod({ ...period, end: date });
@@ -229,6 +264,12 @@ export default function PlannerForm({
         </div>
       </div>
 
+      {makeConfig.isError && (
+        <p role="alert" className="text-pirrot-red-700 text-sm">
+          Der Planer konnte nicht erstellt werden. Bitte versuchen Sie es
+          erneut.
+        </p>
+      )}
       <div className="flex w-full flex-col gap-4 pt-2 sm:flex-row sm:gap-6">
         <Link
           href="dashboard?view=planer"
@@ -237,8 +278,8 @@ export default function PlannerForm({
           Planer Laden <FolderUp />
         </Link>
         <button
-          onClick={handleNewConfig}
-          disabled={makeConfig.isPending}
+          type="submit"
+          disabled={!isValid || makeConfig.isPending}
           className="btn-solid relative flex flex-1 cursor-pointer items-center justify-center gap-2 px-4 py-2.5 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {makeConfig.isPending ? "Wird erstellt..." : "Weiter"} <ArrowRight />

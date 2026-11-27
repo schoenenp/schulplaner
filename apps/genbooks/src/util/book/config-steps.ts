@@ -38,8 +38,8 @@ export const configSteps: Array<{
   },
   {
     id: "CHECKOUT",
-    title: "Checkout",
+    title: "Vorschau & Bestellung",
     desc: "Prüfen Sie Ihre Konfiguration und schließen Sie die Bestellung ab.",
-    hint: "Prüfen Sie Vorschau, Preis und Rechtliches, dann schließen Sie die Bestellung ab.",
+    hint: "Prüfen Sie die Druckvorschau und wählen Sie anschließend die Zahlungsart.",
   },
 ];

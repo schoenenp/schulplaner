@@ -395,7 +395,7 @@ export default function SchoolOrderForm(props: SchoolOrderFormProps) {
                 Ich habe die Bestelldaten geprüft und bestelle auf Rechnung. Die{" "}
                 <a
                   className="underline"
-                  href="https://secure.pirrot.de/datenschutz"
+                  href="https://pirrot.de/datenschutz"
                   target="_blank"
                   rel="noreferrer"
                 >

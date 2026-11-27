@@ -49,10 +49,6 @@ export default function StartConfig({
           für Ihren Schulalltag.
         </p>
       </section>
-      <TemplateGallery />
-
-      <HowItWorks />
-
       <section id="planer-erstellen" className="section-shell w-full scroll-mt-24 py-2">
         <div className="content-card grid min-h-[640px] w-full grid-cols-1 items-center justify-center gap-8 p-3 py-8 lg:grid-cols-3 lg:p-6">
           <div className="order-2 col-span-1 flex w-full flex-col items-center justify-center gap-4 px-3 py-10 lg:order-1 lg:py-20">
@@ -85,6 +81,8 @@ export default function StartConfig({
         </div>
       </section>
 
+      <TemplateGallery />
+      <HowItWorks />
       <About />
 
       <Footer />

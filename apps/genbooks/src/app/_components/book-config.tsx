@@ -11,7 +11,6 @@ import {
   ChevronUp,
   Component,
   EyeIcon,
-  GiftIcon,
   InfoIcon,
   LoaderCircle,
   PenBox,
@@ -48,7 +47,7 @@ import { SearchInput } from "./search-input";
 import FileUpload from "../config/_components/file-upload";
 import { uploadModuleFiles } from "@/util/upload/client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import ConfigInfoForm from "./config-info-form";
 import CustomDatesForm from "./custom-dates-form";
 import { calculatePrintCost } from "@/util/pdf/calculator";
@@ -447,10 +446,10 @@ function SelectedModuleList(props: {
 export default function BookConfig(props: {
   bookId?: string;
   isLoggedIn?: boolean;
-  partnerToken?: string;
 }) {
-  const { bookId, isLoggedIn, partnerToken } = props;
+  const { bookId, isLoggedIn } = props;
   const router = useRouter();
+  const resumeCheckout = useSearchParams().get("step") === "bestellen";
 
   const {
     modules,
@@ -475,6 +474,7 @@ export default function BookConfig(props: {
     setIsMakingPreview,
   } = useModuleState({
     name: existingBook?.name,
+    format: existingBook?.format,
     quantity: existingBook?.quantity,
     modules: existingBook?.modules.map((moduleItem) => ({
       id: moduleItem.moduleId,
@@ -505,8 +505,25 @@ export default function BookConfig(props: {
     isMobileViewport,
   } = useUIState();
 
+  const completionStatus = useMemo(
+    () => ({
+      hasCoverModule: pickedModules.COVER.length === 1,
+      hasPlannerModule: pickedModules.PLANNER.length >= 1,
+      hasBindingModule: pickedModules.BINDING.length === 1,
+    }),
+    [pickedModules],
+  );
+
   const [searchFilterValue, setSearchFilterValue] = useState("");
-  const [currentStep, setCurrentStep] = useState<ConfigStepId>("COVER");
+  const [currentStep, setCurrentStep] = useState<ConfigStepId>(() =>
+    isLoggedIn &&
+    resumeCheckout &&
+    completionStatus.hasCoverModule &&
+    completionStatus.hasPlannerModule &&
+    completionStatus.hasBindingModule
+      ? "CHECKOUT"
+      : "COVER",
+  );
   const [pendingAutoAdvanceStep, setPendingAutoAdvanceStep] =
     useState<ConfigStepId | null>(null);
   const [moduleColorMap, setModuleColorMap] = useState<
@@ -520,6 +537,7 @@ export default function BookConfig(props: {
     }
     return next;
   });
+  const [invoiceCheckoutError, setInvoiceCheckoutError] = useState<string>();
   const [isRefreshingPreview, setIsRefreshingPreview] = useState(false);
   const [useMobilePdfFallback, setUseMobilePdfFallback] = useState(false);
   const [bindingOverflowEvent, setBindingOverflowEvent] =
@@ -698,6 +716,8 @@ export default function BookConfig(props: {
   const pdfBookDetails = useMemo<BookDetails>(
     () => ({
       title: existingBook?.bookTitle ?? "Schulplaner",
+      subtitle: existingBook?.subTitle,
+      combineDateLabels: true,
       period: {
         start: existingBook?.planStart,
         end: existingBook?.planEnd ?? undefined,
@@ -712,6 +732,7 @@ export default function BookConfig(props: {
     }),
     [
       existingBook?.bookTitle,
+      existingBook?.subTitle,
       existingBook?.planStart,
       existingBook?.planEnd,
       existingBook?.region,
@@ -816,15 +837,6 @@ export default function BookConfig(props: {
       binding: resolveModules(pickedModules.BINDING),
     };
   }, [moduleLookupById, pickedModules]);
-
-  const completionStatus = useMemo(
-    () => ({
-      hasCoverModule: pickedModules.COVER.length === 1,
-      hasPlannerModule: pickedModules.PLANNER.length >= 1,
-      hasBindingModule: pickedModules.BINDING.length === 1,
-    }),
-    [pickedModules],
-  );
 
   const currentStepConfig = configSteps.find(
     (step) => step.id === currentStep,
@@ -1243,16 +1255,17 @@ export default function BookConfig(props: {
     await saveConfigModules({
       bookId,
       quantity: orderAmount,
+      format: pickedFormat,
       modules: [
         ...pickedModules.COVER.map((id) => ({
           id,
           idx: 0,
-          colorCode: moduleColorMap.get(id),
+          colorCode: moduleColorMap.get(id) ?? 4,
         })),
         ...getOrderedContentModuleIds(pickedModules).map((id, index) => ({
           id,
           idx: index + 1,
-          colorCode: moduleColorMap.get(id),
+          colorCode: moduleColorMap.get(id) ?? 4,
         })),
         ...pickedModules.BINDING.map((id) => ({
           id,
@@ -1260,6 +1273,26 @@ export default function BookConfig(props: {
         })),
       ],
     });
+  }
+
+  async function openInvoiceCheckout() {
+    if (!bookId || !isConfigComplete) return;
+
+    setInvoiceCheckoutError(undefined);
+    try {
+      await handleSaveConfig();
+      const encodedBookId = encodeURIComponent(bookId);
+      if (isLoggedIn) {
+        router.push(`/config/bestellen?bookId=${encodedBookId}`);
+      } else {
+        const callback = `/config?bookId=${encodedBookId}&step=bestellen`;
+        router.push(`/auth/signin?callbackUrl=${encodeURIComponent(callback)}`);
+      }
+    } catch {
+      setInvoiceCheckoutError(
+        "Der Planer konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.",
+      );
+    }
   }
 
   async function generateCheckoutPreview(usePreviewMode: boolean) {
@@ -2049,25 +2082,6 @@ export default function BookConfig(props: {
     );
   }
 
-  const partnerBookMeta = existingBook;
-  const partnerCampaignExpiresAt =
-    existingBook.sourceType === "PARTNER_TEMPLATE" &&
-    partnerBookMeta.partnerCampaignExpiresAt
-      ? new Date(partnerBookMeta.partnerCampaignExpiresAt)
-      : null;
-  const hasPartnerOrderBeenSubmitted =
-    existingBook.sourceType === "PARTNER_TEMPLATE" &&
-    Boolean(partnerBookMeta.partnerOrderSubmittedAt);
-  const isPartnerCampaignExpired = partnerCampaignExpiresAt
-    ? partnerCampaignExpiresAt.getTime() < Date.now()
-    : false;
-  const isPartnerTemplateFlagActive =
-    existingBook.sourceType === "PARTNER_TEMPLATE" &&
-    !isPartnerCampaignExpired &&
-    !hasPartnerOrderBeenSubmitted;
-  const showPartnerTemplateBanner =
-    Boolean(partnerToken) || isPartnerTemplateFlagActive;
-
   const continueBlockedReason = getContinueBlockedReason();
   const mobileSheetClasses = (open: boolean) =>
     `max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:z-[103] max-md:max-h-[85dvh] max-md:rounded-t-2xl max-md:border-t max-md:bg-pirrot-blue-50 max-md:pb-[env(safe-area-inset-bottom)] max-md:shadow-2xl max-md:outline-none max-md:duration-300 ${open ? "max-md:transition-transform" : "max-md:invisible max-md:translate-y-full max-md:transition-[transform,visibility]"}`;
@@ -2485,28 +2499,6 @@ export default function BookConfig(props: {
           <div className="flex w-full flex-col gap-8 p-2 max-md:gap-2 lg:p-4">
             {renderMobileStepBar()}
 
-            {showPartnerTemplateBanner ? (
-              <div className="bg-pirrot-green-100 border-pirrot-green-300 flex flex-col items-start justify-between gap-4 rounded-lg border p-4 sm:flex-row sm:items-center">
-                <div className="flex items-center gap-3">
-                  <div className="bg-pirrot-green-300 rounded-full p-2">
-                    <GiftIcon className="size-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-pirrot-green-600 text-lg font-bold">
-                      Partner-Vorlage
-                    </h3>
-                    <p className="text-pirrot-green-700 text-sm">
-                      {existingBook.modules.length ?? 0} Module inklusive •
-                      Zusätzliche Module kosten Extra
-                    </p>
-                  </div>
-                </div>
-                <div className="text-pirrot-green-600 bg-pirrot-green-50 rounded-full px-3 py-1 text-sm">
-                  <span className="font-semibold">Kostenlos</span> inkludiert
-                </div>
-              </div>
-            ) : null}
-
             <div className="content-card flex w-full flex-col gap-4 p-3 max-md:hidden">
               <div className="pb-1">
                 <Link
@@ -2834,10 +2826,40 @@ export default function BookConfig(props: {
                       </div>
                     </div>
 
+                    {!existingBook.isTemplate && (
+                      <section className="content-card flex flex-col items-start gap-3 p-4">
+                        <h3 className="text-xl font-bold">
+                          Auf Rechnung bestellen
+                        </h3>
+                        <p className="text-info-800 text-sm">
+                          Bestellen Sie diesen Planer für Ihre Schule direkt
+                          bei Digitaldruck Pirrot.
+                        </p>
+                        {invoiceCheckoutError && (
+                          <p role="alert" className="text-pirrot-red-700 text-sm">
+                            {invoiceCheckoutError}
+                          </p>
+                        )}
+                        <button
+                          type="button"
+                          disabled={
+                            !isConfigComplete || isMakingPreview || isSavingConfig
+                          }
+                          onClick={() => void openInvoiceCheckout()}
+                          className="btn-solid flex items-center gap-2 px-4 py-2 disabled:opacity-40"
+                        >
+                          {isSavingConfig
+                            ? "Planer wird gespeichert …"
+                            : isLoggedIn
+                              ? "Zur Rechnungsbestellung"
+                              : "Für die Rechnungsbestellung anmelden"}
+                          <ArrowRight className="size-4" />
+                        </button>
+                      </section>
+                    )}
+
                     <div className="content-card flex flex-col gap-3 p-4">
-                      <h3 className="text-xl font-bold">
-                        Rechtliches vor dem Bestellen
-                      </h3>
+                      <h3 className="text-xl font-bold">Online bezahlen</h3>
                       <div className="field-shell flex items-center gap-2 px-3 py-2">
                         <input
                           id="agb"
@@ -2879,7 +2901,6 @@ export default function BookConfig(props: {
                         bookId={bookId!}
                         quantity={orderAmount}
                         format={pickedFormat}
-                        partnerToken={partnerToken}
                         onAbortForm={() => activateStep("BINDING")}
                       />
                     </div>

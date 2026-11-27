@@ -77,3 +77,18 @@ See [STORAGE.md](STORAGE.md) for the Hetzner bucket configuration, migration, an
 ## MySQL to PostgreSQL migration
 
 This checkout prepares the PostgreSQL release. Follow [POSTGRESQL-MIGRATION.md](POSTGRESQL-MIGRATION.md) for local rehearsal, auditing, copying, verification, and cutover. Existing MySQL deployments need the verified data transfer before deploying this release.
+
+## Rechnungsbestellungen für Schulen
+
+Schulen stellen ihren Planer aus den Modulen im Pirrot-Konfigurator zusammen.
+Angemeldete Schulen können im letzten Schritt auf Rechnung bestellen. Das
+Panel zeigt Bestellung, Druck-PDF, Versandstatus und Rechnungsdaten unter
+**Bestellungen**. Pirrot stellt die Rechnung separat aus und erfasst
+Rechnungsnummer und Zahlung im Panel.
+
+Auf einer bereits eingerichteten PostgreSQL-Shop-Datenbank zuerst
+`prisma migrate status` im DB-Workspace prüfen und dann `bun run db:migrate`
+gegen die bestätigte Shop-Datenbank ausführen. Bei einem MySQL-Livebetrieb
+gilt zuerst der [PostgreSQL-Cutover](POSTGRESQL-MIGRATION.md).
+Preise und Seitenlimits ergeben sich aus Format, Bindung und dem
+Preisverzeichnis des Panels.

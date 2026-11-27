@@ -251,6 +251,15 @@ export default function Overview({ orderId }: OrderOverviewProps) {
                         </h2>
                         
                         <div className="space-y-4">
+                            {order.schoolInvoice ? (
+                                <p className="text-sm text-info-700">
+                                    {order.schoolInvoiceNumber
+                                        ? `Rechnungsnummer ${order.schoolInvoiceNumber}`
+                                        : order.status === "CANCELED"
+                                          ? "Zahlung auf Rechnung"
+                                          : "Zahlung auf Rechnung. Pirrot sendet Ihnen die Rechnung per E-Mail."}
+                                </p>
+                            ) : null}
                             <div className="flex justify-between items-center py-2">
                                 <span className="font-baloo text-info-700">Produktpreis:</span>
                                 <span className="font-bold font-cairo text-info-950">{order.price}</span>
@@ -298,7 +307,7 @@ export default function Overview({ orderId }: OrderOverviewProps) {
                         <Package className="w-5 h-5" />
                         Rechnung herunterladen
                     </Link>
-                ) : (
+                ) : !order.schoolInvoice ? (
                     <button
                       type="button"
                       disabled
@@ -307,9 +316,9 @@ export default function Overview({ orderId }: OrderOverviewProps) {
                         <Package className="w-5 h-5" />
                         Keine Rechnung verfügbar
                     </button>
-                )}
+                ) : null}
                 
-                {order.status === 'PENDING' && (
+                {order.status === 'PENDING' && !order.schoolInvoice && (
                     <button
                       type="button"
                       onClick={() => setShowCancelConfirm(true)}

@@ -179,9 +179,11 @@ export default function CheckoutSuccess({
           </div>
           <h1 className="text-3xl font-bold text-info-950">Vielen Dank!</h1>
           <p className="mt-2 text-info-700">
-            {isDirectFlow
-              ? "Ihre Bestellung wurde ohne zusätzliche Zahlung erstellt und bestätigt."
-              : "Ihre Zahlung wurde bestätigt und Ihre Bestellung wird nun bearbeitet."}
+            {flow === "school-invoice"
+              ? "Ihre Schulplaner-Bestellung ist bei Pirrot eingegangen. Die Rechnung erhalten Sie per E-Mail."
+              : isDirectFlow
+                ? "Ihre Bestellung wurde ohne zusätzliche Zahlung erstellt und bestätigt."
+                : "Ihre Zahlung wurde bestätigt und Ihre Bestellung wird nun bearbeitet."}
           </p>
         </div>
       </div>

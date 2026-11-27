@@ -177,14 +177,20 @@ export const plannerRouter = createTRPCRouter({
           id: true,
           name: true,
           bookTitle: true,
+          subTitle: true,
+          clientRef: true,
           format: true,
           region: true,
           country: true,
           planStart: true,
           planEnd: true,
           deletedAt: true,
-          customDates: { select: { date: true, name: true } },
+          customDates: {
+            orderBy: [{ date: "asc" }, { id: "asc" }],
+            select: { date: true, name: true },
+          },
           modules: {
+            orderBy: [{ idx: "asc" }, { id: "asc" }],
             select: {
               idx: true,
               colorCode: true,
@@ -195,6 +201,7 @@ export const plannerRouter = createTRPCRouter({
                   part: true,
                   type: { select: { name: true } },
                   files: {
+                    orderBy: { id: "asc" },
                     select: {
                       name: true,
                       type: true,
@@ -217,8 +224,10 @@ export const plannerRouter = createTRPCRouter({
         });
       }
 
-      const coverModule = book.modules.find(
-        (entry) => entry.module.part === "COVER",
+      const schoolOrder = book.clientRef === "pirrot-school-order";
+      const coverModule = book.modules.find(({ module }) =>
+        module.part === "COVER" ||
+        (schoolOrder && module.type.name.toLowerCase() === COVER_MODULE_TYPE),
       );
       if (!coverModule) {
         throw new TRPCError({
@@ -235,9 +244,12 @@ export const plannerRouter = createTRPCRouter({
       }
 
       const contentModules = book.modules
-        .filter(
-          (entry) =>
-            entry.module.part === "DEFAULT" || entry.module.part === "PLANNER",
+        .filter(({ module }) =>
+          (module.part === "DEFAULT" || module.part === "PLANNER") &&
+          (!schoolOrder ||
+            ![COVER_MODULE_TYPE, "bindung", "farben"].includes(
+              module.type.name.toLowerCase(),
+            )),
         )
         .sort((a, b) => a.idx - b.idx);
       if (contentModules.length === 0) {
@@ -268,6 +280,9 @@ export const plannerRouter = createTRPCRouter({
       });
 
       const coverImageFile = pickCoverImageFile(coverModule.module.files);
+      if (schoolOrder && coverModule.colorCode === "GRAYSCALE") {
+        colorEntries.push([coverModule.module.id, 1]);
+      }
       modules.push({
         id: coverModule.module.id,
         name: coverModule.module.name,
@@ -291,6 +306,8 @@ export const plannerRouter = createTRPCRouter({
         modules,
         bookDetails: {
           title: book.bookTitle ?? "Schulplaner",
+          subtitle: book.subTitle,
+          combineDateLabels: schoolOrder,
           code: book.region ?? "DE-SL",
           country: book.country,
           addHolidays: true,
@@ -368,13 +385,17 @@ export const plannerRouter = createTRPCRouter({
 
       const book = await ctx.db.book.findUnique({
         where: { id: input.bookId },
-        select: { id: true, deletedAt: true },
+        select: { id: true, deletedAt: true, clientRef: true },
       });
       if (!book || book.deletedAt) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Planer nicht gefunden.",
         });
+      }
+
+      if (book.clientRef === "pirrot-school-order") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Dieser Schulplaner kann nicht als Vorlage freigegeben werden." });
       }
 
       return ctx.db.book.update({

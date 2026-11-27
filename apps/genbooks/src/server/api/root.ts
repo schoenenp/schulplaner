@@ -6,7 +6,6 @@ import { configRouter } from "./routers/config";
 import { typeRouter } from "./routers/type";
 import { orderRouter } from "./routers/order";
 import { userRouter } from "./routers/user";
-import { partnerRouter } from "./routers/partner";
 import { templateShareRouter } from "./routers/template-share";
 
 /**
@@ -23,7 +22,6 @@ export const appRouter = createTRPCRouter({
   order: orderRouter,
   config: configRouter,
   user: userRouter,
-  partner: partnerRouter,
   templateShare: templateShareRouter,
 });
 

@@ -1,4 +1,5 @@
 import { cdnAssetUrl } from "@/util/cdn-asset-url";
+import { SCHOOL_ORDER_CLIENT } from "@/util/school-planner-input";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { stripeClient, toStripeAddress } from "@/util/stripe";
@@ -17,11 +18,6 @@ import createOrderKey, {
 import { createOrderConfirmationEmail } from "@/util/order/templates/create-validation-order";
 import { getAppOriginFromHeaders } from "@/util/app-origin";
 import { cloneBookForOrder } from "@/util/book/clone-book";
-import {
-  type PartnerCheckoutClaims,
-  verifyPartnerToken,
-} from "@/util/partner-link";
-import { type PartnerSessionMetadata } from "@/util/partner-program/session-metadata";
 import { logger } from "@/util/logger";
 import { pickCoverImageFile, pickModulePdfFile } from "@/util/module-files";
 import { enforceProcedureRateLimit } from "@/util/rate-limit";
@@ -31,11 +27,6 @@ import {
 } from "@/util/book/binding-rules";
 import { buildModuleFeedVisibilityWhere } from "./module-visibility";
 import { canAccessBookForSetupOrder } from "./setup-order-access";
-import { isPartnerControlledFulfillmentEnabled } from "@/util/partner-program/flags";
-import {
-  createPartnerCorrelationId,
-  recordPartnerOrderTransition,
-} from "@/util/partner-program/transitions";
 
 const REQUIRED_TEXT_MIN = 1;
 const NAME_MAX = 120;
@@ -104,32 +95,6 @@ const ConfigDetailsSchema = z.object({
 export type ConfigAddress = z.infer<typeof ConfigAddressSchema>;
 const STRIPE_GERMAN_LOCALE = "de";
 
-function parseConnectApplicationFeeCents(input: string | undefined): number {
-  if (!input) {
-    return 0;
-  }
-
-  const trimmed = input.trim();
-  if (!/^\d+$/.test(trimmed)) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message:
-        "Invalid STRIPE_CONNECT_APPLICATION_FEE_CENTS. Use a non-negative integer in cents.",
-    });
-  }
-
-  const parsed = Number.parseInt(trimmed, 10);
-  if (!Number.isSafeInteger(parsed) || parsed < 0) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message:
-        "Invalid STRIPE_CONNECT_APPLICATION_FEE_CENTS. Use a non-negative integer in cents.",
-    });
-  }
-
-  return parsed;
-}
-
 export const configRouter = createTRPCRouter({
   /** Admin-managed prices for the configurator's live estimate. */
   getPriceBook: publicProcedure.query(() => getPriceBook()),
@@ -153,22 +118,11 @@ export const configRouter = createTRPCRouter({
 
       const { bookId, quantity, format, saveUser, isPickup, partnerToken } =
         details;
-      const partnerControlledFulfillmentEnabled =
-        isPartnerControlledFulfillmentEnabled();
-      const configuredApplicationFeeCents = parseConnectApplicationFeeCents(
-        env.STRIPE_CONNECT_APPLICATION_FEE_CENTS,
-      );
-
-      let partnerClaims: PartnerCheckoutClaims | undefined;
-      if (partnerToken) {
-        const claims = verifyPartnerToken(partnerToken);
-        if (claims.kind !== "partnered_checkout") {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Invalid partner checkout token",
-          });
-        }
-        partnerClaims = claims;
+      if (partnerToken !== undefined) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Dieser Bestelllink ist nicht mehr verfügbar.",
+        });
       }
 
       const existingBook = await db.book.findFirst({
@@ -176,11 +130,6 @@ export const configRouter = createTRPCRouter({
           id: bookId,
         },
         include: {
-          partnerClaim: {
-            select: {
-              userId: true,
-            },
-          },
           modules: {
             include: {
               module: {
@@ -194,50 +143,16 @@ export const configRouter = createTRPCRouter({
         },
       });
 
-      if (!existingBook) {
+      if (
+        !existingBook ||
+        existingBook.deletedAt ||
+        existingBook.clientRef === SCHOOL_ORDER_CLIENT ||
+        existingBook.sourceType === "PARTNER_TEMPLATE"
+      ) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "book doesn't exist. must order a book.",
         });
-      }
-
-      let effectivePartnerClaims = partnerClaims;
-      if (
-        !effectivePartnerClaims &&
-        existingBook.sourceType === "PARTNER_TEMPLATE" &&
-        existingBook.partnerPromotionCodeId &&
-        existingBook.partnerSnapshotBookId
-      ) {
-        const linkedPromotion = await stripeClient.promotionCodes.retrieve(
-          existingBook.partnerPromotionCodeId,
-        );
-        const linkedMetadata = linkedPromotion.metadata ?? {};
-        const linkedPartnerUserId = linkedMetadata.partnerUserId ?? "";
-        const linkedTemplateId = linkedMetadata.templateId ?? "";
-        const linkedSnapshotBookId =
-          linkedMetadata.snapshotBookId ?? existingBook.partnerSnapshotBookId;
-
-        if (
-          linkedMetadata.kind === "partner_campaign" &&
-          linkedPartnerUserId &&
-          linkedTemplateId &&
-          linkedSnapshotBookId &&
-          linkedPromotion.active &&
-          (!linkedPromotion.expires_at ||
-            linkedPromotion.expires_at >= Math.floor(Date.now() / 1000))
-        ) {
-          effectivePartnerClaims = {
-            kind: "partnered_checkout",
-            partnerUserId: linkedPartnerUserId,
-            templateId: linkedTemplateId,
-            snapshotBookId: linkedSnapshotBookId,
-            promotionCodeId: linkedPromotion.id,
-            promotionCode: linkedPromotion.code,
-            exp:
-              linkedPromotion.expires_at ??
-              Math.floor(Date.now() / 1000) + 14 * 24 * 60 * 60,
-          };
-        }
       }
 
       const sessionUserId = ctx.session?.user?.id;
@@ -246,7 +161,6 @@ export const configRouter = createTRPCRouter({
           bookOwnerId: existingBook.createdById,
           sessionUserId,
           bookSourceType: existingBook.sourceType,
-          partnerClaimUserId: existingBook.partnerClaim?.userId,
           isPublic: existingBook.isPublic,
         })
       ) {
@@ -409,232 +323,7 @@ export const configRouter = createTRPCRouter({
         });
       }
 
-      let unitAmountCents = estimatedCost.total;
-      let unitAmountPerPlannerCents = estimatedCost.single;
-      let isPartneredCheckout = false;
-      let partnerMetadata: PartnerSessionMetadata | undefined;
-
-      if (effectivePartnerClaims) {
-        const campaign = await stripeClient.promotionCodes.retrieve(
-          effectivePartnerClaims.promotionCodeId,
-        );
-        const campaignMetadata = campaign.metadata ?? {};
-
-        if (campaignMetadata.kind !== "partner_campaign") {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Partner-Kampagne nicht gefunden",
-          });
-        }
-        const campaignPartnerUserId = campaignMetadata.partnerUserId;
-        const campaignPartnerAccountId = campaignMetadata.partnerAccountId;
-        if (!campaign.active) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Promo code is no longer active",
-          });
-        }
-        if (
-          campaign.expires_at &&
-          campaign.expires_at < Math.floor(Date.now() / 1000)
-        ) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Promo code has expired",
-          });
-        }
-        if (
-          campaign.max_redemptions &&
-          campaign.times_redeemed >= campaign.max_redemptions
-        ) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Promo code has already been used",
-          });
-        }
-        if (
-          campaignPartnerUserId !== effectivePartnerClaims.partnerUserId ||
-          campaignMetadata.templateId !== effectivePartnerClaims.templateId ||
-          campaignMetadata.snapshotBookId !==
-            effectivePartnerClaims.snapshotBookId
-        ) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Partner-Kampagne passt nicht zum Link",
-          });
-        }
-        if (
-          campaign.code.trim().toUpperCase() !==
-          effectivePartnerClaims.promotionCode.trim().toUpperCase()
-        ) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Promo code mismatch",
-          });
-        }
-        if (existingBook.copyFromId !== effectivePartnerClaims.snapshotBookId) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "The current planner is not tied to this campaign",
-          });
-        }
-
-        const snapshotBook = await db.book.findFirst({
-          where: {
-            id: effectivePartnerClaims.snapshotBookId,
-            deletedAt: null,
-          },
-          include: {
-            modules: {
-              include: {
-                module: {
-                  include: {
-                    type: true,
-                    files: true,
-                  },
-                },
-              },
-            },
-          },
-        });
-
-        if (!snapshotBook) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Partner-Vorlagen-Snapshot nicht gefunden",
-          });
-        }
-
-        const baseCost = await calculateBookCost(snapshotBook);
-        const baseModuleIds = new Set(
-          snapshotBook.modules.map((moduleItem) => moduleItem.moduleId),
-        );
-        const additionalModules = existingBook.modules.filter(
-          (moduleItem) => !baseModuleIds.has(moduleItem.moduleId),
-        );
-        const additionalModuleNames = [
-          ...new Set(
-            additionalModules
-              .map((moduleItem) => moduleItem.module?.name?.trim())
-              .filter((name): name is string =>
-                Boolean(name && name.length > 0),
-              ),
-          ),
-        ];
-
-        let addOnPerPlanner = 0;
-
-        if (additionalModules.length > 0) {
-          const additionalCost = await calculateBookCost({
-            bookTitle: existingBook.bookTitle,
-            planStart: existingBook.planStart,
-            planEnd: existingBook.planEnd,
-            region: existingBook.region,
-            country: existingBook.country,
-            modules: additionalModules,
-          });
-          addOnPerPlanner = additionalCost.single;
-        }
-
-        unitAmountPerPlannerCents = 0;
-        unitAmountCents = 0;
-        isPartneredCheckout = true;
-        const partnerStripeAccountId = campaignPartnerAccountId ?? "";
-        if (!partnerStripeAccountId.startsWith("acct_")) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Partner-Konto ist für diese Kampagne nicht verfügbar",
-          });
-        }
-
-        partnerMetadata = {
-          partnerUserId: effectivePartnerClaims.partnerUserId,
-          partnerBaseUnitAmount: baseCost.single,
-          partnerBaseTotalAmount: baseCost.single * quantity,
-          partnerAddOnUnitAmount: addOnPerPlanner,
-          partnerAddOnTotalAmount: addOnPerPlanner * quantity,
-          partnerAddOnModules: additionalModuleNames.join(", "),
-          partnerStripeAccountId,
-          partnerTemplateId: effectivePartnerClaims.templateId,
-          partnerSnapshotBookId: effectivePartnerClaims.snapshotBookId,
-          partnerPromotionCodeId: effectivePartnerClaims.promotionCodeId,
-        };
-      }
-
-      if (partnerMetadata && partnerControlledFulfillmentEnabled) {
-        const existingPartnerOrder = await db.partnerOrder.findUnique({
-          where: {
-            bookId: existingBook.id,
-          },
-          select: {
-            id: true,
-          },
-        });
-
-        if (!existingPartnerOrder) {
-          const createdPartnerOrder = await db.partnerOrder.create({
-            data: {
-              partnerUserId: partnerMetadata.partnerUserId,
-              schoolUserId: sessionUserId,
-              bookId: existingBook.id,
-              status: "SUBMITTED_BY_SCHOOL",
-              submittedAt: new Date(),
-              schoolSnapshot: {
-                name: `${orderAddress.prename} ${orderAddress.name}`.trim(),
-                email: orderAddress.email,
-                vatId: orderAddress.vatId,
-                address: toStripeAddress(orderAddress),
-                phone: orderAddress.phone,
-                org: orderAddress.org,
-              },
-              lineItemsSnapshot: {
-                quantity,
-                baseUnitAmount: partnerMetadata.partnerBaseUnitAmount,
-                baseTotalAmount: partnerMetadata.partnerBaseTotalAmount,
-                addOnUnitAmount: partnerMetadata.partnerAddOnUnitAmount,
-                addOnTotalAmount: partnerMetadata.partnerAddOnTotalAmount,
-                addOnModules: partnerMetadata.partnerAddOnModules,
-              },
-              sourceCampaignId: partnerMetadata.partnerPromotionCodeId,
-              sourceClaimId: existingBook.partnerClaimId,
-            },
-          });
-
-          await db.partnerNotification.create({
-            data: {
-              partnerUserId: partnerMetadata.partnerUserId,
-              partnerOrderId: createdPartnerOrder.id,
-              type: "INCOMING_PARTNER_ORDER",
-              payload: {
-                bookId: existingBook.id,
-                bookName: existingBook.name,
-                schoolEmail: orderAddress.email,
-                quantity,
-              },
-            },
-          });
-
-          const correlationId = createPartnerCorrelationId("partner_submit");
-          await recordPartnerOrderTransition({
-            db,
-            partnerOrderId: createdPartnerOrder.id,
-            actorUserId: sessionUserId ?? null,
-            fromStatus: null,
-            toStatus: "SUBMITTED_BY_SCHOOL",
-            correlationId,
-            payload: {
-              bookId: existingBook.id,
-              sourceCampaignId: partnerMetadata.partnerPromotionCodeId,
-              sourceClaimId: existingBook.partnerClaimId,
-            },
-          });
-        }
-      } else if (partnerMetadata) {
-        logger.info("partner_controlled_fulfillment_disabled_fallback", {
-          partnerUserId: partnerMetadata.partnerUserId,
-          bookId: existingBook.id,
-        });
-      }
+      const unitAmountCents = estimatedCost.total;
 
       let createdUser: Awaited<ReturnType<typeof db.user.create>> | undefined;
       if (!existingUser && saveUser) {
@@ -723,57 +412,6 @@ export const configRouter = createTRPCRouter({
         priceBookVersion: String(priceBookVersion),
       };
 
-      if (partnerMetadata) {
-        checkoutMetadata.partnerFlow = "1";
-        checkoutMetadata.partnerUserId = partnerMetadata.partnerUserId;
-        checkoutMetadata.partnerTemplateId = partnerMetadata.partnerTemplateId;
-        checkoutMetadata.partnerSnapshotBookId =
-          partnerMetadata.partnerSnapshotBookId;
-        checkoutMetadata.partnerPromotionCodeId =
-          partnerMetadata.partnerPromotionCodeId;
-        checkoutMetadata.partnerStripeAccountId =
-          partnerMetadata.partnerStripeAccountId;
-        checkoutMetadata.partnerBaseUnitAmount = String(
-          partnerMetadata.partnerBaseUnitAmount,
-        );
-        checkoutMetadata.partnerBaseTotalAmount = String(
-          partnerMetadata.partnerBaseTotalAmount,
-        );
-        checkoutMetadata.partnerAddOnUnitAmount = String(
-          partnerMetadata.partnerAddOnUnitAmount,
-        );
-        checkoutMetadata.partnerAddOnTotalAmount = String(
-          partnerMetadata.partnerAddOnTotalAmount,
-        );
-        checkoutMetadata.partnerAddOnModules =
-          partnerMetadata.partnerAddOnModules;
-      }
-
-      let partneredPaymentIntentData:
-        Stripe.Checkout.SessionCreateParams.PaymentIntentData | undefined;
-      if (isPartneredCheckout && partnerMetadata && unitAmountCents > 0) {
-        const partnerSubtotalCents = unitAmountPerPlannerCents * quantity;
-        if (configuredApplicationFeeCents > partnerSubtotalCents) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Configured platform fee exceeds partner checkout amount.",
-          });
-        }
-
-        partneredPaymentIntentData = {
-          transfer_data: {
-            destination: partnerMetadata.partnerStripeAccountId,
-          },
-          on_behalf_of: partnerMetadata.partnerStripeAccountId,
-          ...(configuredApplicationFeeCents > 0
-            ? { application_fee_amount: configuredApplicationFeeCents }
-            : {}),
-        };
-        checkoutMetadata.partnerAppFeeCents = String(
-          configuredApplicationFeeCents,
-        );
-      }
-
       if (unitAmountCents <= 0) {
         const createdOrder = await db.$transaction(async (tx) => {
           await tx.payment.update({
@@ -825,65 +463,23 @@ export const configRouter = createTRPCRouter({
           };
         });
 
-        if (partnerMetadata && partnerControlledFulfillmentEnabled) {
-          const transitioned = await ctx.db.partnerOrder.updateMany({
-            where: {
-              bookId: existingBook.id,
-              partnerUserId: partnerMetadata.partnerUserId,
-              status: {
-                in: ["SUBMITTED_BY_SCHOOL", "UNDER_PARTNER_REVIEW"],
-              },
-            },
-            data: {
-              status: "UNDER_PARTNER_REVIEW",
-              orderId: createdOrder.id,
-            },
-          });
-          if (transitioned.count === 1) {
-            const partnerOrder = await ctx.db.partnerOrder.findUnique({
-              where: { bookId: existingBook.id },
-              select: { id: true },
-            });
-            if (partnerOrder) {
-              await recordPartnerOrderTransition({
-                db: ctx.db,
-                partnerOrderId: partnerOrder.id,
-                actorUserId: ctx.session?.user?.id ?? null,
-                fromStatus: "SUBMITTED_BY_SCHOOL",
-                toStatus: "UNDER_PARTNER_REVIEW",
-                correlationId: createPartnerCorrelationId("partner_review"),
-                payload: {
-                  orderId: createdOrder.id,
-                  orderKey: createdOrder.orderKey,
-                  flow: "direct",
-                },
-              });
-            }
-          }
-          logger.info("partner_order_waiting_for_partner_confirmation_direct", {
+        try {
+          const appOrigin = getAppOriginFromHeaders(ctx.headers);
+          const html = await createOrderConfirmationEmail(
+            createdOrder.orderKey,
+            `${orderAddress.prename} ${orderAddress.name}`.trim(),
+            appOrigin,
+          );
+          await sendOrderVerification(
+            orderAddress.email,
+            "Bestellung bestätigt - Pirrot",
+            html,
+          );
+        } catch (emailError) {
+          logger.error("direct_checkout_confirmation_email_failed", {
             orderId: createdOrder.id,
-            orderKey: createdOrder.orderKey,
-            partnerUserId: partnerMetadata.partnerUserId,
+            error: emailError,
           });
-        } else {
-          try {
-            const appOrigin = getAppOriginFromHeaders(ctx.headers);
-            const html = await createOrderConfirmationEmail(
-              createdOrder.orderKey,
-              `${orderAddress.prename} ${orderAddress.name}`.trim(),
-              appOrigin,
-            );
-            await sendOrderVerification(
-              orderAddress.email,
-              "Bestellung bestätigt - Pirrot",
-              html,
-            );
-          } catch (emailError) {
-            logger.error("direct_checkout_confirmation_email_failed", {
-              orderId: createdOrder.id,
-              error: emailError,
-            });
-          }
         }
 
         const orderPayload = encryptPayload({
@@ -911,28 +507,21 @@ export const configRouter = createTRPCRouter({
         },
         line_items: [
           {
-            quantity: isPartneredCheckout ? quantity : 1,
+            quantity: 1,
             price_data: {
               currency: "eur",
               tax_behavior: "inclusive",
               product_data: {
-                name: isPartneredCheckout
-                  ? "Zusatzmodul"
-                  : (existingBook.name ?? existingBook.id),
-                description: isPartneredCheckout
-                  ? "Zusätzliche Module zur Partner-Vorlage"
-                  : "Planer von pirrot.de",
+                name: existingBook.name ?? existingBook.id,
+                description: "Planer von pirrot.de",
                 tax_code: "txcd_20090028",
               },
-              unit_amount: isPartneredCheckout
-                ? unitAmountPerPlannerCents
-                : unitAmountCents,
+              unit_amount: unitAmountCents,
             },
           },
         ],
         automatic_tax: { enabled: true },
         metadata: checkoutMetadata,
-        payment_intent_data: partneredPaymentIntentData,
       };
 
       const sessionParams = isPickup
@@ -1035,6 +624,7 @@ export const configRouter = createTRPCRouter({
       const existingBook = await db.book.findFirst({
         where: {
           id: bookId,
+          deletedAt: null,
         },
         include: {
           partnerClaim: {
@@ -1054,6 +644,7 @@ export const configRouter = createTRPCRouter({
         },
       });
 
+      if (existingBook?.clientRef === SCHOOL_ORDER_CLIENT) return null;
       const sessionUserId = ctx.session?.user?.id;
       const canAccessExistingBook = !existingBook
         ? true

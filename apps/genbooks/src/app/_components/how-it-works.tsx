@@ -19,7 +19,7 @@ export default function HowItWorks() {
 				<div className="content-card p-6">
 					<CheckCircle className="mb-4 h-8 w-8 text-pirrot-blue-500" />
 					<h3 className="mb-2 text-lg font-bold">3. Bestellung abschließen</h3>
-					<p className="text-info-700">Sicher bezahlen und Bestellstatus verfolgen.</p>
+					<p className="text-info-700">Online bezahlen oder als Schule auf Rechnung bestellen.</p>
 				</div>
 			</div>
 		</section>

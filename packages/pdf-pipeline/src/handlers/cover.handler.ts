@@ -1,5 +1,6 @@
 import { fetchCdnAsset } from "../cdn-fetch";
 import { PDFDocument } from "pdf-lib";
+import { flattenPdfForm } from "../flatten-pdf-form";
 import { logger } from "../logger";
 import { BaseHandler } from "./base.handler";
 import type { TagDefinition, TagContext, HandlerResult } from "../types";
@@ -36,6 +37,10 @@ class CoverHandler extends BaseHandler {
       required: true,
     },
     {
+      fieldName: "BOOK_SUBTITLE",
+      getValue: (ctx) => ctx.bookDetails.subtitle ?? "",
+    },
+    {
       fieldName: "FROM_TO",
       getValue: (ctx) => {
         const start = ctx.bookDetails.period.start?.getFullYear();
@@ -70,7 +75,7 @@ class CoverHandler extends BaseHandler {
     const form = coverDoc.getForm();
     this.fillTags(form, context);
     await this.injectCustomCoverImage(coverDoc, context);
-    form.flatten();
+    flattenPdfForm(coverDoc);
 
     let processedDoc = coverDoc;
     if (context.isGrayscale) {

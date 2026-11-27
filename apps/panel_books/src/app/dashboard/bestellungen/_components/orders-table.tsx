@@ -192,7 +192,18 @@ export default function OrdersTable() {
                       ) : null}
                     </td>
                     <td className="px-3 py-3">
-                      {order.user?.email ?? "Gast"}
+                      {order.schoolDetails ? (
+                        <>
+                          <p className="font-semibold text-white">
+                            {order.schoolDetails.schoolName}
+                          </p>
+                          <p className="text-xs text-pirrot-blue-100/70">
+                            {order.schoolDetails.email}
+                          </p>
+                        </>
+                      ) : (
+                        (order.user?.email ?? "Gast")
+                      )}
                     </td>
                     <td className="max-w-52 truncate px-3 py-3">
                       {order.bookOrder?.book.name ??

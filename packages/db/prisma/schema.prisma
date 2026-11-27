@@ -202,8 +202,9 @@ model Order {
   orderKey String?     @unique
   status   OrderStatus @default(PENDING)
 
-  bookOrder    BookOrder?
-  partnerOrder PartnerOrder?
+  bookOrder     BookOrder?
+  partnerOrder  PartnerOrder?
+  schoolDetails SchoolOrderDetails?
 
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
@@ -213,6 +214,22 @@ model Order {
   shipping   Shipping? @relation(fields: [shippingId], references: [id])
 
   @@index([userId])
+}
+
+model SchoolOrderDetails {
+  orderId Int   @id
+  order   Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  requestId        String  @unique
+  priceBookVersion Int
+  schoolName       String
+  contactName      String
+  email            String
+  phone            String?
+  billingAddress   Json
+  shippingAddress  Json
+  customerNote     String? @db.Text
+  invoiceNumber    String?
 }
 
 model Payment {

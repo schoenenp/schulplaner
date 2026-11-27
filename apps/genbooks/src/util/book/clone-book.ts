@@ -23,6 +23,7 @@ export async function cloneBookForOrder(
   const source = await prisma.book.findUnique({
     where: { id: bookId },
     include: {
+      customDates: true,
       modules: {
         orderBy: { idx: "asc" },
         include: {
@@ -68,6 +69,8 @@ export async function cloneBookForOrder(
         subTitle,
         format,
         region,
+        country: source.country,
+        customDates: { create: source.customDates.map(({ date, name }) => ({ date, name })) },
         planEnd,
         planStart,
         copyFromId: source.id

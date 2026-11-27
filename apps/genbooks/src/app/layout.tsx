@@ -21,8 +21,8 @@ import { PostHogClientProvider } from "@/app/_components/posthog-provider";
 import { TRPCReactProvider } from "@/trpc/react";
 
 export const metadata: Metadata = {
-  title: "Planer Generator",
-  description: "",
+  title: "Schulplaner | Digitaldruck Pirrot",
+  description: "Schulplaner mit eigenen Terminen und Umschlag gestalten und direkt bei Digitaldruck Pirrot bestellen.",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
@@ -30,7 +30,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${baloo.variable} ${cairo.variable}`}>
+    <html lang="de" className={`${baloo.variable} ${cairo.variable}`}>
       <body>
         <PostHogClientProvider>
           <TRPCReactProvider>

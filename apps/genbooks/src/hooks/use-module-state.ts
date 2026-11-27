@@ -14,6 +14,7 @@ type InitialModuleItem = {
 
 export function useModuleState(initialBook?: {
   name?: string | null;
+  format?: string;
   quantity?: number;
   modules?: InitialModuleItem[];
 }) {
@@ -36,7 +37,9 @@ export function useModuleState(initialBook?: {
     useState<ConfigModules>(initialModules);
 
   const [pickedFormat, setPickedFormat] = useState<"DIN A5" | "DIN A4">(
-    "DIN A5",
+    initialBook?.format === "DIN A4" || initialBook?.format === "A4"
+      ? "DIN A4"
+      : "DIN A5",
   );
   const [totalPagesCount, setTotalPagesCount] = useState(0);
   const [isMakingPreview, setIsMakingPreview] = useState(false);

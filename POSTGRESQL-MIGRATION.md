@@ -102,6 +102,15 @@ and repeat the rehearsal. The tools verify both schema and baseline SQL hashes
 against the manifest before connecting. Do not regenerate the manifest merely
 to bypass an unexplained drift error.
 
+## Cutover before enabling school invoices
+
+The MySQL source has no `SchoolOrderDetails` table. If Pirrot still uses
+MySQL, use the pre-invoice checkout at commit `ee7b3d1` for the audit, target
+schema, copy and verification, with its matching migration manifest. After
+the copy verifies and before starting the invoice release, apply
+`20261127120000_school_order_details` with `bun run db:migrate` from the
+invoice checkout against the verified PostgreSQL target.
+
 ## Install the target schema
 
 Provision a new empty PostgreSQL database. The database owner must be able to

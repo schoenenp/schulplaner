@@ -378,6 +378,7 @@ export const orderRouter = createTRPCRouter({
               partnerSnapshot: true,
             },
           },
+          schoolDetails: { select: { invoiceNumber: true } },
         },
       });
       if (!order) {
@@ -425,6 +426,8 @@ export const orderRouter = createTRPCRouter({
         total: `${(orderPrice / 100).toFixed(2)}€`,
         trackingId: order.shippingId,
         invoiceUrl: invoiceUrl ?? null,
+        schoolInvoice: Boolean(order.schoolDetails),
+        schoolInvoiceNumber: order.schoolDetails?.invoiceNumber ?? null,
         paymentStatus: orderDetails?.payment_status
           ? mapCheckoutPaymentStatus(orderDetails.payment_status)
           : order.bookOrder?.payment.status ?? "PENDING",
@@ -526,11 +529,19 @@ export const orderRouter = createTRPCRouter({
               payment: true,
             },
           },
+          schoolDetails: { select: { orderId: true } },
         },
       });
 
       if (!order) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Order not found" });
+      }
+
+      if (order.schoolDetails) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Bitte wenden Sie sich für Änderungen an Ihrer Schulbestellung direkt an Pirrot.",
+        });
       }
 
       const guardError = getCancellationGuardError({

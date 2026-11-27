@@ -29,7 +29,9 @@ const listInput = z.object({
   pageSize: z.number().int().min(5).max(100).default(20),
 });
 
-function buildOrderWhere(input: z.infer<typeof listInput>): Prisma.OrderWhereInput {
+function buildOrderWhere(
+  input: z.infer<typeof listInput>,
+): Prisma.OrderWhereInput {
   const query = input.query && input.query.length > 0 ? input.query : undefined;
 
   return {
@@ -41,7 +43,26 @@ function buildOrderWhere(input: z.infer<typeof listInput>): Prisma.OrderWhereInp
             { orderKey: { contains: query, mode: "insensitive" } },
             { user: { email: { contains: query, mode: "insensitive" } } },
             { user: { name: { contains: query, mode: "insensitive" } } },
-            { bookOrder: { book: { name: { contains: query, mode: "insensitive" } } } },
+            {
+              schoolDetails: {
+                schoolName: { contains: query, mode: "insensitive" },
+              },
+            },
+            {
+              schoolDetails: {
+                invoiceNumber: { contains: query, mode: "insensitive" },
+              },
+            },
+            {
+              schoolDetails: {
+                email: { contains: query, mode: "insensitive" },
+              },
+            },
+            {
+              bookOrder: {
+                book: { name: { contains: query, mode: "insensitive" } },
+              },
+            },
           ],
         }
       : {}),
@@ -119,6 +140,7 @@ export const shopOrderRouter = createTRPCRouter({
             select: { id: true, status: true, trackId: true, title: true },
           },
           partnerOrder: { select: { id: true, status: true } },
+          schoolDetails: { select: { schoolName: true, email: true } },
           bookOrder: {
             select: {
               quantity: true,
@@ -161,6 +183,18 @@ export const shopOrderRouter = createTRPCRouter({
               partnerUser: { select: { id: true, name: true, email: true } },
             },
           },
+          schoolDetails: {
+            select: {
+              schoolName: true,
+              contactName: true,
+              email: true,
+              phone: true,
+              billingAddress: true,
+              shippingAddress: true,
+              customerNote: true,
+              invoiceNumber: true,
+            },
+          },
           bookOrder: {
             include: {
               payment: true,
@@ -174,6 +208,26 @@ export const shopOrderRouter = createTRPCRouter({
                   region: true,
                   planStart: true,
                   planEnd: true,
+                  modules: {
+                    where: {
+                      module: {
+                        OR: [
+                          { part: { in: ["BINDING", "SETTINGS"] } },
+                          {
+                            type: {
+                              name: {
+                                in: ["bindung", "farben"],
+                                mode: "insensitive",
+                              },
+                            },
+                          },
+                        ],
+                      },
+                    },
+                    orderBy: [{ idx: "asc" }, { id: "asc" }],
+                    take: 1,
+                    select: { module: { select: { name: true } } },
+                  },
                   _count: { select: { modules: true, customDates: true } },
                 },
               },
@@ -215,21 +269,81 @@ export const shopOrderRouter = createTRPCRouter({
         return { id: order.id, status: order.status };
       }
 
-      const updated = await ctx.db.order.update({
-        where: { id: order.id },
-        data: {
-          status: input.status,
-          canceledAt:
-            input.status === "CANCELED"
-              ? new Date()
-              : order.status === "CANCELED"
-                ? null
-                : undefined,
-        },
-        select: { id: true, status: true, canceledAt: true },
+      return ctx.db.$transaction(async (tx) => {
+        const updated = await tx.order.update({
+          where: { id: order.id },
+          data: {
+            status: input.status,
+            canceledAt:
+              input.status === "CANCELED"
+                ? new Date()
+                : order.status === "CANCELED"
+                  ? null
+                  : undefined,
+          },
+          select: { id: true, status: true, canceledAt: true },
+        });
+        if (input.status === "CANCELED" || order.status === "CANCELED") {
+          const canceled = input.status === "CANCELED";
+          await tx.payment.updateMany({
+            where: {
+              status: canceled ? "PENDING" : "CANCELLED",
+              bookOrder: {
+                orderId: order.id,
+                order: { schoolDetails: { isNot: null } },
+              },
+            },
+            data: { status: canceled ? "CANCELLED" : "PENDING" },
+          });
+        }
+        return updated;
+      });
+    }),
+
+  updateSchoolInvoice: protectedProcedure
+    .input(
+      z.object({
+        orderId: z.number().int(),
+        invoiceNumber: z.string().trim().max(120),
+        paid: z.boolean(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      enforceProcedureRateLimit(ctx, {
+        scope: "shopOrder.updateSchoolInvoice",
+        maxRequests: 60,
+        windowMs: 10 * 60 * 1000,
       });
 
-      return updated;
+      return ctx.db.$transaction(async (tx) => {
+        const { count } = await tx.order.updateMany({
+          where: {
+            id: input.orderId,
+            deletedAt: null,
+            status: { not: "CANCELED" },
+            schoolDetails: { isNot: null },
+          },
+          data: { updatedAt: new Date() },
+        });
+        if (!count)
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Offene Schulbestellung nicht gefunden.",
+          });
+
+        await tx.schoolOrderDetails.update({
+          where: { orderId: input.orderId },
+          data: { invoiceNumber: input.invoiceNumber || null },
+        });
+        await tx.payment.updateMany({
+          where: {
+            status: { in: ["PENDING", "SUCCEEDED"] },
+            bookOrder: { orderId: input.orderId },
+          },
+          data: { status: input.paid ? "SUCCEEDED" : "PENDING" },
+        });
+        return { orderId: input.orderId };
+      });
     }),
 
   updateShipping: protectedProcedure

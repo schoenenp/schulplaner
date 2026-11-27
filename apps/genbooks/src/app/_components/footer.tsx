@@ -15,7 +15,7 @@ export default function Footer() {
                             Digitaldruck Pirrot GmbH
                         </h3>
                         <p className="text-info-700 text-sm leading-relaxed">
-                            Ihr Partner für individuelle Schulplaner und hochwertige Druckerzeugnisse. 
+                            Schulplaner und Druckerzeugnisse aus Saarbrücken.
                             Wir gestalten mit Ihnen zusammen maßgeschneiderte Lösungen für den Schulalltag.
                         </p>
                         <div className="flex space-x-4">
@@ -37,7 +37,7 @@ export default function Footer() {
                         <ul className="space-y-2 text-sm">
                             <li>
                                 <Link href="/" className="text-info-700 hover:text-pirrot-red-500 transition-colors">
-                                    Schulplaner Generator
+                                    Schulplaner
                                 </Link>
                             </li>
                             <li>

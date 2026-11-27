@@ -97,6 +97,8 @@ function getModulePreviewSrc(
   return previewFile?.src ?? DEFAULT_PREVIEW_SRC;
 }
 
+const immutableSchoolModuleThemes = ["pirrot-school-order"];
+
 export const moduleRouter = createTRPCRouter({
   getPreview: publicProcedure
     .input(
@@ -468,6 +470,10 @@ export const moduleRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Module not found" });
       }
 
+      if (immutableSchoolModuleThemes.includes(existingModule.theme ?? "")) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Dieses Schulplaner-Modul ist schreibgeschützt." });
+      }
+
       const typeName = type.toLocaleLowerCase();
       const existingType = await ctx.db.moduleType.findFirst({
         where: { name: typeName },
@@ -588,8 +594,12 @@ export const moduleRouter = createTRPCRouter({
         id: z.string(),
       }),
     )
-    .mutation(({ ctx, input }) => {
+    .mutation(async ({ ctx, input }) => {
       const { id } = input;
+      const module = await ctx.db.module.findUnique({ where: { id }, select: { theme: true } });
+      if (immutableSchoolModuleThemes.includes(module?.theme ?? "")) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Dieses Schulplaner-Modul ist schreibgeschützt." });
+      }
       return ctx.db.module.update({
         where: {
           id,

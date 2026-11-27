@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
+import { SCHOOL_ORDER_CLIENT } from "@/util/school-planner-input";
 import { Naming } from "@/util/naming";
 import {
   createTRPCRouter,
@@ -19,12 +20,14 @@ async function getBookAccessMeta(
             id: true;
             createdById: true;
             isTemplate: true;
+            clientRef: true;
             deletedAt: true;
           };
         }) => Promise<{
           id: string;
           createdById: string | null;
           isTemplate: boolean;
+          clientRef: string | null;
           deletedAt: Date | null;
         } | null>;
       };
@@ -38,6 +41,7 @@ async function getBookAccessMeta(
       id: true,
       createdById: true,
       isTemplate: true,
+      clientRef: true,
       deletedAt: true,
     },
   });
@@ -59,12 +63,14 @@ async function assertOwnedBookAccess(
             id: true;
             createdById: true;
             isTemplate: true;
+            clientRef: true;
             deletedAt: true;
           };
         }) => Promise<{
           id: string;
           createdById: string | null;
           isTemplate: boolean;
+          clientRef: string | null;
           deletedAt: Date | null;
         } | null>;
       };
@@ -74,6 +80,9 @@ async function assertOwnedBookAccess(
   bookId: string,
 ) {
   const book = await getBookAccessMeta(ctx, bookId);
+  if (book.clientRef === SCHOOL_ORDER_CLIENT) {
+    throw new TRPCError({ code: "NOT_FOUND" });
+  }
   if (!book.createdById || book.createdById !== ctx.session.user.id) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
@@ -148,6 +157,7 @@ export const bookRouter = createTRPCRouter({
       z.object({
         bookId: z.string(),
         quantity: z.number().int().min(1).max(5000).optional(),
+        format: z.enum(["DIN A4", "DIN A5"]).optional(),
         modules: z
           .object({
             id: z.string(),
@@ -163,8 +173,9 @@ export const bookRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { bookId, quantity, modules: bookModules } = input;
+      const { bookId, quantity, format, modules: bookModules } = input;
       const book = await getBookAccessMeta(ctx, bookId);
+      if (book.clientRef === SCHOOL_ORDER_CLIENT) throw new TRPCError({ code: "NOT_FOUND" });
       const sessionUserId = ctx.session?.user.id;
 
       if (book.createdById) {
@@ -183,6 +194,7 @@ export const bookRouter = createTRPCRouter({
           },
           data: {
             quantity,
+            format,
             createdBy: ctx.session?.user.id
               ? {
                   connect: {
@@ -214,6 +226,7 @@ export const bookRouter = createTRPCRouter({
       where: {
         createdById: session.user.id,
         deletedAt: null,
+        sourceType: { not: "PARTNER_TEMPLATE" },
       },
       include: {
         modules: true,
@@ -232,10 +245,10 @@ export const bookRouter = createTRPCRouter({
       const user = ctx.session.user;
       const targetBook = await ctx.db.book.findFirst({
         where: { id: bookId, deletedAt: null },
-        select: { id: true, createdById: true },
+        select: { id: true, createdById: true, clientRef: true },
       });
 
-      if (!targetBook) {
+      if (!targetBook || targetBook.clientRef === SCHOOL_ORDER_CLIENT) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Book not found" });
       }
 
@@ -261,10 +274,10 @@ export const bookRouter = createTRPCRouter({
       const user = ctx.session.user;
       const targetBook = await ctx.db.book.findFirst({
         where: { id: bookId, deletedAt: null },
-        select: { id: true, createdById: true, isTemplate: true },
+        select: { id: true, createdById: true, isTemplate: true, clientRef: true },
       });
 
-      if (!targetBook) {
+      if (!targetBook || targetBook.clientRef === SCHOOL_ORDER_CLIENT) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Book not found" });
       }
 
@@ -304,7 +317,7 @@ export const bookRouter = createTRPCRouter({
         },
       });
 
-      if (!book) return null;
+      if (!book || book.clientRef === SCHOOL_ORDER_CLIENT) return null;
 
       const sessionUserId = ctx.session?.user.id;
       if (book.createdById && book.createdById !== sessionUserId) {

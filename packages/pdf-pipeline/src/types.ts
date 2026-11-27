@@ -77,6 +77,8 @@ export interface ProcessingOptions {
 
 export type BookDetails = {
   title: string;
+  subtitle?: string | null;
+  combineDateLabels?: boolean;
   code?: string;
   country?: string;
   addHolidays: boolean;

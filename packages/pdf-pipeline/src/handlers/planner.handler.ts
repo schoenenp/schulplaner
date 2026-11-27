@@ -98,6 +98,7 @@ class PlannerHandler extends BaseHandler {
     { fieldName: "xE_Date", getValue: (ctx) => this.getHoliday(ctx, 4) },
     { fieldName: "WEEK_FROMTO", getValue: (ctx) => this.getWeekRange(ctx) },
     { fieldName: "WEEK_NUM", getValue: (ctx) => this.getWeekNumber(ctx) },
+    { fieldName: "WEEKEND_DATES", getValue: (ctx) => this.getWeekendDates(ctx) },
 
     // Add more planner tags here as needed:
     // { fieldName: "MONTH_NAME", getValue: (ctx) => this.getMonthName(ctx) },
@@ -131,6 +132,19 @@ class PlannerHandler extends BaseHandler {
     const weekStart = ctx.weekDates?.[0];
     if (!weekStart) return "";
     return `KW ${getIsoWeekNumber(weekStart).toString().padStart(2, "0")}`;
+  }
+
+  private getWeekendDates(ctx: TagContext): string {
+    const monday = ctx.weekDates?.[0];
+    if (!monday) return "";
+    return [5, 6].flatMap((offset) => {
+      const date = new Date(monday);
+      date.setDate(date.getDate() + offset);
+      const label = ctx.holidayMap?.get(formatDate(date));
+      if (!label) return [];
+      const [, month, day] = formatDate(date).split("-");
+      return [`${offset === 5 ? "Sa" : "So"} ${day}.${month}.: ${label}`];
+    }).join(" · ");
   }
 
   async process(
@@ -318,7 +332,20 @@ class PlannerHandler extends BaseHandler {
       );
     }
 
-    return new Map(holidays.map((h) => [h.date, h.name]));
+    if (!bookDetails.combineDateLabels) {
+      return new Map(holidays.map((h) => [h.date, h.name]));
+    }
+
+    const labels = new Map<string, Set<string>>();
+    for (const { date, name } of holidays) {
+      const key = normalizeDate(date);
+      const label = name.trim();
+      if (!key || !label) continue;
+      const names = labels.get(key) ?? new Set<string>();
+      names.add(label);
+      labels.set(key, names);
+    }
+    return new Map([...labels].map(([date, names]) => [date, [...names].join(" · ")]));
   }
 
   async calculatePageCount(context: TagContext): Promise<number> {

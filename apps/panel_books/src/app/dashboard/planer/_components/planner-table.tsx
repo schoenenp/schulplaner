@@ -18,16 +18,12 @@ import ConfirmDeleteDialog from "@/app/_components/confirm-delete-dialog";
 import LoadingSpinner from "@/app/_components/loading-spinner";
 import { useToast } from "@/app/_components/toast";
 import { formatDate } from "@/util/format";
+import {
+  createPlannerPdfUrl,
+  downloadPlannerPrintPdf,
+} from "@/util/planner-pdf-download";
 
 type PdfMode = "preview" | "print";
-
-function toSafeFileName(input: string): string {
-  const cleaned = input
-    .trim()
-    .replace(/[^\p{L}\p{N}]+/gu, "-")
-    .replace(/^-+|-+$/g, "");
-  return cleaned.length > 0 ? cleaned : "planer";
-}
 
 const KIND_FILTERS = [
   { value: "ALL", label: "Alle" },
@@ -123,24 +119,8 @@ export default function PlannerTable() {
     );
     try {
       const source = await utils.planner.getPdfSource.fetch({ bookId });
-      const { processPdfModules } = await import("@/util/pdf");
-
-      const result = await processPdfModules(
-        source.bookDetails,
-        source.modules,
-        {
-          format: source.format,
-          colorMap: new Map(source.colorEntries),
-          ...(mode === "preview" ? { addWatermark: true } : {}),
-        },
-      );
-
-      const blob = new Blob([result.pdfFile as BlobPart], {
-        type: "application/pdf",
-      });
-      const url = URL.createObjectURL(blob);
-
       if (mode === "preview") {
+        const url = await createPlannerPdfUrl(source, true);
         if (previewUrlRef.current) {
           URL.revokeObjectURL(previewUrlRef.current);
         }
@@ -156,18 +136,8 @@ export default function PlannerTable() {
           );
         }
       } else {
-        const anchor = document.createElement("a");
-        anchor.href = url;
-        anchor.download = `${toSafeFileName(source.fileName)}-druck.pdf`;
-        document.body.appendChild(anchor);
-        anchor.click();
-        anchor.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 30_000);
-        toast.update(
-          toastId,
-          "Druck-PDF wird heruntergeladen.",
-          "success",
-        );
+        await downloadPlannerPrintPdf(source);
+        toast.update(toastId, "Druck-PDF wird heruntergeladen.", "success");
       }
     } catch (error) {
       toast.update(
@@ -208,9 +178,7 @@ export default function PlannerTable() {
             {overview.data?.totalTemplates ?? "–"}
           </p>
           <p className="mt-2 text-sm text-pirrot-blue-100/70">
-            {overview.data
-              ? `${overview.data.featuredTemplates} featured`
-              : ""}
+            {overview.data ? `${overview.data.featuredTemplates} featured` : ""}
           </p>
         </div>
         <div className="metric-card">
@@ -356,7 +324,7 @@ export default function PlannerTable() {
                             required
                             maxLength={140}
                             disabled={renameTemplate.isPending}
-                            className="border-pirrot-blue-200/30 w-full rounded border bg-slate-950/40 px-2 py-1 text-white"
+                            className="w-full rounded border border-pirrot-blue-200/30 bg-slate-950/40 px-2 py-1 text-white"
                           />
                           <div className="flex gap-2">
                             <button

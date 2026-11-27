@@ -7,6 +7,7 @@ import { api } from "@/trpc/react";
 import LoadingSpinner from "@/app/_components/loading-spinner";
 import StatusBadge from "@/app/_components/status-badge";
 import { formatCents, formatDate, formatDateTime } from "@/util/format";
+import { downloadPlannerPrintPdf } from "@/util/planner-pdf-download";
 import {
   DELIVERY_STATUS_META,
   ORDER_STATUS_META,
@@ -35,6 +36,36 @@ type OrderDetailProps = {
   orderId: number;
 };
 
+function SchoolAddress({
+  label,
+  address,
+}: {
+  label: string;
+  address: unknown;
+}) {
+  if (!address || typeof address !== "object" || Array.isArray(address))
+    return null;
+  const fields = address as Record<string, unknown>;
+  const locality = [fields.zip, fields.city]
+    .filter((part) => typeof part === "string")
+    .join(" ");
+  const lines = [
+    fields.recipient,
+    fields.extra,
+    fields.street,
+    locality,
+    fields.country === "AT" ? "Österreich" : "Deutschland",
+  ];
+  return (
+    <div className="field-shell p-3">
+      <h5 className="mb-1 font-semibold text-white">{label}</h5>
+      {lines.map((line, index) =>
+        typeof line === "string" && line ? <p key={index}>{line}</p> : null,
+      )}
+    </div>
+  );
+}
+
 export default function OrderDetail({ orderId }: OrderDetailProps) {
   const utils = api.useUtils();
   const order = api.shopOrder.getById.useQuery({ orderId });
@@ -46,6 +77,9 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
   const [trackIdDraft, setTrackIdDraft] = useState("");
   const [shippingTitleDraft, setShippingTitleDraft] = useState("");
   const [feedback, setFeedback] = useState<string | undefined>();
+  const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [invoicePaid, setInvoicePaid] = useState(false);
+  const [printing, setPrinting] = useState(false);
 
   useEffect(() => {
     if (!order.data) return;
@@ -53,6 +87,8 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
     setShippingStatusDraft(order.data.shipping?.status ?? "PENDING");
     setTrackIdDraft(order.data.shipping?.trackId ?? "");
     setShippingTitleDraft(order.data.shipping?.title ?? "");
+    setInvoiceNumber(order.data.schoolDetails?.invoiceNumber ?? "");
+    setInvoicePaid(order.data.bookOrder?.payment.status === "SUCCEEDED");
   }, [order.data]);
 
   const updateStatus = api.shopOrder.updateStatus.useMutation({
@@ -70,6 +106,31 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
     },
     onError: (error) => setFeedback(error.message),
   });
+
+  const updateSchoolInvoice = api.shopOrder.updateSchoolInvoice.useMutation({
+    onSuccess: async () => {
+      setFeedback("Rechnungsdaten aktualisiert.");
+      await utils.shopOrder.invalidate();
+    },
+    onError: (error) => setFeedback(error.message),
+  });
+
+  async function downloadSchoolPlanner(bookId: string) {
+    setPrinting(true);
+    setFeedback(undefined);
+    try {
+      const source = await utils.planner.getPdfSource.fetch({ bookId });
+      await downloadPlannerPrintPdf(source);
+    } catch (error) {
+      setFeedback(
+        error instanceof Error
+          ? error.message
+          : "PDF konnte nicht erstellt werden.",
+      );
+    } finally {
+      setPrinting(false);
+    }
+  }
 
   if (order.isPending) {
     return (
@@ -90,6 +151,8 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
   const data = order.data;
   const payment = data.bookOrder?.payment;
   const book = data.bookOrder?.book;
+  const school = data.schoolDetails;
+  const binding = book?.modules[0]?.module.name;
 
   return (
     <div className="flex flex-col gap-6">
@@ -162,8 +225,35 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
 
       <div className="grid gap-5 xl:grid-cols-2">
         <section className="glass-card-soft flex flex-col gap-4 p-5">
-          <h4 className="text-lg font-bold text-white">Kunde</h4>
-          {data.user ? (
+          <h4 className="text-lg font-bold text-white">
+            {school ? "Schule und Adressen" : "Kunde"}
+          </h4>
+          {school ? (
+            <div className="flex flex-col gap-3 text-sm text-pirrot-blue-100/80">
+              <div>
+                <p className="font-semibold text-white">{school.schoolName}</p>
+                <p>{school.contactName}</p>
+                <p>{school.email}</p>
+                {school.phone ? <p>{school.phone}</p> : null}
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <SchoolAddress
+                  label="Rechnungsadresse"
+                  address={school.billingAddress}
+                />
+                <SchoolAddress
+                  label="Lieferadresse"
+                  address={school.shippingAddress}
+                />
+              </div>
+              {school.customerNote ? (
+                <div>
+                  <p className="font-semibold text-white">Anmerkung</p>
+                  <p className="whitespace-pre-wrap">{school.customerNote}</p>
+                </div>
+              ) : null}
+            </div>
+          ) : data.user ? (
             <div className="flex flex-col gap-1 text-sm text-pirrot-blue-100/80">
               <span className="font-semibold text-white">
                 {data.user.name ?? "Ohne Namen"}
@@ -205,10 +295,13 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
               </div>
               <div className="field-shell p-3">
                 <p className="compact-label text-[11px] uppercase text-pirrot-blue-200/65">
-                  Format / Region
+                  Format / Bindung / Region
                 </p>
                 <p className="mt-1 font-semibold text-white">
-                  {book.format}
+                  {book.format === "A4" || book.format === "A5"
+                    ? `DIN ${book.format}`
+                    : book.format}
+                  {binding ? ` · ${binding}` : ""}
                   {book.region ? ` · ${book.region}` : ""}
                 </p>
               </div>
@@ -236,10 +329,24 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
               Kein Planer verknüpft.
             </p>
           )}
+          {school && book ? (
+            <button
+              type="button"
+              className="btn-secondary w-fit"
+              onClick={() => void downloadSchoolPlanner(book.id)}
+              disabled={printing}
+            >
+              {printing
+                ? "Druck-PDF wird erstellt …"
+                : "Druck-PDF herunterladen"}
+            </button>
+          ) : null}
         </section>
 
         <section className="glass-card-soft flex flex-col gap-4 p-5">
-          <h4 className="text-lg font-bold text-white">Zahlung</h4>
+          <h4 className="text-lg font-bold text-white">
+            {school ? "Zahlung auf Rechnung" : "Zahlung"}
+          </h4>
           {payment ? (
             <div className="grid gap-3 text-sm text-pirrot-blue-100/80 sm:grid-cols-2">
               <div className="field-shell p-3">
@@ -294,6 +401,50 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
               Keine Zahlung verknüpft.
             </p>
           )}
+          {school && payment && data.status !== "CANCELED" ? (
+            <form
+              className="flex flex-col gap-3 border-t border-pirrot-blue-200/10 pt-4"
+              onSubmit={(event) => {
+                event.preventDefault();
+                updateSchoolInvoice.mutate({
+                  orderId,
+                  invoiceNumber,
+                  paid: invoicePaid,
+                });
+              }}
+            >
+              <label className="flex flex-col gap-1.5 text-sm text-pirrot-blue-100/80">
+                Rechnungsnummer
+                <input
+                  className="soft-input"
+                  maxLength={120}
+                  value={invoiceNumber}
+                  onChange={(event) => setInvoiceNumber(event.target.value)}
+                />
+              </label>
+              <label className="flex w-fit items-center gap-2 text-sm text-pirrot-blue-100/80">
+                <input
+                  type="checkbox"
+                  checked={invoicePaid}
+                  onChange={(event) => setInvoicePaid(event.target.checked)}
+                />
+                Zahlung eingegangen
+              </label>
+              <button
+                type="submit"
+                className="btn-primary w-fit"
+                disabled={
+                  updateSchoolInvoice.isPending ||
+                  (invoiceNumber.trim() === (school.invoiceNumber ?? "") &&
+                    invoicePaid === (payment.status === "SUCCEEDED"))
+                }
+              >
+                {updateSchoolInvoice.isPending
+                  ? "Speichert …"
+                  : "Rechnungsdaten speichern"}
+              </button>
+            </form>
+          ) : null}
         </section>
 
         <section className="glass-card-soft flex flex-col gap-4 p-5">

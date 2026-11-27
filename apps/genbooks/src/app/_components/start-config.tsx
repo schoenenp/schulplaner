@@ -44,16 +44,16 @@ export default function StartConfig({
           Schulplaner Generator
         </h1>
         <p className="mx-auto max-w-3xl text-lg text-info-800 lg:text-2xl">
-          Gestalten Sie individuelle Schulplaner mit Hausaufgabenübersicht,
-          Stundenplan, Kalender und allen wichtigen Funktionen für den
-          Schulalltag.
+          Stellen Sie Ihren Schulplaner aus einzelnen Modulen zusammen.
+          Kombinieren Sie Wochenplan, Stundenplan, Kalender und weitere Seiten
+          für Ihren Schulalltag.
         </p>
       </section>
       <TemplateGallery />
 
       <HowItWorks />
 
-      <section className="section-shell w-full py-2">
+      <section id="planer-erstellen" className="section-shell w-full scroll-mt-24 py-2">
         <div className="content-card grid min-h-[640px] w-full grid-cols-1 items-center justify-center gap-8 p-3 py-8 lg:grid-cols-3 lg:p-6">
           <div className="order-2 col-span-1 flex w-full flex-col items-center justify-center gap-4 px-3 py-10 lg:order-1 lg:py-20">
             <BookPreview

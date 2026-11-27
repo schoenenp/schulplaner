@@ -9,7 +9,6 @@ import { redirect } from "next/navigation";
 import {
   BookCopy,
   Component,
-  Handshake,
   ReceiptEuro,
   UserIcon,
 } from "lucide-react";
@@ -17,7 +16,6 @@ import ModulesSection from "./_components/modules";
 import Navigation from "../_components/navigation";
 import PlanerSection from "./_components/planers";
 import OrdersSection from "./_components/orders";
-import PartnerSection from "./_components/partner";
 
 export default async function Dashboard({
     searchParams,
@@ -32,9 +30,8 @@ export default async function Dashboard({
   void api.module.getUserModules.prefetch()
   void api.book.getUserBooks.prefetch()
   void api.order.initSection.prefetch()
-  void api.partner.getStatus.prefetch()
 
-  if(!session?.user) redirect("/")
+  if(!session?.user) redirect(`/auth/signin?callbackUrl=${encodeURIComponent(view === "orders" ? "/dashboard?view=orders" : "/dashboard?view=planer")}`)
   
     function renderView(){
       switch (view) {
@@ -46,10 +43,8 @@ export default async function Dashboard({
               return <ModulesSection />
           case "orders":
               return <OrdersSection />
-          case "partner":
-              return <PartnerSection />
           default:
-              return <ProfileSection {...session?.user} />
+              return <PlanerSection />
       }
     }
 
@@ -68,7 +63,7 @@ export default async function Dashboard({
                   <Link
                     key={dl.name}
                     className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold uppercase max-md:min-h-14 max-md:flex-col max-md:justify-center max-md:gap-1 max-md:px-1 max-md:text-[11px] lg:flex-1 lg:justify-center max-md:[&>svg]:size-5 ${
-                      view === dl.name || view === undefined
+                      (view ?? "planer") === dl.name
                         ? "bg-pirrot-blue-100 text-pirrot-blue-900"
                         : "text-info-800 hover:bg-pirrot-blue-100/40"
                     }`}
@@ -109,9 +104,5 @@ const DASHBOARD_LINKS:DashLink[] = [
   {
     name:"orders",
     icon: <ReceiptEuro />,
-  },
-  {
-    name:"partner",
-    icon: <Handshake />,
   },
 ]

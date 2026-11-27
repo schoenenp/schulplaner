@@ -114,16 +114,16 @@ export default function Footer() {
                             © {currentYear} Digitaldruck Pirrot GmbH. Alle Rechte vorbehalten.
                         </div>
                         <div className="flex space-x-6 text-sm">
-                            <a href="https://secure.pirrot.de/datenschutz" target="_blank" rel="noreferrer" className="text-info-600 hover:text-pirrot-red-500 transition-colors">
+                            <a href="https://pirrot.de/impressum" target="_blank" rel="noreferrer" className="text-info-600 hover:text-pirrot-red-500 transition-colors">
                                 Impressum
                             </a>
-                            <a href="https://secure.pirrot.de/datenschutz" target="_blank" rel="noreferrer" className="text-info-600 hover:text-pirrot-red-500 transition-colors">
+                            <a href="https://pirrot.de/datenschutz" target="_blank" rel="noreferrer" className="text-info-600 hover:text-pirrot-red-500 transition-colors">
                                 Datenschutz
                             </a>
-                            <a href="https://secure.pirrot.de/datenschutz" target="_blank" rel="noreferrer" className="text-info-600 hover:text-pirrot-red-500 transition-colors">
+                            <a href="https://pirrot.de/agb" target="_blank" rel="noreferrer" className="text-info-600 hover:text-pirrot-red-500 transition-colors">
                                 AGB
                             </a>
-                            <a href="https://secure.pirrot.de/datenschutz" target="_blank" rel="noreferrer" className="text-info-600 hover:text-pirrot-red-500 transition-colors">
+                            <a href="https://pirrot.de/agb" target="_blank" rel="noreferrer" className="text-info-600 hover:text-pirrot-red-500 transition-colors">
                                 Widerrufsrecht
                             </a>
                         </div>
